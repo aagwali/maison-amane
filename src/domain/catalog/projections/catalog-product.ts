@@ -1,79 +1,67 @@
 // src/domain/catalog/projections/catalog-product.ts
 
-import type {
-  ProductId,
-  ProductLabel,
-  ProductDescription,
-  ImageUrl,
-  Price,
-  PositiveCm
+import * as S from "effect/Schema"
+import { case as constructor } from "effect/Data"
+import {
+  ProductIdSchema,
+  ProductLabelSchema,
+  ProductDescriptionSchema,
+  ImageUrlSchema,
+  PriceSchema,
+  PositiveCmSchema,
+  ProductCategorySchema,
+  PriceRangeSchema,
 } from "../../pilot"
 
-import type {
-  ProductCategory,
-  PriceRange
-} from "../../pilot"
+import { TaggedSchema } from "../../shared"
 
 // ============================================
 // CATALOG VARIANT (simplified for UI)
 // ============================================
 
-export interface CatalogStandardVariant {
-  readonly _tag: "StandardVariant"
-  readonly size: "STANDARD" | "LARGE"
-}
+const CatalogStandardVariantSchema = S.Struct({
+  _tag: S.Literal("StandardVariant"),
+  size: S.Literal("REGULAR", "LARGE"),
+})
 
-export interface CatalogCustomVariant {
-  readonly _tag: "CustomVariant"
-  readonly dimensions: {
-    readonly width: PositiveCm
-    readonly length: PositiveCm
-  }
-  readonly price: Price
-}
+const CatalogCustomVariantSchema = S.Struct({
+  _tag: S.Literal("CustomVariant"),
+  dimensions: S.Struct({
+    width: PositiveCmSchema,
+    length: PositiveCmSchema,
+  }),
+  price: PriceSchema,
+})
 
-export type CatalogVariant = CatalogStandardVariant | CatalogCustomVariant
+const CatalogVariantSchema = S.Union(
+  CatalogStandardVariantSchema,
+  CatalogCustomVariantSchema,
+)
+
+export type CatalogStandardVariant = typeof CatalogStandardVariantSchema.Type
+export type CatalogCustomVariant = typeof CatalogCustomVariantSchema.Type
+export type CatalogVariant = typeof CatalogVariantSchema.Type
 
 // ============================================
 // CATALOG PRODUCT (Read Model for UI)
 // ============================================
 
-export interface CatalogProduct {
-  readonly _tag: "CatalogProduct"
+const CatalogProductSchema = TaggedSchema("CatalogProduct", {
+  id: ProductIdSchema,
+  label: ProductLabelSchema,
+  description: ProductDescriptionSchema,
+  category: ProductCategorySchema,
+  priceRange: PriceRangeSchema,
+  variants: S.Array(CatalogVariantSchema),
+  images: S.Struct({
+    front: ImageUrlSchema,
+    detail: ImageUrlSchema,
+    gallery: S.Array(ImageUrlSchema),
+  }),
+  shopifyUrl: S.optional(S.String),
+  publishedAt: S.Date,
+})
 
-  // Identity (same as PilotProduct)
-  readonly id: ProductId
+export type CatalogProduct = typeof CatalogProductSchema.Type
 
-  // Core (simplified for display)
-  readonly label: ProductLabel
-  readonly description: ProductDescription
-  readonly category: ProductCategory
-  readonly priceRange: PriceRange
-
-  // Variants (simplified)
-  readonly variants: readonly CatalogVariant[]
-
-  // Images (flattened for easy UI consumption)
-  readonly images: {
-    readonly front: ImageUrl
-    readonly detail: ImageUrl
-    readonly gallery: readonly ImageUrl[]
-  }
-
-  // Shopify integration (optional, present after sync)
-  readonly shopifyUrl?: string
-
-  // Metadata
-  readonly publishedAt: Date
-}
-
-// ============================================
-// FACTORY
-// ============================================
-
-export const CatalogProduct = {
-  create: (params: Omit<CatalogProduct, "_tag">): CatalogProduct => ({
-    _tag: "CatalogProduct",
-    ...params
-  })
-}
+export const MakeCatalogProduct = constructor<CatalogProduct>()

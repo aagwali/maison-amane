@@ -1,38 +1,40 @@
 // src/domain/pilot/errors.ts
 
+import * as S from "effect/Schema"
+import { case as constructor } from "effect/Data"
 import type { ParseError } from "effect/ParseResult"
+import { TaggedSchema } from "../shared"
 
 // ============================================
 // VALIDATION ERROR (wraps ParseError)
 // ============================================
 
-export interface ValidationError {
-  readonly _tag: "ValidationError"
-  readonly cause: ParseError
-}
+const ParseErrorSchema = S.Any as S.Schema<ParseError>
+
+const ValidationErrorSchema = TaggedSchema("ValidationError", {
+  cause: ParseErrorSchema,
+})
+
+export type ValidationError = typeof ValidationErrorSchema.Type
+
+const MakeValidationError = constructor<ValidationError>()
 
 export const ValidationError = {
-  fromParseError: (cause: ParseError): ValidationError => ({
-    _tag: "ValidationError",
-    cause
-  })
+  fromParseError: (cause: ParseError): ValidationError =>
+    MakeValidationError({ cause }),
 }
 
 // ============================================
 // PERSISTENCE ERROR
 // ============================================
 
-export interface PersistenceError {
-  readonly _tag: "PersistenceError"
-  readonly cause: unknown
-}
+const PersistenceErrorSchema = TaggedSchema("PersistenceError", {
+  cause: S.Unknown,
+})
 
-export const PersistenceError = {
-  create: (cause: unknown): PersistenceError => ({
-    _tag: "PersistenceError",
-    cause
-  })
-}
+export type PersistenceError = typeof PersistenceErrorSchema.Type
+
+export const MakePersistenceError = constructor<PersistenceError>()
 
 // ============================================
 // AGGREGATE ERROR TYPE

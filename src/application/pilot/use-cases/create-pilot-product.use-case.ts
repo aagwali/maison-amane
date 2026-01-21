@@ -3,13 +3,16 @@
 import { Effect, pipe } from "effect"
 import type { PilotProduct, ProductVariant } from "../../../domain/pilot"
 import {
-  PilotProductAggregate,
-  ProductVariantEntity,
-  PilotProductPublished,
   ProductStatus,
-  type CreateProductError
+  type CreateProductError,
+  MakeStandardVariant,
+  MakeCustomVariant,
+  Size,
+  MakePilotProduct,
+  MakePilotProductPublished,
+  MakeNotSynced,
 } from "../../../domain/pilot"
-import type { CreatePilotProductCommand } from "../commands"
+import type { PilotProductCreationCommand } from "../commands"
 import { validateProductData, type ValidatedProductData, type ValidatedVariant } from "../validation"
 import {
   PilotProductRepository,
@@ -23,7 +26,7 @@ import {
 // ============================================
 
 export const createPilotProduct = (
-  command: CreatePilotProductCommand
+  command: PilotProductCreationCommand
 ): Effect.Effect<
   PilotProduct,
   CreateProductError,
@@ -76,7 +79,8 @@ const createAggregate = (
           pipe(
             createVariants(validated.variants, idGen),
             Effect.map((variants) =>
-              PilotProductAggregate.create({
+              MakePilotProduct({
+                syncStatus: MakeNotSynced({}),
                 id: productId,
                 label: validated.label,
                 type: validated.type,
@@ -89,6 +93,7 @@ const createAggregate = (
                 createdAt: now,
                 updatedAt: now
               })
+
             )
           )
         )
@@ -107,9 +112,15 @@ const createVariants = (
           idGen.generateVariantId(),
           Effect.map((variantId): ProductVariant => {
             if (v._tag === "CustomVariant") {
-              return ProductVariantEntity.createCustom(variantId, v.customDimensions, v.price)
+              return MakeCustomVariant({
+                _tag: "CustomVariant",
+                id: variantId,
+                size: Size.CUSTOM,
+                customDimensions: v.customDimensions,
+                price: v.price,
+              })
             } else {
-              return ProductVariantEntity.createStandard(variantId, v.size)
+              return MakeStandardVariant({ _tag: "StandardVariant", id: variantId, size: v.size })
             }
           })
         )
@@ -124,7 +135,7 @@ const createVariants = (
 
 const emitEvent = (
   product: PilotProduct,
-  command: CreatePilotProductCommand
+  command: PilotProductCreationCommand
 ): Effect.Effect<void, never, EventPublisher | Clock> =>
   pipe(
     Effect.all({
@@ -135,12 +146,13 @@ const emitEvent = (
       pipe(
         clock.now(),
         Effect.flatMap((now) => {
-          const event = PilotProductPublished.create(
+          const event = MakePilotProductPublished({
+            productId: product.id,
             product,
-            command.correlationId,
-            command.userId,
-            now
-          )
+            correlationId: command.correlationId,
+            userId: command.userId,
+            timestamp: now,
+          })
           return publisher.publish(event)
         })
       )

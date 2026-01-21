@@ -3,7 +3,7 @@
 import { Effect, Layer, Option, pipe } from "effect"
 import type { PilotProductRepository } from "../../../ports/driven"
 import { PilotProductRepository as PilotProductRepositoryTag } from "../../../ports/driven"
-import { PersistenceError } from "../../../domain/pilot"
+import { MakePersistenceError } from "../../../domain/pilot"
 import { toDocument, fromDocument } from "./mappers"
 
 // ============================================
@@ -24,7 +24,7 @@ export const makeMongodbPilotProductRepository = (
             await collection.insertOne(doc)
             return product
           },
-          catch: (error) => PersistenceError.create(error)
+          catch: (error) => MakePersistenceError({ cause: error })
         })
       ),
 
@@ -35,7 +35,7 @@ export const makeMongodbPilotProductRepository = (
             const doc = await collection.findOne({ _id: id })
             return doc ? Option.some(fromDocument(doc)) : Option.none()
           },
-          catch: (error) => PersistenceError.create(error)
+          catch: (error) => MakePersistenceError({ cause: error })
         })
       ),
 
@@ -47,7 +47,7 @@ export const makeMongodbPilotProductRepository = (
             await collection.replaceOne({ _id: product.id }, doc)
             return product
           },
-          catch: (error) => PersistenceError.create(error)
+          catch: (error) => MakePersistenceError({ cause: error })
         })
       )
   }

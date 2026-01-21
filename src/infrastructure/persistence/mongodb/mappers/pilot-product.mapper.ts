@@ -112,7 +112,7 @@ export const toDocument = (product: PilotProduct): PilotProductDocument => ({
           attempts: product.syncStatus.attempts
         }
       : {})
-  },
+  } as PilotProductDocument["syncStatus"],
   createdAt: product.createdAt,
   updatedAt: product.updatedAt
 })

@@ -2,35 +2,36 @@
 
 import { Effect } from "effect"
 import { MakeCorrelationId, MakeUserId } from "./domain/shared"
-import { createPilotProduct, CreatePilotProductCommand } from "./application/pilot"
+import { createPilotProduct, MakeCreatePilotProductCommand } from "./application/pilot"
 import { DevelopmentLayer } from "./composition"
 
 // ============================================
 // TEST DATA
 // ============================================
 
-const testCommand = CreatePilotProductCommand.create(
-  {
+const testCommand = MakeCreatePilotProductCommand({
+  data: {
     label: "Tapis Berbere Atlas",
     type: "TAPIS",
     category: "STANDARD",
     description: "Un beau tapis fait main",
     priceRange: "PREMIUM",
     variants: [
-      { size: "STANDARD" },
-      { size: "LARGE" }
+      { size: "REGULAR" },
+      { size: "LARGE" },
     ],
     views: [
       { viewType: "FRONT", imageUrl: "https://cdn.example.com/front.jpg" },
       { viewType: "DETAIL", imageUrl: "https://cdn.example.com/detail.jpg" },
       { viewType: "BACK", imageUrl: "https://cdn.example.com/back.jpg" },
-      { viewType: "AMBIANCE", imageUrl: "https://cdn.example.com/ambiance.jpg" }
+      { viewType: "AMBIANCE", imageUrl: "https://cdn.example.com/ambiance.jpg" },
     ],
-    status: "DRAFT"
+    status: "DRAFT",
   },
-  MakeCorrelationId("corr-123"),
-  MakeUserId("user-456")
-)
+  correlationId: MakeCorrelationId("corr-123"),
+  userId: MakeUserId("user-456"),
+  timestamp: new Date(),
+})
 
 // ============================================
 // PROGRAM

@@ -4,51 +4,58 @@
 // VALUE OBJECTS
 // ============================================
 export {
-  // Schemas
+  // IDs
   ProductIdSchema,
-  VariantIdSchema,
-  ShopifyProductIdSchema,
-  ProductLabelSchema,
-  ProductDescriptionSchema,
-  PriceSchema,
-  PositiveCmSchema,
-  ImageUrlSchema,
-  ProductViewSchema,
-  CustomDimensionSchema,
-  ValidatedVariantSchema,
-  ProductVariantSchema,
-  StandardVariantSchema,
-  CustomVariantSchema,
-  // Types
-  type ProductId,
-  type VariantId,
-  type ShopifyProductId,
-  type ProductLabel,
-  type ProductDescription,
-  type Price,
-  type PositiveCm,
-  type ImageUrl,
-  type ValidatedVariant,
-  type ValidatedStandardVariant,
-  type ValidatedCustomVariant,
-  // Constructors
   MakeProductId,
+  type ProductId,
+  VariantIdSchema,
   MakeVariantId,
+  type VariantId,
+  ShopifyProductIdSchema,
   MakeShopifyProductId,
+  type ShopifyProductId,
+  // Primitives
+  ProductLabelSchema,
   MakeProductLabel,
+  type ProductLabel,
+  ProductDescriptionSchema,
   MakeProductDescription,
+  type ProductDescription,
+  PriceSchema,
   MakePrice,
+  type Price,
+  PositiveCmSchema,
   MakePositiveCm,
+  type PositiveCm,
+  ImageUrlSchema,
   MakeImageUrl,
-  // Other
-  SyncStatus,
+  type ImageUrl,
+  // Dimensions
+  CustomDimensionSchema,
   type CustomDimension,
+  // Views
+  ProductViewSchema,
   type ProductView,
+  ProductViewsSchema,
   type ProductViews,
+  // Variants (entities)
+  StandardVariantSchema,
+  type StandardVariant,
+  CustomVariantSchema,
+  type CustomVariant,
+  ProductVariantSchema,
+  type ProductVariant,
+  // Sync Status
+  SyncErrorSchema,
   type SyncError,
+  MakeNotSynced,
   type NotSynced,
+  MakeSynced,
   type Synced,
-  type SyncFailed
+  MakeSyncFailed,
+  type SyncFailed,
+  SyncStatusSchema,
+  type SyncStatus,
 } from "./value-objects"
 
 // ============================================
@@ -72,27 +79,26 @@ export {
   ProductStatusSchema,
   ViewTypeSchema,
   type PredefinedSize,
-  type Dimension
+  type Dimension,
 } from "./enums"
 
 // ============================================
 // AGGREGATE
 // ============================================
 export {
-  PilotProductAggregate,
-  ProductVariantEntity,
+  MakeStandardVariant,
+  MakePilotProduct,
+  MakeCustomVariant,
   type PilotProduct,
-  type StandardVariant,
-  type CustomVariant,
-  type ProductVariant
 } from "./aggregate"
 
 // ============================================
 // EVENTS
 // ============================================
 export {
-  PilotProductPublished,
-  type PilotDomainEvent
+  MakePilotProductPublished,
+  type PilotProductPublished,
+  type PilotDomainEvent,
 } from "./events"
 
 // ============================================
@@ -100,6 +106,7 @@ export {
 // ============================================
 export {
   ValidationError,
-  PersistenceError,
-  type CreateProductError
+  MakePersistenceError,
+  type PersistenceError,
+  type CreateProductError,
 } from "./errors"

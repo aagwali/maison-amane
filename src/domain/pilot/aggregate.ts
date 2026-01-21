@@ -1,28 +1,41 @@
 // src/domain/pilot/aggregate.ts
 
-import type {
-  ProductId,
-  VariantId,
-  ProductLabel,
-  ProductDescription,
-  CustomDimension,
-  Price,
-  ProductViews,
-  SyncStatus,
-  ProductVariant,
-  StandardVariant,
-  CustomVariant,
+import * as S from "effect/Schema"
+import { case as constructor } from "effect/Data"
+import {
+  ProductIdSchema,
+  ProductLabelSchema,
+  ProductDescriptionSchema,
+  ProductViewsSchema,
+  ProductVariantSchema,
+  SyncStatusSchema,
+  MakeNotSynced,
+  type ProductId,
+  type VariantId,
+  type ProductLabel,
+  type ProductDescription,
+  type CustomDimension,
+  type Price,
+  type ProductViews,
+  type ProductVariant,
+  type StandardVariant,
+  type CustomVariant,
 } from "./value-objects"
 
-import type {
-  ProductType,
-  ProductCategory,
-  PriceRange,
-  ProductStatus,
-  PredefinedSize
+import {
+  ProductTypeSchema,
+  ProductCategorySchema,
+  PriceRangeSchema,
+  ProductStatusSchema,
+  Size,
+  type ProductType,
+  type ProductCategory,
+  type PriceRange,
+  type ProductStatus,
+  type PredefinedSize,
 } from "./enums"
 
-import { Size } from "./enums"
+import { TaggedSchema } from "../shared"
 
 // Re-export variant types for convenience
 export type { ProductVariant, StandardVariant, CustomVariant }
@@ -31,56 +44,34 @@ export type { ProductVariant, StandardVariant, CustomVariant }
 // VARIANT CONSTRUCTORS
 // ============================================
 
-export const ProductVariantEntity = {
-  createStandard: (id: VariantId, size: PredefinedSize): StandardVariant => ({
-    _tag: "StandardVariant",
-    id,
-    size
-  }),
-  createCustom: (
-    id: VariantId,
-    customDimensions: CustomDimension,
-    price: Price
-  ): CustomVariant => ({
-    _tag: "CustomVariant",
-    id,
-    size: Size.CUSTOM,
-    customDimensions,
-    price
-  })
-}
+export const MakeStandardVariant = constructor<StandardVariant>()
+export const MakeCustomVariant = constructor<CustomVariant>()
 
 // ============================================
 // PILOT PRODUCT (Aggregate Root)
 // ============================================
 
-export interface PilotProduct {
-  readonly _tag: "PilotProduct"
+const VariantsNonEmptySchema = S.NonEmptyArray(ProductVariantSchema)
 
-  // Identity
-  readonly id: ProductId
+const PilotProductSchema = TaggedSchema("PilotProduct", {
+  id: ProductIdSchema,
+  label: ProductLabelSchema,
+  type: ProductTypeSchema,
+  category: ProductCategorySchema,
+  description: ProductDescriptionSchema,
+  priceRange: PriceRangeSchema,
+  variants: VariantsNonEmptySchema,
+  views: ProductViewsSchema,
+  status: ProductStatusSchema,
+  syncStatus: SyncStatusSchema,
+  createdAt: S.Date,
+  updatedAt: S.Date,
+})
 
-  // Core
-  readonly label: ProductLabel
-  readonly type: ProductType
-  readonly category: ProductCategory
-  readonly description: ProductDescription
-  readonly priceRange: PriceRange
+export type PilotProduct = typeof PilotProductSchema.Type
 
-  // Collections
-  readonly variants: readonly [ProductVariant, ...ProductVariant[]]
-  readonly views: ProductViews
+export const MakePilotProduct = constructor<PilotProduct>()
 
-  // Status
-  readonly status: ProductStatus
-  readonly syncStatus: SyncStatus
-
-  // Metadata
-  readonly createdAt: Date
-  readonly updatedAt: Date
-}
-
-// Constructor
 export const PilotProductAggregate = {
   create: (params: {
     id: ProductId
@@ -94,9 +85,9 @@ export const PilotProductAggregate = {
     status: ProductStatus
     createdAt: Date
     updatedAt: Date
-  }): PilotProduct => ({
-    _tag: "PilotProduct",
-    ...params,
-    syncStatus: { _tag: "NotSynced" }
-  })
+  }): PilotProduct =>
+    MakePilotProduct({
+      ...params,
+      syncStatus: MakeNotSynced({}),
+    }),
 }

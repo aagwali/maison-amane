@@ -24,7 +24,7 @@ export interface CatalogProductDocument {
   priceRange: string
   variants: Array<{
     _tag: "StandardVariant" | "CustomVariant"
-    size?: "STANDARD" | "LARGE"
+    size?: "REGULAR" | "LARGE"
     dimensions?: { width: number; length: number }
     price?: number
   }>

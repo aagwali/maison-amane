@@ -1,40 +1,29 @@
 // src/domain/pilot/events.ts
 
-import type { CorrelationId, UserId } from "../shared"
-import type { ProductId } from "./value-objects"
+import * as S from "effect/Schema"
+import { case as constructor } from "effect/Data"
+import { CorrelationIdSchema, UserIdSchema, TaggedSchema } from "../shared"
+import { ProductIdSchema } from "./value-objects"
 import type { PilotProduct } from "./aggregate"
 
 // ============================================
 // PILOT PRODUCT PUBLISHED
-// Emitted when a product is published, triggers:
-// - Shopify sync
-// - CatalogProduct projection
 // ============================================
 
-export interface PilotProductPublished {
-  readonly _tag: "PilotProductPublished"
-  readonly productId: ProductId
-  readonly product: PilotProduct
-  readonly correlationId: CorrelationId
-  readonly userId: UserId
-  readonly timestamp: Date
-}
+// Note: PilotProduct is a complex type, we use S.Any for schema
+const PilotProductSchema = S.Any as S.Schema<PilotProduct>
 
-export const PilotProductPublished = {
-  create: (
-    product: PilotProduct,
-    correlationId: CorrelationId,
-    userId: UserId,
-    timestamp: Date
-  ): PilotProductPublished => ({
-    _tag: "PilotProductPublished",
-    productId: product.id,
-    product,
-    correlationId,
-    userId,
-    timestamp
-  })
-}
+const PilotProductPublishedSchema = TaggedSchema("PilotProductPublished", {
+  productId: ProductIdSchema,
+  product: PilotProductSchema,
+  correlationId: CorrelationIdSchema,
+  userId: UserIdSchema,
+  timestamp: S.Date,
+})
+
+export type PilotProductPublished = typeof PilotProductPublishedSchema.Type
+
+export const MakePilotProductPublished = constructor<PilotProductPublished>()
 
 // ============================================
 // DOMAIN EVENTS UNION

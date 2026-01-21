@@ -36,7 +36,7 @@ export type ProductCategory = typeof ProductCategory[keyof typeof ProductCategor
 // ============================================
 
 export const Size = {
-  STANDARD: "STANDARD",
+  REGULAR: "REGULAR",
   LARGE: "LARGE",
   CUSTOM: "CUSTOM",
 } as const
@@ -102,7 +102,7 @@ export const DIMENSION_SETS: Record<
   Record<PredefinedSize, readonly Dimension[]>
 > = {
   RUNNER: {
-    STANDARD: [
+    REGULAR: [
       { width: 60, length: 180 },
       { width: 80, length: 200 }
     ],
@@ -112,7 +112,7 @@ export const DIMENSION_SETS: Record<
     ]
   },
   STANDARD: {
-    STANDARD: [
+    REGULAR: [
       { width: 120, length: 180 },
       { width: 140, length: 200 }
     ],

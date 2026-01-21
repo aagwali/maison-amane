@@ -1,8 +1,9 @@
 // src/domain/catalog/projections/index.ts
 
 export {
-  CatalogProduct,
+  MakeCatalogProduct,
+  type CatalogProduct,
   type CatalogVariant,
   type CatalogStandardVariant,
-  type CatalogCustomVariant
+  type CatalogCustomVariant,
 } from "./catalog-product"

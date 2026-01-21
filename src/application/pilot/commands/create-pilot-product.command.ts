@@ -1,60 +1,58 @@
 // src/application/pilot/commands/create-pilot-product.command.ts
 
-import type { CorrelationId, UserId } from "../../../domain/shared"
+import * as S from "effect/Schema"
+import { case as constructor } from "effect/Data"
+import {
+  CorrelationIdSchema,
+  UserIdSchema,
+  TaggedSchema,
+} from "../../../domain/shared"
 
 // ============================================
-// UNVALIDATED DATA (from UI)
+// UNVALIDATED SCHEMAS (from UI/API boundary)
 // ============================================
 
-export interface UnvalidatedVariant {
-  readonly size: string
-  readonly customDimensions?: {
-    readonly width: number
-    readonly length: number
-  }
-  readonly price?: number
-}
+const UnvalidatedProductDataSchema = S.Struct({
+  label: S.String,
+  type: S.String,
+  category: S.String,
+  description: S.String,
+  priceRange: S.String,
+  variants: S.Array(S.Struct({
+    size: S.String,
+    customDimensions: S.optional(
+      S.Struct({
+        width: S.Number,
+        length: S.Number,
+      }),
+    ),
+    price: S.optional(S.Number),
+  })),
+  views: S.Array(S.Struct({
+    viewType: S.String,
+    imageUrl: S.String,
+  })),
+  status: S.String,
+})
 
-export interface UnvalidatedView {
-  readonly viewType: string
-  readonly imageUrl: string
-}
-
-export interface UnvalidatedProductData {
-  readonly label: string
-  readonly type: string
-  readonly category: string
-  readonly description: string
-  readonly priceRange: string
-  readonly variants: readonly UnvalidatedVariant[]
-  readonly views: readonly UnvalidatedView[]
-  readonly status: string
-}
+export type UnvalidatedProductData = typeof UnvalidatedProductDataSchema.Type
 
 // ============================================
 // CREATE PILOT PRODUCT COMMAND
 // ============================================
 
-// todo : remplacer par schema + technique de validation fp-demo like ?
+const PilotProductCreationCommandSchema = TaggedSchema(
+  "CreatePilotProductCommand",
+  {
+    data: UnvalidatedProductDataSchema,
+    correlationId: CorrelationIdSchema,
+    userId: UserIdSchema,
+    timestamp: S.Date,
+  },
+)
 
-export interface CreatePilotProductCommand {
-  readonly _tag: "CreatePilotProductCommand"
-  readonly data: UnvalidatedProductData
-  readonly correlationId: CorrelationId
-  readonly userId: UserId
-  readonly timestamp: Date
-}
+export type PilotProductCreationCommand =
+  typeof PilotProductCreationCommandSchema.Type
 
-export const CreatePilotProductCommand = {
-  create: (
-    data: UnvalidatedProductData,
-    correlationId: CorrelationId,
-    userId: UserId
-  ): CreatePilotProductCommand => ({
-    _tag: "CreatePilotProductCommand",
-    data,
-    correlationId,
-    userId,
-    timestamp: new Date()
-  })
-}
+export const MakeCreatePilotProductCommand =
+  constructor<PilotProductCreationCommand>()
