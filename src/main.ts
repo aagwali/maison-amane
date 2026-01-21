@@ -1,29 +1,15 @@
 // src/main.ts
 
-import { Effect, pipe, Layer } from "effect"
-import {
-  createPilotProduct,
-  PilotProductCommand,
-  MakeCorrelationId,
-  MakeUserId,
-} from "./domain/pilote/index"
-import {
-  UuidIdGeneratorLive,
-  SystemClockLive,
-  ConsoleEventPublisherLive,
-  InMemoryProductRepositoryLive
-} from "./infrastructure/pilote/implementations"
+import { Effect } from "effect"
+import { MakeCorrelationId, MakeUserId } from "./domain/shared"
+import { createPilotProduct, CreatePilotProductCommand } from "./application/pilot"
+import { DevelopmentLayer } from "./composition"
 
-// Compose all layers
-const AppLayer = Layer.mergeAll(
-  UuidIdGeneratorLive,
-  SystemClockLive,
-  ConsoleEventPublisherLive,
-  InMemoryProductRepositoryLive
-)
+// ============================================
+// TEST DATA
+// ============================================
 
-// Test data
-const testCommand = PilotProductCommand.create(
+const testCommand = CreatePilotProductCommand.create(
   {
     label: "Tapis Berbere Atlas",
     type: "TAPIS",
@@ -46,23 +32,26 @@ const testCommand = PilotProductCommand.create(
   MakeUserId("user-456")
 )
 
-// Run
-const program = pipe(
-  createPilotProduct(testCommand),
-  Effect.tap((product) =>
-    Effect.sync(() => {
-      console.log("Created product:")
-      console.log("  id:", product.id)
-      console.log("  label:", product.label)
-      console.log("  status:", product.status)
-      console.log("  variants:", product.variants.length)
-    })
-  )
-)
+// ============================================
+// PROGRAM
+// ============================================
 
-Effect.runPromise(
-  pipe(program, Effect.provide(AppLayer))
-).then(
-  () => console.log("\nSuccess!"),
-  (err) => console.error("\nError:", err)
-)
+const program = createPilotProduct(testCommand)
+  .pipe(
+    Effect.tap((product) =>
+      Effect.sync(() => {
+        console.log("Created product:")
+        console.log("  id:", product.id)
+        console.log("  label:", product.label)
+        console.log("  status:", product.status)
+        console.log("  variants:", product.variants)
+      })
+    )
+  )
+  .pipe(Effect.provide(DevelopmentLayer))
+
+// ============================================
+// RUN
+// ============================================
+
+Effect.runPromise(program)
