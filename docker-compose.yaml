@@ -1,0 +1,34 @@
+version: "3.8"
+name: maison_amane
+
+services:
+  mongodb:
+    image: mongo:7-jammy
+    container_name: maison_amane_mongodb
+    env_file: .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DB}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: maison_amane_mongo_express
+    env_file: .env
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_USER}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_PASSWORD}
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USER}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:

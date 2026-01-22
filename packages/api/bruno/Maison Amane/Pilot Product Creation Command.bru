@@ -1,0 +1,56 @@
+meta {
+  name: Pilot Product Creation Command
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/api/pilot-product
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "label": "Tapis Berbere Atlas",
+    "type": "TAPIS",
+    "category": "STANDARD",
+    "description": "Un beau tapis fait main",
+    "priceRange": "PREMIUM",
+    "variants": [
+      {
+        "size": "REGULAR"
+      },
+      {
+        "size": "LARGE"
+      }
+    ],
+    "views": [
+      {
+        "viewType": "FRONT",
+        "imageUrl": "https://cdn.example.com/front.jpg"
+      },
+      {
+        "viewType": "DETAIL",
+        "imageUrl": "https://cdn.example.com/detail.jpg"
+      },
+      {
+        "viewType": "BACK",
+        "imageUrl": "https://cdn.example.com/back.jpg"
+      },
+      {
+        "viewType": "AMBIANCE",
+        "imageUrl": "https://cdn.example.com/ambiance.jpg"
+      }
+    ],
+    "status": "DRAFT"
+  }
+}
+
+settings {
+  encodeUrl: false
+}
