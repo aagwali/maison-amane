@@ -1,41 +1,38 @@
 // src/domain/pilot/value-objects/variants.ts
 
 import * as S from "effect/Schema"
-import { VariantIdSchema } from "./ids"
-import { PriceSchema } from "./primitives"
+import { PriceSchema } from "./scalar-types"
 import { CustomDimensionSchema } from "./dimensions"
 import { Size } from "../enums"
 
 // ============================================
-// STANDARD VARIANT (entity with id)
+// STANDARD VARIANT BASE (value object, without id)
 // ============================================
 
-export const StandardVariantSchema = S.Struct({
+export const StandardVariantBaseSchema = S.Struct({
   _tag: S.Literal("StandardVariant"),
-  id: VariantIdSchema,
   size: S.Literal(Size.REGULAR, Size.LARGE),
 })
 
-export type StandardVariant = typeof StandardVariantSchema.Type
+export type StandardVariantBase = typeof StandardVariantBaseSchema.Type
 
 // ============================================
-// CUSTOM VARIANT (entity with id)
+// CUSTOM VARIANT BASE (value object, without id)
 // ============================================
 
-export const CustomVariantSchema = S.Struct({
+export const CustomVariantBaseSchema = S.Struct({
   _tag: S.Literal("CustomVariant"),
-  id: VariantIdSchema,
   size: S.Literal(Size.CUSTOM),
   customDimensions: CustomDimensionSchema,
   price: PriceSchema,
 })
 
-export type CustomVariant = typeof CustomVariantSchema.Type
+export type CustomVariantBase = typeof CustomVariantBaseSchema.Type
 
 // ============================================
-// PRODUCT VARIANT (union)
+// VARIANT BASE (union)
 // ============================================
 
-export const ProductVariantSchema = S.Union(StandardVariantSchema, CustomVariantSchema)
+export const VariantBaseSchema = S.Union(StandardVariantBaseSchema, CustomVariantBaseSchema)
 
-export type ProductVariant = typeof ProductVariantSchema.Type
+export type VariantBase = typeof VariantBaseSchema.Type

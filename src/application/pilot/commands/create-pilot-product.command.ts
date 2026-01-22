@@ -5,7 +5,6 @@ import { case as constructor } from "effect/Data"
 import {
   CorrelationIdSchema,
   UserIdSchema,
-  TaggedSchema,
 } from "../../../domain/shared"
 
 // ============================================
@@ -41,7 +40,7 @@ export type UnvalidatedProductData = typeof UnvalidatedProductDataSchema.Type
 // CREATE PILOT PRODUCT COMMAND
 // ============================================
 
-const PilotProductCreationCommandSchema = TaggedSchema(
+const PilotProductCreationCommandSchema = S.TaggedStruct(
   "CreatePilotProductCommand",
   {
     data: UnvalidatedProductDataSchema,
@@ -54,5 +53,5 @@ const PilotProductCreationCommandSchema = TaggedSchema(
 export type PilotProductCreationCommand =
   typeof PilotProductCreationCommandSchema.Type
 
-export const MakeCreatePilotProductCommand =
+export const MakePilotProductCreationCommand =
   constructor<PilotProductCreationCommand>()

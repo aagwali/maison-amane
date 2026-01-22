@@ -2,8 +2,7 @@
 
 import { Effect, Layer, Option, pipe } from "effect"
 import type { CatalogProductRepository } from "../../../ports/driven"
-import { CatalogProductRepository as CatalogProductRepositoryTag } from "../../../ports/driven"
-import { MakePersistenceError } from "../../../domain/pilot"
+import { CatalogProductRepository as CatalogProductRepositoryTag, PersistenceError } from "../../../ports/driven"
 import { catalogToDocument, catalogFromDocument } from "./mappers/catalog-product.mapper"
 
 // ============================================
@@ -28,7 +27,7 @@ export const makeMongodbCatalogProductRepository = (
             )
             return product
           },
-          catch: (error) => MakePersistenceError({ cause: error })
+          catch: (error) => new PersistenceError({ cause: error })
         })
       ),
 
@@ -39,7 +38,7 @@ export const makeMongodbCatalogProductRepository = (
             const doc = await collection.findOne({ _id: id })
             return doc ? Option.some(catalogFromDocument(doc)) : Option.none()
           },
-          catch: (error) => MakePersistenceError({ cause: error })
+          catch: (error) =>  new PersistenceError({ cause: error })
         })
       ),
 
@@ -50,7 +49,7 @@ export const makeMongodbCatalogProductRepository = (
             const docs = await collection.find({}).toArray()
             return docs.map(catalogFromDocument)
           },
-          catch: (error) => MakePersistenceError({ cause: error })
+          catch: (error) =>  new PersistenceError({ cause: error })
         })
       )
   }

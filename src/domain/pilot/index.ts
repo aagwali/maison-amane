@@ -14,7 +14,7 @@ export {
   ShopifyProductIdSchema,
   MakeShopifyProductId,
   type ShopifyProductId,
-  // Primitives
+  // Scalar Types
   ProductLabelSchema,
   MakeProductLabel,
   type ProductLabel,
@@ -38,13 +38,9 @@ export {
   type ProductView,
   ProductViewsSchema,
   type ProductViews,
-  // Variants (entities)
-  StandardVariantSchema,
-  type StandardVariant,
-  CustomVariantSchema,
-  type CustomVariant,
-  ProductVariantSchema,
-  type ProductVariant,
+  // Variants (base, without id)
+  VariantBaseSchema,
+  type VariantBase,
   // Sync Status
   SyncErrorSchema,
   type SyncError,
@@ -59,6 +55,28 @@ export {
 } from "./value-objects"
 
 // ============================================
+// SERVICES
+// ============================================
+export {
+  SyncStatusMachine,
+  structureViews,
+  flattenViews,
+  MIN_VIEWS,
+} from "./services"
+
+// ============================================
+// ENTITIES
+// ============================================
+export {
+  StandardVariantSchema,
+  type StandardVariant,
+  CustomVariantSchema,
+  type CustomVariant,
+  ProductVariantSchema,
+  type ProductVariant,
+} from "./entities"
+
+// ============================================
 // ENUMS
 // ============================================
 export {
@@ -69,9 +87,6 @@ export {
   ProductStatus,
   ViewType,
   REQUIRED_VIEW_TYPES,
-  MIN_VIEWS,
-  DIMENSION_SETS,
-  getDimensionsForSize,
   ProductTypeSchema,
   ProductCategorySchema,
   SizeSchema,
@@ -79,8 +94,16 @@ export {
   ProductStatusSchema,
   ViewTypeSchema,
   type PredefinedSize,
-  type Dimension,
 } from "./enums"
+
+// ============================================
+// REFERENCE DATA
+// ============================================
+export {
+  DIMENSION_SETS,
+  getDimensionsForSize,
+  type Dimension,
+} from "./reference-data"
 
 // ============================================
 // AGGREGATE
@@ -106,7 +129,5 @@ export {
 // ============================================
 export {
   ValidationError,
-  MakePersistenceError,
-  type PersistenceError,
-  type CreateProductError,
+  type PilotProductCreationError,
 } from "./errors"

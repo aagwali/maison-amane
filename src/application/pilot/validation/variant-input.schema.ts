@@ -1,41 +1,87 @@
 // src/application/pilot/validation/variant-input.schema.ts
 
 import * as S from "effect/Schema"
+import * as ParseResult from "effect/ParseResult"
+import { Effect } from "effect"
 import {
-  PriceSchema,
-  CustomDimensionSchema,
   Size,
+  CustomDimensionSchema,
+  PriceSchema,
+  VariantBaseSchema,
+  type VariantBase,
 } from "../../../domain/pilot"
 
 // ============================================
-// VALIDATED STANDARD VARIANT (input, sans id)
+// UNVALIDATED VARIANT (from UI/API boundary)
 // ============================================
 
-const ValidatedStandardVariantSchema = S.Struct({
-  size: S.Literal(Size.REGULAR, Size.LARGE),
-}).pipe(S.attachPropertySignature("_tag", "StandardVariant"))
+const UnvalidatedVariantSchema = S.Struct({
+  size: S.String,
+  customDimensions: S.optional(
+    S.Struct({
+      width: S.Number,
+      length: S.Number,
+    }),
+  ),
+  price: S.optional(S.Number),
+})
 
-export type ValidatedStandardVariant = typeof ValidatedStandardVariantSchema.Type
+type UnvalidatedVariant = typeof UnvalidatedVariantSchema.Type
 
 // ============================================
-// VALIDATED CUSTOM VARIANT (input, sans id)
+// VALIDATED VARIANT SCHEMAS (for decode targets)
 // ============================================
 
-const ValidatedCustomVariantSchema = S.Struct({
+const CustomVariantTargetSchema = S.Struct({
+  _tag: S.Literal("CustomVariant"),
   size: S.Literal(Size.CUSTOM),
   customDimensions: CustomDimensionSchema,
   price: PriceSchema,
-}).pipe(S.attachPropertySignature("_tag", "CustomVariant"))
+})
 
-export type ValidatedCustomVariant = typeof ValidatedCustomVariantSchema.Type
+const StandardVariantTargetSchema = S.Struct({
+  _tag: S.Literal("StandardVariant"),
+  size: S.Literal(Size.REGULAR, Size.LARGE),
+})
 
 // ============================================
-// VALIDATED VARIANT (union)
+// TRANSFORMATION: Unvalidated → Validated
 // ============================================
 
-export const ValidatedVariantSchema = S.Union(
-  ValidatedStandardVariantSchema,
-  ValidatedCustomVariantSchema,
-)
+export const ValidatedVariantSchema: S.Schema<VariantBase, UnvalidatedVariant> =
+  S.transformOrFail(UnvalidatedVariantSchema, S.typeSchema(VariantBaseSchema), {
+    strict: true,
+    decode: (input) => {
+      if (input.size === Size.CUSTOM) {
+        return S.decodeUnknown(CustomVariantTargetSchema)({
+          _tag: "CustomVariant",
+          size: input.size,
+          customDimensions: input.customDimensions,
+          price: input.price,
+        }).pipe(
+          Effect.mapError((e) => e.issue)
+        )
+      }
 
-export type ValidatedVariant = typeof ValidatedVariantSchema.Type
+      return S.decodeUnknown(StandardVariantTargetSchema)({
+        _tag: "StandardVariant",
+        size: input.size,
+      }).pipe(
+        Effect.mapError((e) => e.issue)
+      )
+    },
+    encode: (validated) => {
+      if (validated._tag === "CustomVariant") {
+        return ParseResult.succeed({
+          size: validated.size,
+          customDimensions: validated.customDimensions,
+          price: validated.price,
+        })
+      }
+      return ParseResult.succeed({
+        size: validated.size,
+      })
+    },
+  })
+
+export type ValidatedVariant = VariantBase

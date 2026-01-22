@@ -1,7 +1,6 @@
 // src/domain/catalog/projections/catalog-product.ts
 
 import * as S from "effect/Schema"
-import { case as constructor } from "effect/Data"
 import {
   ProductIdSchema,
   ProductLabelSchema,
@@ -11,21 +10,23 @@ import {
   PositiveCmSchema,
   ProductCategorySchema,
   PriceRangeSchema,
+  type ProductId,
+  type ProductLabel,
+  type ProductDescription,
+  type ImageUrl,
+  type ProductCategory,
+  type PriceRange,
 } from "../../pilot"
-
-import { TaggedSchema } from "../../shared"
 
 // ============================================
 // CATALOG VARIANT (simplified for UI)
 // ============================================
 
-const CatalogStandardVariantSchema = S.Struct({
-  _tag: S.Literal("StandardVariant"),
+const CatalogStandardVariantSchema = S.TaggedStruct("StandardVariant", {
   size: S.Literal("REGULAR", "LARGE"),
 })
 
-const CatalogCustomVariantSchema = S.Struct({
-  _tag: S.Literal("CustomVariant"),
+const CatalogCustomVariantSchema = S.TaggedStruct("CustomVariant", {
   dimensions: S.Struct({
     width: PositiveCmSchema,
     length: PositiveCmSchema,
@@ -46,7 +47,7 @@ export type CatalogVariant = typeof CatalogVariantSchema.Type
 // CATALOG PRODUCT (Read Model for UI)
 // ============================================
 
-const CatalogProductSchema = TaggedSchema("CatalogProduct", {
+const CatalogProductSchema = S.TaggedStruct("CatalogProduct", {
   id: ProductIdSchema,
   label: ProductLabelSchema,
   description: ProductDescriptionSchema,
@@ -64,4 +65,21 @@ const CatalogProductSchema = TaggedSchema("CatalogProduct", {
 
 export type CatalogProduct = typeof CatalogProductSchema.Type
 
-export const MakeCatalogProduct = constructor<CatalogProduct>()
+export const MakeCatalogProduct = (params: {
+  id: ProductId
+  label: ProductLabel
+  description: ProductDescription
+  category: ProductCategory
+  priceRange: PriceRange
+  variants: CatalogVariant[]
+  images: {
+    front: ImageUrl
+    detail: ImageUrl
+    gallery: ImageUrl[]
+  }
+  shopifyUrl?: string
+  publishedAt: Date
+}): CatalogProduct => ({
+  _tag: "CatalogProduct",
+  ...params,
+})

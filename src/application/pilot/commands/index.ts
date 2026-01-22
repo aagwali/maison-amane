@@ -1,7 +1,7 @@
 // src/application/pilot/commands/index.ts
 
 export {
-  MakeCreatePilotProductCommand,
+  MakePilotProductCreationCommand,
   type PilotProductCreationCommand,
   type UnvalidatedProductData,
 } from "./create-pilot-product.command"

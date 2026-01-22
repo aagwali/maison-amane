@@ -8,6 +8,4 @@ export {
 
 export {
   ValidatedVariantSchema,
-  type ValidatedStandardVariant,
-  type ValidatedCustomVariant,
 } from "./variant-input.schema"

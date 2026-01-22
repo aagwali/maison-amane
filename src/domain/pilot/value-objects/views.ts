@@ -1,7 +1,7 @@
 // src/domain/pilot/value-objects/views.ts
 
 import * as S from "effect/Schema"
-import { ImageUrlSchema } from "./primitives"
+import { ImageUrlSchema } from "./scalar-types"
 import { ViewTypeSchema } from "../enums"
 
 // ============================================

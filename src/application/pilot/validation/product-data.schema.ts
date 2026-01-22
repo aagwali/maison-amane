@@ -7,14 +7,16 @@ import {
   ProductLabelSchema,
   ProductDescriptionSchema,
   ProductViewSchema,
+  ProductViewsSchema,
   ProductTypeSchema,
   ProductCategorySchema,
   PriceRangeSchema,
   ProductStatusSchema,
   ViewType,
   MIN_VIEWS,
+  structureViews,
+  flattenViews,
   type ProductView,
-  type ProductViews,
 } from "../../../domain/pilot"
 import type { UnvalidatedProductData } from "../commands"
 import {
@@ -48,18 +50,11 @@ const ProductViewsInputSchema = S.Array(ProductViewSchema).pipe(
 
 const ProductViewsTransformSchema = S.transform(
   ProductViewsInputSchema,
-  S.typeSchema(S.Any as S.Schema<ProductViews>),
+  S.typeSchema(ProductViewsSchema),
   {
     strict: true,
-    decode: (views): ProductViews => {
-      const front = views.find((v) => v.viewType === ViewType.FRONT)!
-      const detail = views.find((v) => v.viewType === ViewType.DETAIL)!
-      const additional = views.filter(
-        (v) => v.viewType !== ViewType.FRONT && v.viewType !== ViewType.DETAIL,
-      )
-      return { front, detail, additional }
-    },
-    encode: (pv) => [pv.front, pv.detail, ...pv.additional],
+    decode: structureViews,
+    encode: flattenViews,
   },
 )
 

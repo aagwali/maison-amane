@@ -16,7 +16,7 @@ export {
 } from "./ids"
 
 // ============================================
-// PRIMITIVES
+// SCALAR TYPES
 // ============================================
 export {
   ProductLabelSchema,
@@ -34,7 +34,7 @@ export {
   ImageUrlSchema,
   MakeImageUrl,
   type ImageUrl,
-} from "./primitives"
+} from "./scalar-types"
 
 // ============================================
 // DIMENSIONS
@@ -55,15 +55,15 @@ export {
 } from "./views"
 
 // ============================================
-// VARIANTS (entities with id)
+// VARIANTS (base schemas without id, for validation)
 // ============================================
 export {
-  StandardVariantSchema,
-  type StandardVariant,
-  CustomVariantSchema,
-  type CustomVariant,
-  ProductVariantSchema,
-  type ProductVariant,
+  StandardVariantBaseSchema,
+  CustomVariantBaseSchema,
+  VariantBaseSchema,
+  type StandardVariantBase,
+  type CustomVariantBase,
+  type VariantBase,
 } from "./variants"
 
 // ============================================

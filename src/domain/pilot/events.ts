@@ -1,9 +1,8 @@
 // src/domain/pilot/events.ts
 
 import * as S from "effect/Schema"
-import { case as constructor } from "effect/Data"
-import { CorrelationIdSchema, UserIdSchema, TaggedSchema } from "../shared"
-import { ProductIdSchema } from "./value-objects"
+import { CorrelationIdSchema, UserIdSchema, type CorrelationId, type UserId } from "../shared"
+import { ProductIdSchema, type ProductId } from "./value-objects"
 import type { PilotProduct } from "./aggregate"
 
 // ============================================
@@ -13,7 +12,7 @@ import type { PilotProduct } from "./aggregate"
 // Note: PilotProduct is a complex type, we use S.Any for schema
 const PilotProductSchema = S.Any as S.Schema<PilotProduct>
 
-const PilotProductPublishedSchema = TaggedSchema("PilotProductPublished", {
+const PilotProductPublishedSchema = S.TaggedStruct("PilotProductPublished", {
   productId: ProductIdSchema,
   product: PilotProductSchema,
   correlationId: CorrelationIdSchema,
@@ -23,7 +22,16 @@ const PilotProductPublishedSchema = TaggedSchema("PilotProductPublished", {
 
 export type PilotProductPublished = typeof PilotProductPublishedSchema.Type
 
-export const MakePilotProductPublished = constructor<PilotProductPublished>()
+export const MakePilotProductPublished = (params: {
+  productId: ProductId
+  product: PilotProduct
+  correlationId: CorrelationId
+  userId: UserId
+  timestamp: Date
+}): PilotProductPublished => ({
+  _tag: "PilotProductPublished",
+  ...params,
+})
 
 // ============================================
 // DOMAIN EVENTS UNION

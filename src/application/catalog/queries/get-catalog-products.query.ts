@@ -1,26 +1,17 @@
 // src/application/catalog/queries/get-catalog-products.query.ts
 
-import { Effect, pipe } from "effect"
+import { Data, Effect, Option } from "effect"
 import type { CatalogProduct } from "../../../domain/catalog"
 import type { ProductId } from "../../../domain/pilot"
 import { CatalogProductRepository } from "../../../ports/driven"
-import { Option } from "effect"
 
 // ============================================
 // QUERY ERROR
 // ============================================
 
-export interface QueryError {
-  readonly _tag: "QueryError"
+export class QueryError extends Data.TaggedError("QueryError")<{
   readonly cause: unknown
-}
-
-export const QueryError = {
-  create: (cause: unknown): QueryError => ({
-    _tag: "QueryError",
-    cause
-  })
-}
+}> {}
 
 // ============================================
 // QUERIES
@@ -29,19 +20,21 @@ export const QueryError = {
 export const getCatalogProductById = (
   id: ProductId
 ): Effect.Effect<Option.Option<CatalogProduct>, QueryError, CatalogProductRepository> =>
-  pipe(
-    CatalogProductRepository,
-    Effect.flatMap((repo) => repo.findById(id)),
-    Effect.mapError(QueryError.create)
-  )
+  Effect.gen(function* () {
+    const repo = yield* CatalogProductRepository
+    return yield* repo.findById(id).pipe(
+      Effect.mapError((cause) => new QueryError({ cause }))
+    )
+  })
 
 export const listCatalogProducts = (): Effect.Effect<
   readonly CatalogProduct[],
   QueryError,
   CatalogProductRepository
 > =>
-  pipe(
-    CatalogProductRepository,
-    Effect.flatMap((repo) => repo.findAll()),
-    Effect.mapError(QueryError.create)
-  )
+  Effect.gen(function* () {
+    const repo = yield* CatalogProductRepository
+    return yield* repo.findAll().pipe(
+      Effect.mapError((cause) => new QueryError({ cause }))
+    )
+  })

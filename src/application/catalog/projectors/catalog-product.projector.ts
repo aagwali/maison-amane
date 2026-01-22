@@ -1,8 +1,6 @@
 // src/application/catalog/projectors/catalog-product.projector.ts
 
-import * as S from "effect/Schema"
-import { case as constructor } from "effect/Data"
-import { Effect, pipe } from "effect"
+import { Data, Effect } from "effect"
 import type { PilotProductPublished, PilotProduct } from "../../../domain/pilot"
 import {
   MakeCatalogProduct,
@@ -10,19 +8,14 @@ import {
   type CatalogVariant,
 } from "../../../domain/catalog"
 import { CatalogProductRepository } from "../../../ports/driven"
-import { TaggedSchema } from "../../../domain/shared"
 
 // ============================================
 // PROJECTION ERROR
 // ============================================
 
-const ProjectionErrorSchema = TaggedSchema("ProjectionError", {
-  cause: S.Unknown,
-})
-
-export type ProjectionError = typeof ProjectionErrorSchema.Type
-
-export const MakeProjectionError = constructor<ProjectionError>()
+export class ProjectionError extends Data.TaggedError("ProjectionError")<{
+  readonly cause: unknown
+}> {}
 
 // ============================================
 // MAPPER: PilotProduct → CatalogProduct
@@ -71,13 +64,10 @@ const mapVariant = (variant: PilotProduct["variants"][number]): CatalogVariant =
 export const projectToCatalog = (
   event: PilotProductPublished,
 ): Effect.Effect<CatalogProduct, ProjectionError, CatalogProductRepository> =>
-  pipe(
-    Effect.succeed(mapToCatalogProduct(event.product, event.timestamp)),
-    Effect.flatMap((catalogProduct) =>
-      pipe(
-        CatalogProductRepository,
-        Effect.flatMap((repo) => repo.upsert(catalogProduct)),
-        Effect.mapError((e) => MakeProjectionError({ cause: e })),
-      )
-    ),
-  )
+  Effect.gen(function* () {
+    const catalogProduct = mapToCatalogProduct(event.product, event.timestamp)
+    const repo = yield* CatalogProductRepository
+    return yield* repo.upsert(catalogProduct).pipe(
+      Effect.mapError((cause) => new ProjectionError({ cause }))
+    )
+  })

@@ -1,34 +1,16 @@
 // src/infrastructure/persistence/in-memory/catalog-product.repository.ts
 
-import { Effect, Layer, Option } from "effect"
+import { Layer } from "effect"
 import type { CatalogProduct } from "../../../domain/catalog"
-import type { ProductId } from "../../../domain/pilot"
 import { CatalogProductRepository } from "../../../ports/driven"
+import { makeInMemoryRepository } from "./generic.repository"
 
 // ============================================
 // IN-MEMORY CATALOG PRODUCT REPOSITORY
 // ============================================
 
-export const makeInMemoryCatalogProductRepository = (): CatalogProductRepository => {
-  const store = new Map<string, CatalogProduct>()
-
-  return {
-    upsert: (product) =>
-      Effect.sync(() => {
-        store.set(product.id, product)
-        return product
-      }),
-
-    findById: (id: ProductId) =>
-      Effect.sync(() => {
-        const product = store.get(id)
-        return product ? Option.some(product) : Option.none()
-      }),
-
-    findAll: () =>
-      Effect.sync(() => Array.from(store.values()))
-  }
-}
+export const makeInMemoryCatalogProductRepository = () =>
+  makeInMemoryRepository<CatalogProduct, string>((product) => product.id)
 
 export const InMemoryCatalogProductRepositoryLive = Layer.succeed(
   CatalogProductRepository,

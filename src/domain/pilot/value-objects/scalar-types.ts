@@ -1,6 +1,13 @@
-// src/domain/pilot/value-objects/primitives.ts
+// src/domain/pilot/value-objects/scalar-types.ts
 
 import * as S from "effect/Schema"
+
+// ============================================
+// CONSTRAINTS
+// ============================================
+
+const LABEL_MAX_LENGTH = 255
+const DESCRIPTION_MAX_LENGTH = 5000
 
 // ============================================
 // PRODUCT LABEL
@@ -8,7 +15,7 @@ import * as S from "effect/Schema"
 
 export const ProductLabelSchema = S.Trim.pipe(
   S.minLength(1),
-  S.maxLength(255),
+  S.maxLength(LABEL_MAX_LENGTH),
   S.brand("ProductLabel"),
 )
 export type ProductLabel = typeof ProductLabelSchema.Type
@@ -19,7 +26,7 @@ export const MakeProductLabel = S.decodeUnknownSync(ProductLabelSchema)
 // ============================================
 
 export const ProductDescriptionSchema = S.String.pipe(
-  S.maxLength(5000),
+  S.maxLength(DESCRIPTION_MAX_LENGTH),
   S.brand("ProductDescription"),
 )
 export type ProductDescription = typeof ProductDescriptionSchema.Type

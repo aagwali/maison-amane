@@ -1,13 +1,6 @@
 // src/domain/pilot/enums.ts
 
-import * as S from "effect/Schema"
-
-// ============================================
-// SCHEMA HELPER
-// ============================================
-
-const fromEnum = <T extends Record<string, string>>(e: T) =>
-  S.Literal(...Object.values(e) as [T[keyof T], ...T[keyof T][]])
+import { fromEnum } from "../shared"
 
 // ============================================
 // PRODUCT TYPE
@@ -85,48 +78,6 @@ export const REQUIRED_VIEW_TYPES: readonly ViewType[] = [
   ViewType.FRONT,
   ViewType.DETAIL,
 ]
-
-export const MIN_VIEWS = 4
-
-// ============================================
-// DIMENSION SETS (Reference Data)
-// ============================================
-
-export interface Dimension {
-  readonly width: number
-  readonly length: number
-}
-
-export const DIMENSION_SETS: Record<
-  ProductCategory,
-  Record<PredefinedSize, readonly Dimension[]>
-> = {
-  RUNNER: {
-    REGULAR: [
-      { width: 60, length: 180 },
-      { width: 80, length: 200 }
-    ],
-    LARGE: [
-      { width: 80, length: 250 },
-      { width: 100, length: 300 }
-    ]
-  },
-  STANDARD: {
-    REGULAR: [
-      { width: 120, length: 180 },
-      { width: 140, length: 200 }
-    ],
-    LARGE: [
-      { width: 160, length: 230 },
-      { width: 200, length: 300 }
-    ]
-  }
-}
-
-export const getDimensionsForSize = (
-  category: ProductCategory,
-  size: PredefinedSize
-): readonly Dimension[] => DIMENSION_SETS[category][size]
 
 // ============================================
 // ENUM SCHEMAS
