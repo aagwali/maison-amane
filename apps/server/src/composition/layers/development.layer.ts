@@ -2,20 +2,26 @@
 
 import { Layer } from "effect"
 import {
-  InMemoryPilotProductRepositoryLive,
   InMemoryCatalogProductRepositoryLive,
   UuidIdGeneratorLive,
   SystemClockLive,
-  ConsoleEventPublisherLive
+  ConsoleEventPublisherLive,
+  MongoDatabaseLive,
+  MongodbPilotProductRepositoryLive
 } from "../../infrastructure"
 
 // ============================================
 // DEVELOPMENT LAYER
-// In-memory storage, console logging
+// MongoDB for pilot products, in-memory for catalog
 // ============================================
 
+// MongoDB repository layer with its database dependency
+const PilotProductLayer = MongodbPilotProductRepositoryLive.pipe(
+  Layer.provide(MongoDatabaseLive)
+)
+
 export const DevelopmentLayer = Layer.mergeAll(
-  InMemoryPilotProductRepositoryLive,
+  PilotProductLayer,
   InMemoryCatalogProductRepositoryLive,
   UuidIdGeneratorLive,
   SystemClockLive,

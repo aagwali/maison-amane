@@ -1,8 +1,16 @@
 // src/infrastructure/persistence/mongodb/index.ts
 
 export {
+  MongoDatabase,
+  MongoDatabaseLive,
+  MongoDatabaseError,
+  MongoConfig,
+  MongoConfigLive
+} from "./mongo-database"
+
+export {
   makeMongodbPilotProductRepository,
-  makeMongodbPilotProductRepositoryLayer
+  MongodbPilotProductRepositoryLive
 } from "./pilot-product.repository"
 
 export {

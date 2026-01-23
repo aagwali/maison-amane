@@ -23,9 +23,10 @@ import {
 
 // ============================================
 // MONGODB DOCUMENT TYPE
+// Uses string _id instead of ObjectId
 // ============================================
 
-export interface PilotProductDocument {
+interface PilotProductDocumentSchema {
   _id: string
   label: string
   type: string
@@ -56,6 +57,10 @@ export interface PilotProductDocument {
   createdAt: Date
   updatedAt: Date
 }
+
+// Type alias for MongoDB collection
+// Explicitly declares this document uses string _id (not ObjectId)
+export type PilotProductDocument = PilotProductDocumentSchema
 
 // ============================================
 // MAPPER: Domain -> Document
