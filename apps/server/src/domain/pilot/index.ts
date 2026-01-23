@@ -131,3 +131,9 @@ export {
   ValidationError,
   type PilotProductCreationError,
 } from "./errors"
+
+// ============================================
+// POLICIES (placeholder - see policies/index.ts for patterns)
+// ============================================
+// export { canSyncProduct, SyncNotAllowed } from "./policies"
+// export { canPublish, PublicationNotAllowed } from "./policies"

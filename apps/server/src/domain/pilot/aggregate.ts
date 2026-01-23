@@ -1,4 +1,32 @@
 // src/domain/pilot/aggregate.ts
+//
+// ============================================
+// DDD: AGGREGATE ROOT
+// ============================================
+//
+// The aggregate is the guardian of INVARIANTS - rules that must always be true
+// for the entity to be in a valid state. Methods on the aggregate should:
+//
+//   1. Validate that the operation is allowed (guard/precondition)
+//   2. Apply the change
+//   3. Return the new state or fail with a domain error
+//
+// Examples of invariants you might add here:
+//
+//   - "A PUBLISHED product cannot return to DRAFT"
+//   - "variants must contain at least one item" (already enforced by NonEmptyArray)
+//   - "syncStatus can only be Synced if status is PUBLISHED"
+//
+// Pattern for adding behavior:
+//
+//   export const publishProduct = (
+//     product: PilotProduct
+//   ): Effect.Effect<PilotProduct, InvariantViolation> =>
+//     product.views.additional.length < 2
+//       ? Effect.fail(new InvariantViolation("Min 2 additional views to publish"))
+//       : Effect.succeed({ ...product, status: ProductStatus.PUBLISHED })
+//
+// ============================================
 
 import * as S from "effect/Schema"
 import { Data } from "effect"

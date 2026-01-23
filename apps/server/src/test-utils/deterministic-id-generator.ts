@@ -1,0 +1,46 @@
+// src/test-utils/deterministic-id-generator.ts
+//
+// TEST UTILITY: Generates predictable IDs for deterministic tests.
+// Use this instead of UuidIdGenerator in tests to get reproducible results.
+
+import { Effect, Layer } from "effect"
+import { IdGenerator } from "../ports/driven"
+import { MakeProductId, MakeVariantId } from "../domain/pilot"
+
+export const makeDeterministicIdGenerator = (prefix = "test") => {
+  let productCounter = 0
+  let variantCounter = 0
+  let correlationCounter = 0
+
+  return {
+    generateProductId: () =>
+      Effect.sync(() => {
+        productCounter++
+        return MakeProductId(`${prefix}-product-${productCounter}`)
+      }),
+
+    generateVariantId: () =>
+      Effect.sync(() => {
+        variantCounter++
+        return MakeVariantId(`${prefix}-variant-${variantCounter}`)
+      }),
+
+    generateCorrelationId: () =>
+      Effect.sync(() => {
+        correlationCounter++
+        return `${prefix}-correlation-${correlationCounter}`
+      }),
+
+    // Reset counters between tests
+    reset: () => {
+      productCounter = 0
+      variantCounter = 0
+      correlationCounter = 0
+    },
+  }
+}
+
+export type DeterministicIdGenerator = ReturnType<typeof makeDeterministicIdGenerator>
+
+export const DeterministicIdGeneratorLive = (prefix = "test") =>
+  Layer.succeed(IdGenerator, makeDeterministicIdGenerator(prefix))
