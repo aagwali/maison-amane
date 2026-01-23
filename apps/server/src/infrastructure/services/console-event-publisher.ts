@@ -6,14 +6,21 @@ import { EventPublisher } from "../../ports/driven"
 
 // ============================================
 // CONSOLE EVENT PUBLISHER (for development)
+// Uses structured logging with context propagation
 // ============================================
 
 export const ConsoleEventPublisherLive = Layer.succeed(
   EventPublisher,
   {
     publish: (event: PilotDomainEvent) =>
-      Effect.sync(() => {
-        console.log("[Event Published]", event._tag, event.productId)
-      })
+      Effect.logInfo("Domain event published").pipe(
+        Effect.annotateLogs({
+          eventType: event._tag,
+          productId: event.productId,
+          correlationId: event.correlationId,
+          userId: event.userId,
+        }),
+        Effect.withLogSpan("eventPublisher")
+      )
   }
 )

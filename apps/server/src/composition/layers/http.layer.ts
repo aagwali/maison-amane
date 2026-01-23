@@ -5,7 +5,7 @@ import { NodeHttpServer } from '@effect/platform-node'
 import { Layer } from 'effect'
 import { createServer } from 'node:http'
 import { MaisonAmaneApi } from '@maison-amane/api'
-import { PilotProductHandlerLive } from '../../infrastructure/http'
+import { PilotProductHandlerLive, SystemHandlerLive } from '../../infrastructure/http'
 import { DevelopmentLayer } from './development.layer'
 
 // ============================================
@@ -14,6 +14,7 @@ import { DevelopmentLayer } from './development.layer'
 
 export const ApiLive = HttpApiBuilder.api(MaisonAmaneApi).pipe(
   Layer.provide(PilotProductHandlerLive),
+  Layer.provide(SystemHandlerLive),
   Layer.provide(DevelopmentLayer)
 )
 

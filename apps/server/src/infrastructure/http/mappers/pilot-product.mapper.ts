@@ -13,6 +13,7 @@ import type { UnvalidatedProductData } from '../../../application/pilot/commands
 import type { PilotProduct, ProductVariant, SyncStatus } from '../../../domain/pilot'
 import type { ValidationError, PilotProductCreationError } from '../../../domain/pilot'
 import type { PersistenceError } from '../../../ports/driven'
+import { formatValidationError } from './error.mapper'
 
 // ============================================
 // REQUEST DTO → COMMAND INPUT
@@ -132,7 +133,7 @@ export const toApiError = (
   if (isValidationError(error)) {
     return new ApiValidationError({
       message: 'Validation failed',
-      details: extractValidationDetails(error),
+      details: formatValidationError(error.cause),
     })
   }
 
@@ -145,13 +146,4 @@ export const toApiError = (
   return new ApiPersistenceError({
     message: 'An unexpected error occurred',
   })
-}
-
-const extractValidationDetails = (error: ValidationError): string[] => {
-  try {
-    const message = error.cause.message
-    return message ? [message] : ['Validation failed']
-  } catch {
-    return ['Validation failed']
-  }
 }
