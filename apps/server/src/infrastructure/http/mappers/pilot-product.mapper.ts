@@ -1,8 +1,6 @@
 // src/infrastructure/http/mappers/pilot-product.mapper.ts
 
 import {
-  ApiValidationError,
-  ApiPersistenceError,
   type CreatePilotProductRequest,
   type PilotProductResponse,
   type VariantResponseDto,
@@ -11,9 +9,6 @@ import {
 } from '@maison-amane/api'
 import type { UnvalidatedProductData } from '../../../application/pilot/commands'
 import type { PilotProduct, ProductVariant, SyncStatus } from '../../../domain/pilot'
-import type { ValidationError, PilotProductCreationError } from '../../../domain/pilot'
-import type { PersistenceError } from '../../../ports/driven'
-import { formatValidationError } from './error.mapper'
 
 // ============================================
 // REQUEST DTO → COMMAND INPUT
@@ -116,34 +111,3 @@ export const toResponse = (product: PilotProduct): PilotProductResponse => ({
   createdAt: product.createdAt.toISOString(),
   updatedAt: product.updatedAt.toISOString(),
 })
-
-// ============================================
-// DOMAIN ERRORS → API ERRORS
-// ============================================
-
-const isValidationError = (error: PilotProductCreationError): error is ValidationError =>
-  '_tag' in error && error._tag === 'ValidationError'
-
-const isPersistenceError = (error: PilotProductCreationError): error is PersistenceError =>
-  '_tag' in error && error._tag === 'PersistenceError'
-
-export const toApiError = (
-  error: PilotProductCreationError
-): ApiValidationError | ApiPersistenceError => {
-  if (isValidationError(error)) {
-    return new ApiValidationError({
-      message: 'Validation failed',
-      details: formatValidationError(error.cause),
-    })
-  }
-
-  if (isPersistenceError(error)) {
-    return new ApiPersistenceError({
-      message: 'Failed to persist pilot product',
-    })
-  }
-
-  return new ApiPersistenceError({
-    message: 'An unexpected error occurred',
-  })
-}

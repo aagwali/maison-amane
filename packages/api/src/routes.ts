@@ -7,15 +7,17 @@ import {
   HealthCheckResponse,
   ApiValidationError,
   ApiPersistenceError,
+  ApiInternalError,
 } from './dtos'
+import { ApiPrefix, Endpoints, GroupNames } from './endpoints'
 
 // ============================================
 // SYSTEM API GROUP (Health, Readiness)
 // ============================================
 
-export class SystemGroup extends HttpApiGroup.make('system')
+export class SystemGroup extends HttpApiGroup.make(GroupNames.SYSTEM)
   .add(
-    HttpApiEndpoint.get('health', '/health')
+    HttpApiEndpoint.get('health', Endpoints.HEALTH)
       .addSuccess(HealthCheckResponse)
   ) {}
 
@@ -23,15 +25,16 @@ export class SystemGroup extends HttpApiGroup.make('system')
 // PILOT PRODUCT API GROUP
 // ============================================
 
-export class PilotProductGroup extends HttpApiGroup.make('pilot-product')
+export class PilotProductGroup extends HttpApiGroup.make(GroupNames.PILOT_PRODUCT)
   .add(
-    HttpApiEndpoint.post('create', '/pilot-product')
+    HttpApiEndpoint.post('create', Endpoints.PILOT_PRODUCT)
       .setPayload(CreatePilotProductRequest)
       .addSuccess(PilotProductResponse)
-      .addError(ApiValidationError, { status: 400 })
-      .addError(ApiPersistenceError, { status: 500 })
+      .addError(ApiValidationError, { status: ApiValidationError.status })
+      .addError(ApiPersistenceError, { status: ApiPersistenceError.status })
+      .addError(ApiInternalError, { status: ApiInternalError.status })
   )
-  .prefix('/api') {}
+  .prefix(ApiPrefix) {}
 
 // ============================================
 // MAIN API
