@@ -3,10 +3,11 @@
 // UNIT TESTS: Pure functions, no Effect Layer needed.
 // Tests view structuring and flattening transformations.
 
-import { describe, it, expect } from "vitest"
-import { structureViews, flattenViews, MIN_VIEWS } from "./views.service"
-import { ViewType } from "../enums"
-import { MakeImageUrl, type ProductView } from "../value-objects"
+import { describe, expect, it } from 'vitest'
+
+import { ViewType } from '../enums'
+import { MakeImageUrl, type ProductView } from '../value-objects'
+import { flattenViews, MIN_VIEWS, structureViews } from './views.service'
 
 // ============================================
 // TEST FIXTURES

@@ -28,28 +28,27 @@
 //
 // ============================================
 
-import * as S from "effect/Schema"
-import { Data } from "effect"
-import {
-  ProductIdSchema,
-  ProductLabelSchema,
-  ProductDescriptionSchema,
-  ProductViewsSchema,
-  SyncStatusSchema,
-} from "./value-objects"
+import { Data } from 'effect'
+import * as S from 'effect/Schema'
 
 import {
+  type CustomVariant,
   ProductVariantSchema,
   type StandardVariant,
-  type CustomVariant,
-} from "./entities"
-
+} from './entities'
 import {
-  ProductTypeSchema,
-  ProductCategorySchema,
   PriceRangeSchema,
+  ProductCategorySchema,
   ProductStatusSchema,
-} from "./enums"
+  ProductTypeSchema,
+} from './enums'
+import {
+  ProductDescriptionSchema,
+  ProductIdSchema,
+  ProductLabelSchema,
+  ProductViewsSchema,
+  SyncStatusSchema,
+} from './value-objects'
 
 // ============================================
 // VARIANT CONSTRUCTORS

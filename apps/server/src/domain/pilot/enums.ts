@@ -1,6 +1,6 @@
 // src/domain/pilot/enums.ts
 
-import { fromEnum } from "../shared"
+import { fromEnum } from '../shared'
 
 // ============================================
 // PRODUCT TYPE

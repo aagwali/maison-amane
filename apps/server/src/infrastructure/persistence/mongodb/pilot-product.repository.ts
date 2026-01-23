@@ -1,12 +1,16 @@
 // src/infrastructure/persistence/mongodb/pilot-product.repository.ts
 
-import { Effect, Layer, Option, pipe } from "effect"
+import { Effect, Layer, Option, pipe } from 'effect'
+
+import {
+  PersistenceError,
+  PilotProductRepository as PilotProductRepositoryTag,
+} from '../../../ports/driven'
+import { fromDocument, type PilotProductDocument, toDocument } from './mappers'
+import { MongoDatabase } from './mongo-database'
+
 import type { Db, Collection, Filter, OptionalUnlessRequiredId } from "mongodb"
 import type { PilotProductRepository } from "../../../ports/driven"
-import { PilotProductRepository as PilotProductRepositoryTag, PersistenceError } from "../../../ports/driven"
-import { toDocument, fromDocument, type PilotProductDocument } from "./mappers"
-import { MongoDatabase } from "./mongo-database"
-
 // ============================================
 // MONGODB PILOT PRODUCT REPOSITORY
 // ============================================

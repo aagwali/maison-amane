@@ -3,11 +3,12 @@
 // UNIT TESTS: Variant transformation logic (CUSTOM vs STANDARD).
 // This is the most important validation test as it contains conditional logic.
 
-import { describe, it, expect } from "vitest"
-import * as S from "effect/Schema"
-import { Effect } from "effect"
-import { ValidatedVariantSchema } from "./variant-input.schema"
-import { Size } from "../../../domain/pilot"
+import { Effect } from 'effect'
+import * as S from 'effect/Schema'
+import { describe, expect, it } from 'vitest'
+
+import { Size } from '../../../domain/pilot'
+import { ValidatedVariantSchema } from './variant-input.schema'
 
 // ============================================
 // HELPER

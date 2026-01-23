@@ -1,8 +1,9 @@
 // src/domain/pilot/value-objects/views.ts
 
-import * as S from "effect/Schema"
-import { ImageUrlSchema } from "./scalar-types"
-import { ViewTypeSchema } from "../enums"
+import * as S from 'effect/Schema'
+
+import { ViewTypeSchema } from '../enums'
+import { ImageUrlSchema } from './scalar-types'
 
 // ============================================
 // PRODUCT VIEW (single view)

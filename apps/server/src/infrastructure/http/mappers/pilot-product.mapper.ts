@@ -1,12 +1,13 @@
 // src/infrastructure/http/mappers/pilot-product.mapper.ts
 
-import {
-  type CreatePilotProductRequest,
-  type PilotProductResponse,
-  type VariantResponseDto,
-  type ViewsResponseDto,
-  type SyncStatusResponseDto,
+import type {
+  CreatePilotProductRequest,
+  PilotProductResponse,
+  SyncStatusResponseDto,
+  VariantResponseDto,
+  ViewsResponseDto,
 } from '@maison-amane/api'
+
 import type { UnvalidatedProductData } from '../../../application/pilot/commands'
 import type { PilotProduct, ProductVariant, SyncStatus } from '../../../domain/pilot'
 

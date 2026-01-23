@@ -1,14 +1,14 @@
 // src/domain/pilot/services/sync-status.machine.ts
 
 import {
-  type SyncStatus,
-  type SyncError,
-  type NotSynced,
-  type Synced,
-  type SyncFailed,
-  type ShopifyProductId,
   MakeNotSynced,
-} from "../value-objects"
+  type NotSynced,
+  type ShopifyProductId,
+  type Synced,
+  type SyncError,
+  type SyncFailed,
+  type SyncStatus,
+} from '../value-objects'
 
 // ============================================
 // SYNC STATUS STATE MACHINE

@@ -1,9 +1,10 @@
 // src/infrastructure/services/uuid-id-generator.ts
 
-import { Effect, Layer } from "effect"
-import { v4 as uuidv4 } from "uuid"
-import { MakeProductId, MakeVariantId } from "../../domain/pilot"
-import { IdGenerator } from "../../ports/driven"
+import { Effect, Layer } from 'effect'
+import { v4 as uuidv4 } from 'uuid'
+
+import { MakeProductId, MakeVariantId } from '../../domain/pilot'
+import { IdGenerator } from '../../ports/driven'
 
 // ============================================
 // UUID ID GENERATOR

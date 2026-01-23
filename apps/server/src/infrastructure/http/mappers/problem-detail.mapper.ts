@@ -1,21 +1,22 @@
 // src/infrastructure/http/mappers/problem-detail.mapper.ts
 
 import {
-  ApiValidationError,
-  ApiPersistenceError,
-  ApiNotFoundError,
   ApiInternalError,
-  ErrorTypeUris,
-  ValidationErrorCodes,
-  PersistenceErrorCodes,
-  NotFoundErrorCodes,
-  SystemErrorCodes,
+  ApiNotFoundError,
+  ApiPersistenceError,
+  ApiValidationError,
   ErrorCodeTitles,
+  ErrorTypeUris,
+  NotFoundErrorCodes,
+  PersistenceErrorCodes,
+  SystemErrorCodes,
+  ValidationErrorCodes,
 } from '@maison-amane/api'
-import type { ValidationError, PilotProductCreationError } from '../../../domain/pilot'
-import type { PersistenceError } from '../../../ports/driven'
+
 import { formatValidationError } from './error.mapper'
 
+import type { ValidationError, PilotProductCreationError } from '../../../domain/pilot'
+import type { PersistenceError } from '../../../ports/driven'
 // ============================================
 // ERROR CONTEXT
 // Information needed to build ProblemDetail

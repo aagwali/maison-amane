@@ -1,16 +1,22 @@
 // src/infrastructure/http/handlers/pilot-product.handler.ts
 
-import { HttpApiBuilder } from '@effect/platform'
 import { Effect } from 'effect'
-import { MaisonAmaneApi, FullPaths, GroupNames } from '@maison-amane/api'
+
+import { HttpApiBuilder } from '@effect/platform'
+import { FullPaths, GroupNames, MaisonAmaneApi } from '@maison-amane/api'
+
 import {
-  MakePilotProductCreationCommand,
   handlePilotProductCreation,
+  MakePilotProductCreationCommand,
 } from '../../../application/pilot'
 import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
-import { toUnvalidatedProductData, toResponse, toProblemDetail } from '../mappers'
 import { IdGenerator } from '../../../ports/driven'
 import { withObservability } from '../../services'
+import {
+  toProblemDetail,
+  toResponse,
+  toUnvalidatedProductData,
+} from '../mappers'
 
 // ============================================
 // PILOT PRODUCT HTTP HANDLER

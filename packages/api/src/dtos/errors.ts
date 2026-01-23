@@ -1,7 +1,11 @@
 // packages/api/src/dtos/errors.ts
 
 import { Schema as S } from 'effect'
-import { ProblemDetailFields, CustomExtensionFields } from '../errors/problem-detail'
+
+import {
+  CustomExtensionFields,
+  ProblemDetailFields,
+} from '../errors/problem-detail'
 
 // ============================================
 // API ERROR RESPONSES - RFC 7807 COMPLIANT

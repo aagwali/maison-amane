@@ -1,6 +1,6 @@
 // src/domain/pilot/value-objects/ids.ts
 
-import * as S from "effect/Schema"
+import * as S from 'effect/Schema'
 
 // ============================================
 // PRODUCT ID

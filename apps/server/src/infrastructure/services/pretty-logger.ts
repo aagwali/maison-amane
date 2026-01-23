@@ -1,6 +1,6 @@
 // src/infrastructure/services/pretty-logger.ts
 
-import { Logger, LogLevel, HashMap, List, Cause, FiberId } from "effect"
+import { Cause, FiberId, HashMap, List, Logger, LogLevel } from 'effect'
 
 // ============================================
 // PRETTY LOGGER (for development)
@@ -78,5 +78,3 @@ export const PrettyLogger = Logger.make<unknown, void>(
     console.log(`${time} ${level} ${fiber} ${spanStr}${msg}${annot}${err}`)
   }
 )
-
-export const PrettyLoggerLive = Logger.replace(Logger.defaultLogger, PrettyLogger)

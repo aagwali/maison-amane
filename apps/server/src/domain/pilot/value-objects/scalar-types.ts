@@ -1,6 +1,6 @@
 // src/domain/pilot/value-objects/scalar-types.ts
 
-import * as S from "effect/Schema"
+import * as S from 'effect/Schema'
 
 // ============================================
 // CONSTRAINTS

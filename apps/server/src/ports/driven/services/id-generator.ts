@@ -1,6 +1,7 @@
 // src/ports/driven/services/id-generator.ts
 
-import { Context, Effect } from "effect"
+import { Context, Effect } from 'effect'
+
 import type { ProductId, VariantId } from "../../../domain/pilot"
 
 // ============================================

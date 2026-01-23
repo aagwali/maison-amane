@@ -3,9 +3,10 @@
 // TEST UTILITY: Generates predictable IDs for deterministic tests.
 // Use this instead of UuidIdGenerator in tests to get reproducible results.
 
-import { Effect, Layer } from "effect"
-import { IdGenerator } from "../ports/driven"
-import { MakeProductId, MakeVariantId } from "../domain/pilot"
+import { Effect, Layer } from 'effect'
+
+import { MakeProductId, MakeVariantId } from '../domain/pilot'
+import { IdGenerator } from '../ports/driven'
 
 export const makeDeterministicIdGenerator = (prefix = "test") => {
   let productCounter = 0

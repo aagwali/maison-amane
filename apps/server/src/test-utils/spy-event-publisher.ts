@@ -3,8 +3,10 @@
 // TEST UTILITY: Captures published events for test assertions.
 // Access emitted events via publisher.events after running the effect.
 
-import { Effect, Layer } from "effect"
-import { EventPublisher } from "../ports/driven"
+import { Effect, Layer } from 'effect'
+
+import { EventPublisher } from '../ports/driven'
+
 import type { PilotDomainEvent } from "../domain/pilot"
 
 export const makeSpyEventPublisher = () => {

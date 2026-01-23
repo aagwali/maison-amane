@@ -3,21 +3,25 @@
 // INTEGRATION TESTS: Tests the full handler flow with TestLayer.
 // Uses real in-memory repository, deterministic IDs, fixed clock, and spy publisher.
 
-import { describe, it, expect, beforeEach } from "vitest"
-import { Effect } from "effect"
-import { handlePilotProductCreation } from "./create-pilot-product.handler"
-import { MakePilotProductCreationCommand, type UnvalidatedProductData } from "../commands"
+import { Effect } from 'effect'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
-  ProductType,
-  ProductCategory,
   PriceRange,
+  ProductCategory,
   ProductStatus,
-  ViewType,
+  ProductType,
   Size,
   ValidationError,
-} from "../../../domain/pilot"
-import { MakeCorrelationId, MakeUserId } from "../../../domain/shared"
-import { makeTestLayer, TEST_DATE } from "../../../test-utils"
+  ViewType,
+} from '../../../domain/pilot'
+import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
+import { makeTestLayer, TEST_DATE } from '../../../test-utils'
+import {
+  MakePilotProductCreationCommand,
+  type UnvalidatedProductData,
+} from '../commands'
+import { handlePilotProductCreation } from './create-pilot-product.handler'
 
 // ============================================
 // TEST FIXTURES

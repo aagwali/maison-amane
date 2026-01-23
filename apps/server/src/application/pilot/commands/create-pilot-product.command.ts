@@ -1,11 +1,9 @@
 // src/application/pilot/commands/create-pilot-product.command.ts
 
-import * as S from "effect/Schema"
-import { case as constructor } from "effect/Data"
-import {
-  CorrelationIdSchema,
-  UserIdSchema,
-} from "../../../domain/shared"
+import { case as constructor } from 'effect/Data'
+import * as S from 'effect/Schema'
+
+import { CorrelationIdSchema, UserIdSchema } from '../../../domain/shared'
 
 // ============================================
 // UNVALIDATED SCHEMAS (from UI/API boundary)

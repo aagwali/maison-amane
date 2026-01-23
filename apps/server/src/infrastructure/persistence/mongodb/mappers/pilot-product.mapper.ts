@@ -1,25 +1,25 @@
 // src/infrastructure/persistence/mongodb/mappers/pilot-product.mapper.ts
 
 import {
-  MakeProductId,
-  MakeVariantId,
-  MakeProductLabel,
-  MakeProductDescription,
-  MakePrice,
-  MakePositiveCm,
   MakeImageUrl,
+  MakePositiveCm,
+  MakePrice,
+  MakeProductDescription,
+  MakeProductId,
+  MakeProductLabel,
   MakeShopifyProductId,
-  ProductType,
-  ProductCategory,
-  PriceRange,
-  ProductStatus,
-  Size,
-  ViewType,
+  MakeVariantId,
+  type PilotProduct,
   type PredefinedSize,
+  PriceRange,
+  ProductCategory,
+  ProductStatus,
+  ProductType,
   type ProductVariant,
+  Size,
   type SyncStatus,
-  type PilotProduct
-} from "../../../../domain/pilot"
+  ViewType,
+} from '../../../../domain/pilot'
 
 // ============================================
 // MONGODB DOCUMENT TYPE

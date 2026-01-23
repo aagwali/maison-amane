@@ -3,8 +3,8 @@
 export { UuidIdGeneratorLive } from "./uuid-id-generator"
 export { SystemClockLive } from "./system-clock"
 export { ConsoleEventPublisherLive } from "./console-event-publisher"
-export { JsonLogger, JsonLoggerLive } from "./json-logger"
-export { PrettyLogger, PrettyLoggerLive } from "./pretty-logger"
+export { JsonLogger } from "./json-logger"
+export { PrettyLogger } from "./pretty-logger"
 export {
   RequestContext,
   RequestContextLive,

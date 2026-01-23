@@ -1,9 +1,10 @@
 // src/domain/pilot/value-objects/variants.ts
 
-import * as S from "effect/Schema"
-import { PriceSchema } from "./scalar-types"
-import { CustomDimensionSchema } from "./dimensions"
-import { Size } from "../enums"
+import * as S from 'effect/Schema'
+
+import { Size } from '../enums'
+import { CustomDimensionSchema } from './dimensions'
+import { PriceSchema } from './scalar-types'
 
 // ============================================
 // STANDARD VARIANT BASE (value object, without id)

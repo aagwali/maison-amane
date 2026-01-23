@@ -1,6 +1,6 @@
 // src/composition/config/app.config.ts
 
-import { Config } from "effect"
+import { Config } from 'effect'
 
 // ============================================
 // APPLICATION CONFIGURATION (typed & validated)

@@ -1,8 +1,15 @@
 // src/domain/pilot/events.ts
 
-import * as S from "effect/Schema"
-import { CorrelationIdSchema, UserIdSchema, type CorrelationId, type UserId } from "../shared"
-import { ProductIdSchema, type ProductId } from "./value-objects"
+import * as S from 'effect/Schema'
+
+import {
+  type CorrelationId,
+  CorrelationIdSchema,
+  type UserId,
+  UserIdSchema,
+} from '../shared'
+import { type ProductId, ProductIdSchema } from './value-objects'
+
 import type { PilotProduct } from "./aggregate"
 
 // ============================================

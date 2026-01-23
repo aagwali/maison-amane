@@ -1,6 +1,7 @@
 // src/domain/pilot/errors.ts
 
-import { Data } from "effect"
+import { Data } from 'effect'
+
 import type { ParseError } from "effect/ParseResult"
 import type { PersistenceError } from "../../ports/driven"
 

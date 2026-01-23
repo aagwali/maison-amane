@@ -2,4 +2,8 @@
 
 export { IdGenerator, type IdGenerator as IdGeneratorType } from "./id-generator"
 export { Clock, type Clock as ClockType } from "./clock"
-export { EventPublisher, type EventPublisher as EventPublisherType } from "./event-publisher"
+export {
+  EventPublisher,
+  EventPublishError,
+  type EventPublisher as EventPublisherType,
+} from "./event-publisher"

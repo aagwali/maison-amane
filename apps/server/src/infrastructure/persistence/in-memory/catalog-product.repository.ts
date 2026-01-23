@@ -1,10 +1,11 @@
 // src/infrastructure/persistence/in-memory/catalog-product.repository.ts
 
-import { Layer } from "effect"
-import type { CatalogProduct } from "../../../domain/catalog"
-import { CatalogProductRepository } from "../../../ports/driven"
-import { makeInMemoryRepository } from "./generic.repository"
+import { Layer } from 'effect'
 
+import { CatalogProductRepository } from '../../../ports/driven'
+import { makeInMemoryRepository } from './generic.repository'
+
+import type { CatalogProduct } from "../../../domain/catalog"
 // ============================================
 // IN-MEMORY CATALOG PRODUCT REPOSITORY
 // ============================================

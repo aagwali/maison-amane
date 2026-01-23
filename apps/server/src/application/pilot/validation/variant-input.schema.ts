@@ -1,15 +1,16 @@
 // src/application/pilot/validation/variant-input.schema.ts
 
-import * as S from "effect/Schema"
-import * as ParseResult from "effect/ParseResult"
-import { Effect } from "effect"
+import { Effect } from 'effect'
+import * as ParseResult from 'effect/ParseResult'
+import * as S from 'effect/Schema'
+
 import {
-  Size,
   CustomDimensionSchema,
   PriceSchema,
-  VariantBaseSchema,
+  Size,
   type VariantBase,
-} from "../../../domain/pilot"
+  VariantBaseSchema,
+} from '../../../domain/pilot'
 
 // ============================================
 // UNVALIDATED VARIANT (from UI/API boundary)

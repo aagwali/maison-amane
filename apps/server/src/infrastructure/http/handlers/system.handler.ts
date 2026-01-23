@@ -1,7 +1,8 @@
 // src/infrastructure/http/handlers/system.handler.ts
 
-import { HttpApiBuilder } from '@effect/platform'
 import { Effect } from 'effect'
+
+import { HttpApiBuilder } from '@effect/platform'
 import { MaisonAmaneApi } from '@maison-amane/api'
 
 // ============================================

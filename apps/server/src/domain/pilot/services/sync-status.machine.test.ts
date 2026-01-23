@@ -3,15 +3,16 @@
 // UNIT TESTS: Pure functions, no Effect Layer needed.
 // Tests the SyncStatus state machine transitions and guards.
 
-import { describe, it, expect } from "vitest"
-import { SyncStatusMachine } from "./sync-status.machine"
+import { describe, expect, it } from 'vitest'
+
 import {
   MakeNotSynced,
+  MakeShopifyProductId,
   MakeSynced,
   MakeSyncFailed,
-  MakeShopifyProductId,
   type SyncError,
-} from "../value-objects"
+} from '../value-objects'
+import { SyncStatusMachine } from './sync-status.machine'
 
 // ============================================
 // TEST FIXTURES

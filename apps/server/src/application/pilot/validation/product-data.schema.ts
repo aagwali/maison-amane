@@ -1,29 +1,30 @@
 // src/application/pilot/validation/product-data.schema.ts
 
-import * as S from "effect/Schema"
-import { Effect } from "effect"
+import { Effect } from 'effect'
+import * as S from 'effect/Schema'
+
 import {
-  ValidationError,
-  ProductLabelSchema,
+  flattenViews,
+  MIN_VIEWS,
+  PriceRangeSchema,
+  ProductCategorySchema,
   ProductDescriptionSchema,
+  ProductLabelSchema,
+  ProductStatusSchema,
+  ProductTypeSchema,
+  type ProductView,
   ProductViewSchema,
   ProductViewsSchema,
-  ProductTypeSchema,
-  ProductCategorySchema,
-  PriceRangeSchema,
-  ProductStatusSchema,
-  ViewType,
-  MIN_VIEWS,
   structureViews,
-  flattenViews,
-  type ProductView,
-} from "../../../domain/pilot"
-import type { UnvalidatedProductData } from "../commands"
+  ValidationError,
+  ViewType,
+} from '../../../domain/pilot'
 import {
-  ValidatedVariantSchema,
   type ValidatedVariant,
-} from "./variant-input.schema"
+  ValidatedVariantSchema,
+} from './variant-input.schema'
 
+import type { UnvalidatedProductData } from "../commands"
 // Re-export for convenience
 export type { ValidatedVariant }
 

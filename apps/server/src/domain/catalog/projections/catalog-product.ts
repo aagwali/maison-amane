@@ -1,22 +1,23 @@
 // src/domain/catalog/projections/catalog-product.ts
 
-import * as S from "effect/Schema"
+import * as S from 'effect/Schema'
+
 import {
-  ProductIdSchema,
-  ProductLabelSchema,
-  ProductDescriptionSchema,
-  ImageUrlSchema,
-  PriceSchema,
-  PositiveCmSchema,
-  ProductCategorySchema,
-  PriceRangeSchema,
-  type ProductId,
-  type ProductLabel,
-  type ProductDescription,
   type ImageUrl,
-  type ProductCategory,
-  type PriceRange,
-} from "../../pilot"
+  ImageUrlSchema,
+  PositiveCmSchema,
+  PriceRange,
+  PriceRangeSchema,
+  PriceSchema,
+  ProductCategory,
+  ProductCategorySchema,
+  type ProductDescription,
+  ProductDescriptionSchema,
+  type ProductId,
+  ProductIdSchema,
+  type ProductLabel,
+  ProductLabelSchema,
+} from '../../pilot'
 
 // ============================================
 // CATALOG VARIANT (simplified for UI)

@@ -1,13 +1,18 @@
 // src/composition/layers/http.layer.ts
 
-import { HttpApiBuilder, HttpMiddleware, HttpServer } from '@effect/platform'
-import { NodeHttpServer } from '@effect/platform-node'
 import { Effect, Layer } from 'effect'
 import { createServer } from 'node:http'
+
+import { HttpApiBuilder, HttpMiddleware, HttpServer } from '@effect/platform'
+import { NodeHttpServer } from '@effect/platform-node'
 import { MaisonAmaneApi } from '@maison-amane/api'
-import { PilotProductHandlerLive, SystemHandlerLive } from '../../infrastructure/http'
-import { DevelopmentLayer } from './development.layer'
+
+import {
+  PilotProductHandlerLive,
+  SystemHandlerLive,
+} from '../../infrastructure/http'
 import { AppConfig } from '../config'
+import { DevelopmentLayer } from './development.layer'
 
 // ============================================
 // API LAYER

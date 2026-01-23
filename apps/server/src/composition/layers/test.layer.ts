@@ -1,13 +1,14 @@
 // src/composition/layers/test.layer.ts
 
-import { Layer } from "effect"
+import { Layer } from 'effect'
+
 import {
-  InMemoryPilotProductRepositoryLive,
+  ConsoleEventPublisherLive,
   InMemoryCatalogProductRepositoryLive,
-  UuidIdGeneratorLive,
+  InMemoryPilotProductRepositoryLive,
   SystemClockLive,
-  ConsoleEventPublisherLive
-} from "../../infrastructure"
+  UuidIdGeneratorLive,
+} from '../../infrastructure'
 
 // ============================================
 // TEST LAYER

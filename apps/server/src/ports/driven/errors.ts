@@ -1,6 +1,6 @@
 // src/ports/driven/errors.ts
 
-import { Data } from "effect"
+import { Data } from 'effect'
 
 // ============================================
 // PERSISTENCE ERROR

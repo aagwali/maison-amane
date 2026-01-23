@@ -1,6 +1,6 @@
 // src/ports/driven/services/clock.ts
 
-import { Context, Effect } from "effect"
+import { Context, Effect } from 'effect'
 
 // ============================================
 // CLOCK

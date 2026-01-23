@@ -1,7 +1,7 @@
 // src/domain/shared/schema-helpers.ts
 
-import * as S from "effect/Schema"
-import { Enums } from "effect/Schema"
+import * as S from 'effect/Schema'
+
 import type { ParseIssue } from "effect/ParseResult"
 
 // ============================================
@@ -15,7 +15,7 @@ const formatEnumParseError =
 export const createEnumSchema = <T extends Record<string, string | number>>(
   enumObject: T,
 ) =>
-  Enums(enumObject).annotations({
+  S.Enums(enumObject).annotations({
     message: formatEnumParseError(enumObject),
   })
 

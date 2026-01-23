@@ -1,9 +1,10 @@
 // src/infrastructure/services/console-event-publisher.ts
 
-import { Effect, Layer } from "effect"
-import type { PilotDomainEvent } from "../../domain/pilot"
-import { EventPublisher } from "../../ports/driven"
+import { Effect, Layer } from 'effect'
 
+import { EventPublisher, EventPublishError } from '../../ports/driven'
+
+import type { PilotDomainEvent } from "../../domain/pilot"
 // ============================================
 // CONSOLE EVENT PUBLISHER (for development)
 // Uses structured logging with context propagation
@@ -12,7 +13,7 @@ import { EventPublisher } from "../../ports/driven"
 export const ConsoleEventPublisherLive = Layer.succeed(
   EventPublisher,
   {
-    publish: (event: PilotDomainEvent) =>
+    publish: (event: PilotDomainEvent): Effect.Effect<void, EventPublishError> =>
       Effect.logInfo("Domain event published").pipe(
         Effect.annotateLogs({
           eventType: event._tag,
@@ -20,7 +21,8 @@ export const ConsoleEventPublisherLive = Layer.succeed(
           correlationId: event.correlationId,
           userId: event.userId,
         }),
-        Effect.withLogSpan("eventPublisher")
+        Effect.withLogSpan("eventPublisher"),
+        Effect.asVoid
       )
   }
 )

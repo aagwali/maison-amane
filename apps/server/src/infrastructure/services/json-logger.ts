@@ -1,6 +1,6 @@
 // src/infrastructure/services/json-logger.ts
 
-import { Logger, LogLevel, HashMap, List, Cause, FiberId } from "effect"
+import { Cause, FiberId, HashMap, List, Logger, LogLevel } from 'effect'
 
 // ============================================
 // JSON STRUCTURED LOGGER
@@ -71,9 +71,3 @@ export const JsonLogger = Logger.make<unknown, void>(
     console.log(JSON.stringify(logEntry))
   }
 )
-
-// ============================================
-// LAYER: Replace default logger with JSON logger
-// ============================================
-
-export const JsonLoggerLive = Logger.replace(Logger.defaultLogger, JsonLogger)

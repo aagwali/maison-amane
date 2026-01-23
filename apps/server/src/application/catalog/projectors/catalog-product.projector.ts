@@ -1,14 +1,15 @@
 // src/application/catalog/projectors/catalog-product.projector.ts
 
-import { Data, Effect } from "effect"
-import type { PilotProductPublished, PilotProduct } from "../../../domain/pilot"
+import { Data, Effect } from 'effect'
+
 import {
-  MakeCatalogProduct,
   type CatalogProduct,
   type CatalogVariant,
-} from "../../../domain/catalog"
-import { CatalogProductRepository } from "../../../ports/driven"
+  MakeCatalogProduct,
+} from '../../../domain/catalog'
+import { CatalogProductRepository } from '../../../ports/driven'
 
+import type { PilotProductPublished, PilotProduct } from "../../../domain/pilot"
 // ============================================
 // PROJECTION ERROR
 // ============================================

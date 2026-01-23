@@ -1,11 +1,12 @@
 // src/domain/pilot/entities/variant.ts
 
-import * as S from "effect/Schema"
-import { VariantIdSchema } from "../value-objects/ids"
+import * as S from 'effect/Schema'
+
+import { VariantIdSchema } from '../value-objects/ids'
 import {
-  StandardVariantBaseSchema,
   CustomVariantBaseSchema,
-} from "../value-objects/variants"
+  StandardVariantBaseSchema,
+} from '../value-objects/variants'
 
 // ============================================
 // STANDARD VARIANT (entity with id)

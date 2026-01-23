@@ -1,7 +1,8 @@
 // src/domain/pilot/value-objects/sync-status.ts
 
-import * as S from "effect/Schema"
-import { ShopifyProductIdSchema, type ShopifyProductId } from "./ids"
+import * as S from 'effect/Schema'
+
+import { type ShopifyProductId, ShopifyProductIdSchema } from './ids'
 
 // ============================================
 // SYNC ERROR

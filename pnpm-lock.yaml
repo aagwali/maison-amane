@@ -18,6 +18,68 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  apps/consumers/catalog-projection:
+    dependencies:
+      '@effect/platform':
+        specifier: ^0.77.1
+        version: 0.77.7(effect@3.19.14)
+      '@effect/platform-node':
+        specifier: ^0.73.1
+        version: 0.73.7(@effect/platform@0.77.7(effect@3.19.14))(effect@3.19.14)
+      '@maison-amane/server':
+        specifier: workspace:*
+        version: link:../../server
+      amqplib:
+        specifier: ^0.10.9
+        version: 0.10.9
+      effect:
+        specifier: ^3.13.1
+        version: 3.19.14
+    devDependencies:
+      '@types/amqplib':
+        specifier: ^0.10.8
+        version: 0.10.8
+      '@types/node':
+        specifier: ^22.5.1
+        version: 22.19.7
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  apps/consumers/shopify-sync:
+    dependencies:
+      '@effect/platform':
+        specifier: ^0.77.1
+        version: 0.77.7(effect@3.19.14)
+      '@effect/platform-node':
+        specifier: ^0.73.1
+        version: 0.73.7(@effect/platform@0.77.7(effect@3.19.14))(effect@3.19.14)
+      '@maison-amane/server':
+        specifier: workspace:*
+        version: link:../../server
+      amqplib:
+        specifier: ^0.10.9
+        version: 0.10.9
+      effect:
+        specifier: ^3.13.1
+        version: 3.19.14
+    devDependencies:
+      '@types/amqplib':
+        specifier: ^0.10.8
+        version: 0.10.8
+      '@types/node':
+        specifier: ^22.5.1
+        version: 22.19.7
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   apps/server:
     dependencies:
       '@effect/platform':
@@ -29,6 +91,9 @@ importers:
       '@maison-amane/api':
         specifier: workspace:*
         version: link:../../packages/api
+      amqplib:
+        specifier: ^0.10.9
+        version: 0.10.9
       effect:
         specifier: ^3.13.1
         version: 3.19.14
@@ -39,6 +104,9 @@ importers:
         specifier: ^9.0.0
         version: 9.0.1
     devDependencies:
+      '@types/amqplib':
+        specifier: ^0.10.8
+        version: 0.10.8
       '@types/node':
         specifier: ^22.5.1
         version: 22.19.7
@@ -646,6 +714,9 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
+  '@types/amqplib@0.10.8':
+    resolution: {integrity: sha512-vtDp8Pk1wsE/AuQ8/Rgtm6KUZYqcnTgNvEHwzCkX8rL7AGsC6zqAfKAAJhUZXFhM/Pp++tbnUHiam/8vVpPztA==}
+
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -699,6 +770,10 @@ packages:
   '@vitest/utils@2.1.9':
     resolution: {integrity: sha512-v0psaMSkNJ3A2NMrUEHFRzJtDPFn+/VWZ5WxImB21T9fjucJRmS7xCS3ppEnARb9y11OAzaD+P2Ps+b+BGX5iQ==}
 
+  amqplib@0.10.9:
+    resolution: {integrity: sha512-jwSftI4QjS3mizvnSnOrPGYiUnm1vI2OP1iXeOUz5pb74Ua0nbf6nPyyTzuiCLEE3fMpaJORXh2K/TQ08H5xGA==}
+    engines: {node: '>=10'}
+
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
@@ -728,6 +803,9 @@ packages:
   bson@6.10.4:
     resolution: {integrity: sha512-WIsKqkSC0ABoBJuT1LEX+2HEvNmNKKgnTAyd0fL8qzK4SH2i9NXg+t08YtdZp/V9IZ33cxe3iV4yM0qg8lMQng==}
     engines: {node: '>=16.20.1'}
+
+  buffer-more-ints@1.0.0:
+    resolution: {integrity: sha512-EMetuGFz5SLsT0QTnXzINh4Ksr+oo4i+UGTXEshiGCQWnsgSs7ZhJ8fzlwQ+OzEMs0MpDAMr1hxnblp5a4vcHg==}
 
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -982,6 +1060,12 @@ packages:
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
+  querystringify@2.2.0:
+    resolution: {integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==}
+
+  requires-port@1.0.0:
+    resolution: {integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==}
+
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
@@ -1119,6 +1203,9 @@ packages:
   undici@7.19.0:
     resolution: {integrity: sha512-Heho1hJD81YChi+uS2RkSjcVO+EQLmLSyUlHyp7Y/wFbxQaGb4WXVKD073JytrjXJVkSZVzoE2MCSOKugFGtOQ==}
     engines: {node: '>=20.18.1'}
+
+  url-parse@1.5.10:
+    resolution: {integrity: sha512-WypcfiRhfeUP9vvF0j6rw0J3hrWrw6iZv3+22h6iRMJ/8z1Tj6XfLP4DsUix5MhMPnXpiHDoKyoZ/bdCkwBCiQ==}
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
@@ -1586,6 +1673,10 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
+  '@types/amqplib@0.10.8':
+    dependencies:
+      '@types/node': 22.19.7
+
   '@types/estree@1.0.8': {}
 
   '@types/node@22.19.7':
@@ -1658,6 +1749,11 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 1.2.0
 
+  amqplib@0.10.9:
+    dependencies:
+      buffer-more-ints: 1.0.0
+      url-parse: 1.5.10
+
   ansi-regex@5.0.1: {}
 
   ansi-regex@6.2.2: {}
@@ -1677,6 +1773,8 @@ snapshots:
       balanced-match: 1.0.2
 
   bson@6.10.4: {}
+
+  buffer-more-ints@1.0.0: {}
 
   cac@6.7.14: {}
 
@@ -1928,6 +2026,10 @@ snapshots:
 
   pure-rand@6.1.0: {}
 
+  querystringify@2.2.0: {}
+
+  requires-port@1.0.0: {}
+
   resolve-pkg-maps@1.0.0: {}
 
   rollup@4.56.0:
@@ -2066,6 +2168,11 @@ snapshots:
   undici-types@6.21.0: {}
 
   undici@7.19.0: {}
+
+  url-parse@1.5.10:
+    dependencies:
+      querystringify: 2.2.0
+      requires-port: 1.0.0
 
   uuid@9.0.1: {}
 

@@ -1,26 +1,32 @@
 // src/application/pilot/handlers/create-pilot-product.handler.ts
 
-import { Effect } from "effect"
-import type { PilotProduct, ProductVariant } from "../../../domain/pilot"
+import { Effect } from 'effect'
+import { logLevel } from 'effect/Config'
+
 import {
-  ProductStatus,
-  type PilotProductCreationError,
-  MakeStandardVariant,
   MakeCustomVariant,
-  Size,
+  MakeNotSynced,
   MakePilotProduct,
   MakePilotProductPublished,
-  MakeNotSynced,
-} from "../../../domain/pilot"
-import type { PilotProductCreationCommand } from "../commands"
-import { validateProductData, type ValidatedProductData, type ValidatedVariant } from "../validation"
+  MakeStandardVariant,
+  type PilotProductCreationError,
+  ProductStatus,
+  Size,
+} from '../../../domain/pilot'
 import {
-  PilotProductRepository,
-  IdGenerator,
+  Clock,
   EventPublisher,
-  Clock
-} from "../../../ports/driven"
+  IdGenerator,
+  PilotProductRepository,
+} from '../../../ports/driven'
+import {
+  type ValidatedProductData,
+  type ValidatedVariant,
+  validateProductData,
+} from '../validation'
 
+import type { PilotProduct, ProductVariant } from "../../../domain/pilot"
+import type { PilotProductCreationCommand } from "../commands"
 // ============================================
 // HANDLER: CREATE PILOT PRODUCT
 // ============================================
@@ -133,5 +139,12 @@ const emitEvent = (
       timestamp: now,
     })
 
-    yield* publisher.publish(event)
+    // Log error but don't fail the command - event will be retried by message broker
+    yield* publisher.publish(event).pipe(
+      Effect.catchAll((error) =>
+        Effect.logError("Failed to publish event, will be retried").pipe(
+          Effect.annotateLogs({ error: String(error.cause) })
+        )
+      )
+    )
   })

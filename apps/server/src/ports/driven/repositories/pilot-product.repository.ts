@@ -1,6 +1,7 @@
 // src/ports/driven/repositories/pilot-product.repository.ts
 
-import { Context, Effect, Option } from "effect"
+import { Context, Effect, Option } from 'effect'
+
 import type { ProductId, PilotProduct } from "../../../domain/pilot"
 import type { PersistenceError } from "../errors"
 

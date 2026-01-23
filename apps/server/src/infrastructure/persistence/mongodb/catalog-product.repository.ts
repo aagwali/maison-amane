@@ -1,10 +1,17 @@
 // src/infrastructure/persistence/mongodb/catalog-product.repository.ts
 
-import { Effect, Layer, Option, pipe } from "effect"
-import type { CatalogProductRepository } from "../../../ports/driven"
-import { CatalogProductRepository as CatalogProductRepositoryTag, PersistenceError } from "../../../ports/driven"
-import { catalogToDocument, catalogFromDocument } from "./mappers/catalog-product.mapper"
+import { Effect, Layer, Option, pipe } from 'effect'
 
+import {
+  CatalogProductRepository as CatalogProductRepositoryTag,
+  PersistenceError,
+} from '../../../ports/driven'
+import {
+  catalogFromDocument,
+  catalogToDocument,
+} from './mappers/catalog-product.mapper'
+
+import type { CatalogProductRepository } from "../../../ports/driven"
 // ============================================
 // MONGODB CATALOG PRODUCT REPOSITORY
 // ============================================

@@ -1,7 +1,8 @@
 // src/infrastructure/persistence/in-memory/generic.repository.ts
 
-import { Effect, Option } from "effect"
-import { PersistenceError } from "../../../ports/driven"
+import { Effect, Option } from 'effect'
+
+import { PersistenceError } from '../../../ports/driven'
 
 // ============================================
 // GENERIC IN-MEMORY REPOSITORY

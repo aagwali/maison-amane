@@ -1,14 +1,17 @@
 // src/composition/layers/development.layer.ts
 
-import { Layer } from "effect"
+import { Layer } from 'effect'
+
 import {
-  InMemoryCatalogProductRepositoryLive,
-  UuidIdGeneratorLive,
-  SystemClockLive,
   ConsoleEventPublisherLive,
+  InMemoryCatalogProductRepositoryLive,
   MongoDatabaseLive,
-  MongodbPilotProductRepositoryLive
-} from "../../infrastructure"
+  MongodbPilotProductRepositoryLive,
+  RabbitMQEventPublisherLayer,
+  RabbitMQSetupLayer,
+  SystemClockLive,
+  UuidIdGeneratorLive,
+} from '../../infrastructure'
 
 // ============================================
 // DEVELOPMENT LAYER
@@ -20,7 +23,29 @@ const PilotProductLayer = MongodbPilotProductRepositoryLive.pipe(
   Layer.provide(MongoDatabaseLive)
 )
 
+// RabbitMQ event publisher with topology setup (exchanges, queues, bindings)
+// RabbitMQSetupLayer ensures topology is created before publishing
+const RabbitMQPublisherLayer = RabbitMQEventPublisherLayer.pipe(
+  Layer.provide(RabbitMQSetupLayer)
+)
+
+// ============================================
+// DEVELOPMENT LAYER WITH RABBITMQ
+// ============================================
+
 export const DevelopmentLayer = Layer.mergeAll(
+  PilotProductLayer,
+  InMemoryCatalogProductRepositoryLive,
+  UuidIdGeneratorLive,
+  SystemClockLive,
+  RabbitMQPublisherLayer
+)
+
+// ============================================
+// DEVELOPMENT LAYER WITH CONSOLE (fallback)
+// ============================================
+
+export const DevelopmentLayerWithConsole = Layer.mergeAll(
   PilotProductLayer,
   InMemoryCatalogProductRepositoryLive,
   UuidIdGeneratorLive,

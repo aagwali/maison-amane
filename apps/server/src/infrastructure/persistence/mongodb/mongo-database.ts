@@ -1,7 +1,7 @@
 // src/infrastructure/persistence/mongodb/mongo-database.ts
 
-import { Config, Context, Effect, Layer, Redacted } from "effect"
-import { MongoClient, Db } from "mongodb"
+import { Config, Context, Effect, Layer, Redacted } from 'effect'
+import { Db, MongoClient } from 'mongodb'
 
 // ============================================
 // MONGO DATABASE CONFIG

@@ -1,7 +1,8 @@
 // src/domain/pilot/value-objects/dimensions.ts
 
-import * as S from "effect/Schema"
-import { PositiveCmSchema } from "./scalar-types"
+import * as S from 'effect/Schema'
+
+import { PositiveCmSchema } from './scalar-types'
 
 // ============================================
 // CUSTOM DIMENSION

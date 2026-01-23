@@ -1,15 +1,16 @@
 // src/infrastructure/persistence/mongodb/mappers/catalog-product.mapper.ts
 
 import {
+  MakeImageUrl,
+  MakePositiveCm,
+  MakePrice,
+  MakeProductDescription,
   MakeProductId,
   MakeProductLabel,
-  MakeProductDescription,
-  MakePrice,
-  MakePositiveCm,
-  MakeImageUrl,
+  type PriceRange,
   type ProductCategory,
-  type PriceRange
-} from "../../../../domain/pilot"
+} from '../../../../domain/pilot'
+
 import type { CatalogProduct, CatalogVariant } from "../../../../domain/catalog"
 
 // ============================================

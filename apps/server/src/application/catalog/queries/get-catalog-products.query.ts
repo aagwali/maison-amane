@@ -1,10 +1,11 @@
 // src/application/catalog/queries/get-catalog-products.query.ts
 
-import { Data, Effect, Option } from "effect"
+import { Data, Effect, Option } from 'effect'
+
+import { CatalogProductRepository } from '../../../ports/driven'
+
 import type { CatalogProduct } from "../../../domain/catalog"
 import type { ProductId } from "../../../domain/pilot"
-import { CatalogProductRepository } from "../../../ports/driven"
-
 // ============================================
 // QUERY ERROR
 // ============================================
