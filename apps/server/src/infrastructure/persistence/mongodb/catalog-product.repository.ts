@@ -1,17 +1,21 @@
 // src/infrastructure/persistence/mongodb/catalog-product.repository.ts
 
-import { Effect, Layer, Option, pipe } from 'effect'
+import { Effect, Layer } from 'effect'
 
-import {
-  CatalogProductRepository as CatalogProductRepositoryTag,
-  PersistenceError,
-} from '../../../ports/driven'
+import { CatalogProductRepository as CatalogProductRepositoryTag } from '../../../ports/driven'
 import {
   catalogFromDocument,
   catalogToDocument,
 } from './mappers/catalog-product.mapper'
+import { MongoDatabase } from './mongo-database'
+import {
+  findAllDocuments,
+  findDocumentById,
+  upsertDocument,
+} from './base-repository'
 
 import type { CatalogProductRepository } from "../../../ports/driven"
+
 // ============================================
 // MONGODB CATALOG PRODUCT REPOSITORY
 // ============================================
@@ -22,46 +26,23 @@ export const makeMongodbCatalogProductRepository = (
   const collection = db.collection("catalog_products")
 
   return {
-    upsert: (product) =>
-      pipe(
-        Effect.tryPromise({
-          try: async () => {
-            const doc = catalogToDocument(product)
-            await collection.updateOne(
-              { _id: doc._id },
-              { $set: doc },
-              { upsert: true }
-            )
-            return product
-          },
-          catch: (error) => new PersistenceError({ cause: error })
-        })
-      ),
+    upsert: (product) => {
+      const doc = catalogToDocument(product)
+      return upsertDocument(collection, doc._id, doc, product)
+    },
 
-    findById: (id) =>
-      pipe(
-        Effect.tryPromise({
-          try: async () => {
-            const doc = await collection.findOne({ _id: id })
-            return doc ? Option.some(catalogFromDocument(doc)) : Option.none()
-          },
-          catch: (error) =>  new PersistenceError({ cause: error })
-        })
-      ),
+    findById: (id) => findDocumentById(collection, id, catalogFromDocument),
 
-    findAll: () =>
-      pipe(
-        Effect.tryPromise({
-          try: async () => {
-            const docs = await collection.find({}).toArray()
-            return docs.map(catalogFromDocument)
-          },
-          catch: (error) =>  new PersistenceError({ cause: error })
-        })
-      )
+    findAll: () => findAllDocuments(collection, catalogFromDocument),
   }
 }
 
 // Layer factory (requires db instance at runtime)
 export const makeMongodbCatalogProductRepositoryLayer = (db: any) =>
   Layer.succeed(CatalogProductRepositoryTag, makeMongodbCatalogProductRepository(db))
+
+// Live layer using MongoDatabase service
+export const MongodbCatalogProductRepositoryLive = Layer.effect(
+  CatalogProductRepositoryTag,
+  Effect.map(MongoDatabase, (db) => makeMongodbCatalogProductRepository(db))
+)

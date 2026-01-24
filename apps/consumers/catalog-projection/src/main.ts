@@ -5,8 +5,10 @@ import { Config, Effect, Layer, Logger, LogLevel } from 'effect'
 
 import { NodeRuntime } from '@effect/platform-node'
 import {
-  helloWorldHandler,
+  catalogProjectionHandler,
   JsonLogger,
+  MongoDatabaseLive,
+  MongodbCatalogProductRepositoryLive,
   PrettyLogger,
   RabbitMQConfigLive,
   RabbitMQConnectionLayer,
@@ -64,6 +66,11 @@ const program = Effect.gen(function* () {
     RabbitMQConfigLive
   )
 
+  // MongoDB repository layer with its database dependency
+  const CatalogProductRepositoryLayer = MongodbCatalogProductRepositoryLive.pipe(
+    Layer.provide(MongoDatabaseLive)
+  )
+
   yield* Effect.provide(
     Effect.gen(function* () {
       yield* Effect.logInfo(`Starting ${CONSUMER_NAME} consumer...`)
@@ -76,14 +83,14 @@ const program = Effect.gen(function* () {
 
       yield* Effect.logInfo("RabbitMQ topology initialized")
 
-      // TODO: Replace with catalogProjectionHandler
-      yield* startConsumer(CONSUMER_NAME, helloWorldHandler)
+      // Start catalog projection consumer
+      yield* startConsumer(CONSUMER_NAME, catalogProjectionHandler)
 
-      yield* Effect.logInfo("Hello from consumer 2! (Catalog Projection) - waiting for messages...")
+      yield* Effect.logInfo(`${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished events...`)
 
       yield* Effect.never
     }),
-    Layer.mergeAll(RabbitMQLayer, LoggerLive)
+    Layer.mergeAll(RabbitMQLayer, LoggerLive, CatalogProductRepositoryLayer)
   )
 })
 

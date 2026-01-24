@@ -15,7 +15,9 @@ export {
 
 export {
   makeMongodbCatalogProductRepository,
-  makeMongodbCatalogProductRepositoryLayer
+  makeMongodbCatalogProductRepositoryLayer,
+  MongodbCatalogProductRepositoryLive
 } from "./catalog-product.repository"
 
 export * from "./mappers"
+export * from "./base-repository"

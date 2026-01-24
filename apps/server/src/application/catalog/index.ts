@@ -2,3 +2,4 @@
 
 export * from "./projectors"
 export * from "./queries"
+export * from "./handlers"

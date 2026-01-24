@@ -55,9 +55,10 @@ const deserializeEvent = (
 // MESSAGE HANDLER TYPE
 // ============================================
 
-export type MessageHandler = (
-  event: PilotDomainEvent
-) => Effect.Effect<void, MessageHandlerError>
+export type MessageHandler<
+  E extends PilotDomainEvent = PilotDomainEvent,
+  R = never
+> = (event: E) => Effect.Effect<void, MessageHandlerError, R>
 
 // ============================================
 // HELLO WORLD HANDLER (for testing)
@@ -80,11 +81,14 @@ export const helloWorldHandler: MessageHandler = (event) =>
 // Implements retry with exponential backoff + DLQ
 // ============================================
 
-export const startConsumer = (consumerName: string, handler: MessageHandler) =>
+export const startConsumer = <E extends PilotDomainEvent, R>(
+  consumerName: string,
+  handler: MessageHandler<E, R>
+) =>
   Effect.gen(function* () {
     const { channel } = yield* RabbitMQConnection
     const config = yield* RabbitMQConfig
-    const runtime = yield* Effect.runtime<never>()
+    const runtime = yield* Effect.runtime<R>()
     const runFork = Runtime.runFork(runtime)
     const queues = makeQueueNames(consumerName)
 
@@ -106,7 +110,7 @@ export const startConsumer = (consumerName: string, handler: MessageHandler) =>
                 })
               )
 
-              yield* handler(event).pipe(
+              yield* handler(event as E).pipe(
                 Effect.catchAll((error) =>
                   Effect.gen(function* () {
                     yield* Effect.logWarning("Handler failed").pipe(
