@@ -9,7 +9,7 @@ import type { PersistenceError } from "../errors"
 // PILOT PRODUCT REPOSITORY (Write Model)
 // ============================================
 
-export interface PilotProductRepository {
+export interface PilotProductRepositoryService {
   readonly save: (
     product: PilotProduct
   ) => Effect.Effect<PilotProduct, PersistenceError>
@@ -23,6 +23,7 @@ export interface PilotProductRepository {
   ) => Effect.Effect<PilotProduct, PersistenceError>
 }
 
-export const PilotProductRepository = Context.GenericTag<PilotProductRepository>(
-  "PilotProductRepository"
-)
+export class PilotProductRepository extends Context.Tag("PilotProductRepository")<
+  PilotProductRepository,
+  PilotProductRepositoryService
+>() {}

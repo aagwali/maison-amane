@@ -16,7 +16,7 @@ import {
 } from './base-repository'
 
 import type { Collection, Db } from "mongodb"
-import type { PilotProductRepository } from "../../../ports/driven"
+import type { PilotProductRepositoryService } from "../../../ports/driven"
 
 // ============================================
 // MONGODB PILOT PRODUCT REPOSITORY
@@ -24,7 +24,7 @@ import type { PilotProductRepository } from "../../../ports/driven"
 
 const COLLECTION_NAME = "pilot_products"
 
-export const makeMongodbPilotProductRepository = (db: Db): PilotProductRepository => {
+export const makeMongodbPilotProductRepository = (db: Db): PilotProductRepositoryService => {
   // Type-safe collection with PilotProductDocument schema
   const collection: Collection<PilotProductDocument> = db.collection(COLLECTION_NAME)
 

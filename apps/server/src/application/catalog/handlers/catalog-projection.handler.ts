@@ -26,35 +26,36 @@ export const catalogProjectionHandler: MessageHandler<
   PilotProductPublished,
   CatalogProductRepository
 > = (event) =>
-  Effect.gen(function* () {
-    yield* Effect.logInfo("Processing product publication for catalog projection").pipe(
-      Effect.annotateLogs({
-        productId: event.productId,
-        correlationId: event.correlationId,
-        userId: event.userId,
-      }),
-      Effect.withLogSpan("catalog-projection.process")
-    )
-
-    const product = yield* projectToCatalog(event).pipe(
-      Effect.mapError((projectionError) =>
-        new MessageHandlerError(event, projectionError.cause)
-      ),
-      Effect.tap((product) =>
-        Effect.logInfo("Successfully projected product to catalog").pipe(
-          Effect.annotateLogs({
-            catalogProductId: product.id,
-            publishedAt: product.publishedAt.toISOString(),
-          })
-        )
-      ),
-      Effect.tapError((error) =>
-        Effect.logError("Failed to project product to catalog").pipe(
-          Effect.annotateLogs({
-            error: String(error.cause),
-            productId: event.productId,
-          })
-        )
+    Effect.gen(function* () {
+      yield* Effect.logInfo("Processing product publication for catalog projection").pipe(
+        Effect.annotateLogs({
+          productId: event.productId,
+          correlationId: event.correlationId,
+          userId: event.userId,
+        }),
+        Effect.withLogSpan("catalog-projection.process")
       )
-    )
-  })
+
+      yield* projectToCatalog(event).pipe(
+        Effect.mapError((projectionError) =>
+          new MessageHandlerError({ event, cause: projectionError.cause })
+        ),
+        Effect.matchEffect({
+          onSuccess: (product) =>
+            Effect.logInfo("Successfully projected product to catalog").pipe(
+              Effect.annotateLogs({
+                catalogProductId: product.id,
+                publishedAt: product.publishedAt.toISOString(),
+              })
+            ),
+          onFailure: (error) =>
+            Effect.logError("Failed to project product to catalog").pipe(
+              Effect.annotateLogs({
+                error: String(error.cause),
+                productId: event.productId,
+              })
+            )
+        })
+
+      )
+    })

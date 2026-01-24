@@ -10,7 +10,7 @@ import type { PersistenceError } from "../errors"
 // CATALOG PRODUCT REPOSITORY (Read Model)
 // ============================================
 
-export interface CatalogProductRepository {
+export interface CatalogProductRepositoryService {
   readonly upsert: (
     product: CatalogProduct
   ) => Effect.Effect<CatalogProduct, PersistenceError>
@@ -22,6 +22,7 @@ export interface CatalogProductRepository {
   readonly findAll: () => Effect.Effect<readonly CatalogProduct[], PersistenceError>
 }
 
-export const CatalogProductRepository = Context.GenericTag<CatalogProductRepository>(
-  "CatalogProductRepository"
-)
+export class CatalogProductRepository extends Context.Tag("CatalogProductRepository")<
+  CatalogProductRepository,
+  CatalogProductRepositoryService
+>() {}

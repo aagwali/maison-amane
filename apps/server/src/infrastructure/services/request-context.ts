@@ -27,12 +27,15 @@ export const RequestContextRef = FiberRef.unsafeMake<RequestContextValue>(defaul
 // REQUEST CONTEXT SERVICE
 // ============================================
 
-export interface RequestContext {
+export interface RequestContextService {
   readonly get: Effect.Effect<RequestContextValue>
   readonly set: (ctx: RequestContextValue) => Effect.Effect<void>
 }
 
-export const RequestContext = Context.GenericTag<RequestContext>("RequestContext")
+export class RequestContext extends Context.Tag("RequestContext")<
+  RequestContext,
+  RequestContextService
+>() {}
 
 export const RequestContextLive = Layer.succeed(
   RequestContext,

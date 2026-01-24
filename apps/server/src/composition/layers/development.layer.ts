@@ -4,7 +4,6 @@ import { Layer } from 'effect'
 
 import {
   ConsoleEventPublisherLive,
-  InMemoryCatalogProductRepositoryLive,
   MongoDatabaseLive,
   MongodbPilotProductRepositoryLive,
   RabbitMQEventPublisherLayer,
@@ -15,7 +14,8 @@ import {
 
 // ============================================
 // DEVELOPMENT LAYER
-// MongoDB for pilot products, in-memory for catalog
+// MongoDB for pilot products
+// Catalog is managed by the catalog-projection consumer
 // ============================================
 
 // MongoDB repository layer with its database dependency
@@ -35,7 +35,6 @@ const RabbitMQPublisherLayer = RabbitMQEventPublisherLayer.pipe(
 
 export const DevelopmentLayer = Layer.mergeAll(
   PilotProductLayer,
-  InMemoryCatalogProductRepositoryLive,
   UuidIdGeneratorLive,
   SystemClockLive,
   RabbitMQPublisherLayer
@@ -47,7 +46,6 @@ export const DevelopmentLayer = Layer.mergeAll(
 
 export const DevelopmentLayerWithConsole = Layer.mergeAll(
   PilotProductLayer,
-  InMemoryCatalogProductRepositoryLive,
   UuidIdGeneratorLive,
   SystemClockLive,
   ConsoleEventPublisherLive

@@ -29,6 +29,9 @@ importers:
       '@maison-amane/server':
         specifier: workspace:*
         version: link:../../server
+      '@maison-amane/shared-kernel':
+        specifier: workspace:*
+        version: link:../../../packages/shared-kernel
       amqplib:
         specifier: ^0.10.9
         version: 0.10.9
@@ -91,6 +94,9 @@ importers:
       '@maison-amane/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@maison-amane/shared-kernel':
+        specifier: workspace:*
+        version: link:../../packages/shared-kernel
       amqplib:
         specifier: ^0.10.9
         version: 0.10.9
@@ -131,6 +137,16 @@ importers:
       '@effect/platform':
         specifier: ^0.77.1
         version: 0.77.7(effect@3.19.14)
+      effect:
+        specifier: ^3.13.1
+        version: 3.19.14
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/shared-kernel:
+    dependencies:
       effect:
         specifier: ^3.13.1
         version: 3.19.14

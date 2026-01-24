@@ -18,6 +18,7 @@ import {
   EventPublisher,
   IdGenerator,
   PilotProductRepository,
+  type IdGeneratorService,
 } from '../../../ports/driven'
 import {
   type ValidatedProductData,
@@ -87,7 +88,7 @@ const createAggregate = (
 
 const createVariant = (
   v: ValidatedVariant,
-  idGen: IdGenerator
+  idGen: IdGeneratorService
 ): Effect.Effect<ProductVariant> =>
   Effect.gen(function* () {
     const variantId = yield* idGen.generateVariantId()
@@ -109,7 +110,7 @@ const createVariant = (
 
 const createVariants = (
   validatedVariants: readonly [ValidatedVariant, ...ValidatedVariant[]],
-  idGen: IdGenerator
+  idGen: IdGeneratorService
 ): Effect.Effect<readonly [ProductVariant, ...ProductVariant[]]> =>
   Effect.gen(function* () {
     const [first, ...rest] = validatedVariants

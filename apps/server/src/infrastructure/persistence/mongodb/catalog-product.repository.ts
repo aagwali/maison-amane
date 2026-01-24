@@ -14,7 +14,7 @@ import {
   upsertDocument,
 } from './base-repository'
 
-import type { CatalogProductRepository } from "../../../ports/driven"
+import type { CatalogProductRepositoryService } from "../../../ports/driven"
 
 // ============================================
 // MONGODB CATALOG PRODUCT REPOSITORY
@@ -22,7 +22,7 @@ import type { CatalogProductRepository } from "../../../ports/driven"
 
 export const makeMongodbCatalogProductRepository = (
   db: any // MongoDB Db instance
-): CatalogProductRepository => {
+): CatalogProductRepositoryService => {
   const collection = db.collection("catalog_products")
 
   return {

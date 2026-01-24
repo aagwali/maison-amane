@@ -2,10 +2,10 @@
 
 export {
   PilotProductRepository,
-  type PilotProductRepository as PilotProductRepositoryType
+  type PilotProductRepositoryService,
 } from "./pilot-product.repository"
 
 export {
   CatalogProductRepository,
-  type CatalogProductRepository as CatalogProductRepositoryType
+  type CatalogProductRepositoryService,
 } from "./catalog-product.repository"

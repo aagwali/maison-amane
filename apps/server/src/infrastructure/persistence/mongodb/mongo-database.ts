@@ -1,26 +1,12 @@
 // src/infrastructure/persistence/mongodb/mongo-database.ts
 
-import { Config, Context, Effect, Layer, Redacted } from 'effect'
+import { Context, Data, Effect, Layer, Redacted } from 'effect'
 import { Db, MongoClient } from 'mongodb'
 
-// ============================================
-// MONGO DATABASE CONFIG
-// ============================================
+import { MongoConfig, MongoConfigLive } from '@maison-amane/shared-kernel/config'
 
-export class MongoConfig extends Context.Tag("MongoConfig")<
-  MongoConfig,
-  { readonly uri: Redacted.Redacted<string>; readonly database: string }
->() {}
-
-const mongoConfigFromEnv = Config.all({
-  uri: Config.redacted("MONGO_URI"),
-  database: Config.string("MONGO_DB")
-})
-
-export const MongoConfigLive = Layer.effect(
-  MongoConfig,
-  mongoConfigFromEnv
-)
+// Re-export for convenience
+export { MongoConfig, MongoConfigLive }
 
 // ============================================
 // MONGO DATABASE SERVICE
@@ -31,10 +17,9 @@ export class MongoDatabase extends Context.Tag("MongoDatabase")<
   Db
 >() {}
 
-export class MongoDatabaseError {
-  readonly _tag = "MongoDatabaseError"
-  constructor(readonly cause: unknown) {}
-}
+export class MongoDatabaseError extends Data.TaggedError("MongoDatabaseError")<{
+  readonly cause: unknown
+}> {}
 
 // ============================================
 // MONGO DATABASE LAYER
@@ -53,7 +38,7 @@ export const MongoDatabaseLive = Layer.scoped(
           await mongoClient.connect()
           return { client: mongoClient, db: mongoClient.db(config.database) }
         },
-        catch: (error) => new MongoDatabaseError(error)
+        catch: (error) => new MongoDatabaseError({ cause: error })
       }),
       ({ client: mongoClient }) =>
         Effect.promise(() => mongoClient.close()).pipe(

@@ -1,7 +1,7 @@
 // src/infrastructure/messaging/rabbitmq/connection.ts
 
 import amqp from 'amqplib'
-import { Context, Effect, Layer, Redacted } from 'effect'
+import { Context, Data, Effect, Layer, Redacted } from 'effect'
 
 import { RabbitMQConfig } from '../../../composition/config'
 
@@ -9,10 +9,9 @@ import { RabbitMQConfig } from '../../../composition/config'
 // RABBITMQ CONNECTION ERROR
 // ============================================
 
-export class RabbitMQConnectionError {
-  readonly _tag = "RabbitMQConnectionError"
-  constructor(readonly cause: unknown) {}
-}
+export class RabbitMQConnectionError extends Data.TaggedError("RabbitMQConnectionError")<{
+  readonly cause: unknown
+}> {}
 
 // ============================================
 // RABBITMQ CONNECTION SERVICE
@@ -46,7 +45,7 @@ export const RabbitMQConnectionLayer = Layer.scoped(
           const ch = await conn.createChannel()
           return { connection: conn, channel: ch }
         },
-        catch: (error) => new RabbitMQConnectionError(error),
+        catch: (error) => new RabbitMQConnectionError({ cause: error }),
       }),
       ({ connection: conn, channel: ch }) =>
         Effect.promise(async () => {

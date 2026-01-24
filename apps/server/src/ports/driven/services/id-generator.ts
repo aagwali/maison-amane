@@ -8,10 +8,13 @@ import type { ProductId, VariantId } from "../../../domain/pilot"
 // ID GENERATOR
 // ============================================
 
-export interface IdGenerator {
+export interface IdGeneratorService {
   readonly generateProductId: () => Effect.Effect<ProductId>
   readonly generateVariantId: () => Effect.Effect<VariantId>
   readonly generateCorrelationId: () => Effect.Effect<string>
 }
 
-export const IdGenerator = Context.GenericTag<IdGenerator>("IdGenerator")
+export class IdGenerator extends Context.Tag("IdGenerator")<
+  IdGenerator,
+  IdGeneratorService
+>() {}

@@ -1,4 +1,4 @@
-// src/domain/shared/value-objects/correlation-id.ts
+// packages/shared-kernel/src/domain/events/correlation-id.ts
 
 import * as S from 'effect/Schema'
 

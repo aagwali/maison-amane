@@ -1,4 +1,4 @@
-// src/domain/shared/value-objects/user-id.ts
+// packages/shared-kernel/src/domain/events/user-id.ts
 
 import * as S from 'effect/Schema'
 

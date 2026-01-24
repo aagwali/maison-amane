@@ -21,6 +21,7 @@
     "@effect/platform": "^0.77.1",
     "@effect/platform-node": "^0.73.1",
     "@maison-amane/api": "workspace:*",
+    "@maison-amane/shared-kernel": "workspace:*",
     "amqplib": "^0.10.9",
     "effect": "^3.13.1",
     "mongodb": "^6.12.0",

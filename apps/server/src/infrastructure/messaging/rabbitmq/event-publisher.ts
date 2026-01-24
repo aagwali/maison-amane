@@ -39,7 +39,7 @@ const serializeEvent = (event: PilotDomainEvent): Buffer => {
 const makeRabbitMQEventPublisher = Effect.gen(function* () {
   const { channel } = yield* RabbitMQConnection
 
-  return EventPublisher.of({
+  return {
     publish: (event: PilotDomainEvent) =>
       Effect.gen(function* () {
         const routingKey = getRoutingKey(event)
@@ -67,7 +67,7 @@ const makeRabbitMQEventPublisher = Effect.gen(function* () {
               throw new Error("Channel buffer full, message not published")
             }
           },
-          catch: (error) => new EventPublishError(event, error),
+          catch: (error) => new EventPublishError({ event, cause: error }),
         })
 
         yield* Effect.logInfo("Domain event published to RabbitMQ").pipe(
@@ -81,8 +81,8 @@ const makeRabbitMQEventPublisher = Effect.gen(function* () {
           }),
           Effect.withLogSpan("rabbitmq.publish")
         )
-      }),
-  })
+      })
+  }
 })
 
 // ============================================

@@ -1,11 +1,12 @@
 // src/infrastructure/messaging/rabbitmq/topology.ts
 
-import { Effect } from 'effect'
+import { Data, Effect } from 'effect'
 
 import { RabbitMQConfig } from '../../../composition/config'
 import { RabbitMQConnection } from './connection'
 
 import type * as amqp from "amqplib"
+
 // ============================================
 // EXCHANGE & QUEUE NAMES
 // ============================================
@@ -31,10 +32,9 @@ export const RoutingKeys = {
 // TOPOLOGY SETUP ERROR
 // ============================================
 
-export class TopologySetupError {
-  readonly _tag = "TopologySetupError"
-  constructor(readonly cause: unknown) {}
-}
+export class TopologySetupError extends Data.TaggedError("TopologySetupError")<{
+  readonly cause: unknown
+}> {}
 
 // ============================================
 // SETUP EXCHANGES (shared topology)
@@ -56,7 +56,7 @@ export const setupTopology = Effect.gen(function* () {
         durable: true,
       })
     },
-    catch: (error) => new TopologySetupError(error),
+    catch: (error) => new TopologySetupError({ cause: error }),
   })
 
   yield* Effect.logInfo("RabbitMQ exchanges configured").pipe(
@@ -118,7 +118,7 @@ export const setupConsumerQueue = (consumerName: string) =>
           RoutingKeys.ALL_PILOT_EVENTS
         )
       },
-      catch: (error) => new TopologySetupError(error),
+      catch: (error) => new TopologySetupError({ cause: error }),
     })
 
     yield* Effect.logInfo("Consumer queue configured").pipe(

@@ -6,8 +6,11 @@ import { Context, Effect } from 'effect'
 // CLOCK
 // ============================================
 
-export interface Clock {
+export interface ClockService {
   readonly now: () => Effect.Effect<Date>
 }
 
-export const Clock = Context.GenericTag<Clock>("Clock")
+export class Clock extends Context.Tag("Clock")<
+  Clock,
+  ClockService
+>() {}

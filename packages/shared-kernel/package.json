@@ -1,0 +1,19 @@
+{
+  "name": "@maison-amane/shared-kernel",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "exports": {
+    ".": "./src/main.ts",
+    "./domain": "./src/domain/main.ts",
+    "./config": "./src/infrastructure/config/main.ts"
+  },
+  "dependencies": {
+    "effect": "^3.13.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
