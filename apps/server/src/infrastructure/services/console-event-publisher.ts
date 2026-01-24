@@ -4,7 +4,8 @@ import { Effect, Layer } from 'effect'
 
 import { EventPublisher, EventPublishError } from '../../ports/driven'
 
-import type { PilotDomainEvent } from "../../domain/pilot"
+import type { DomainEvent } from "../../domain"
+
 // ============================================
 // CONSOLE EVENT PUBLISHER (for development)
 // Uses structured logging with context propagation
@@ -13,7 +14,7 @@ import type { PilotDomainEvent } from "../../domain/pilot"
 export const ConsoleEventPublisherLive = Layer.succeed(
   EventPublisher,
   {
-    publish: (event: PilotDomainEvent): Effect.Effect<void, EventPublishError> =>
+    publish: (event: DomainEvent): Effect.Effect<void, EventPublishError> =>
       Effect.logInfo("Domain event published").pipe(
         Effect.annotateLogs({
           eventType: event._tag,

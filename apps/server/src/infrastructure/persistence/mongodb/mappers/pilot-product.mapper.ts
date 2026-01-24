@@ -8,7 +8,6 @@ import {
   MakeProductId,
   MakeProductLabel,
   MakeShopifyProductId,
-  MakeVariantId,
   type PilotProduct,
   type PredefinedSize,
   PriceRange,
@@ -35,7 +34,6 @@ interface PilotProductDocumentSchema {
   priceRange: string
   variants: Array<{
     _tag: "StandardVariant" | "CustomVariant"
-    id: string
     size: string
     customDimensions?: { width: number; length: number }
     price?: number
@@ -75,7 +73,6 @@ export const toDocument = (product: PilotProduct): PilotProductDocument => ({
   priceRange: product.priceRange,
   variants: product.variants.map((v) => ({
     _tag: v._tag,
-    id: v.id,
     size: v.size,
     ...(v._tag === "CustomVariant"
       ? {
@@ -138,7 +135,6 @@ export const fromDocument = (doc: PilotProductDocument): PilotProduct => ({
     v._tag === "CustomVariant"
       ? {
           _tag: "CustomVariant" as const,
-          id: MakeVariantId(v.id),
           size: Size.CUSTOM,
           customDimensions: {
             width: MakePositiveCm(v.customDimensions!.width),
@@ -148,7 +144,6 @@ export const fromDocument = (doc: PilotProductDocument): PilotProduct => ({
         }
       : {
           _tag: "StandardVariant" as const,
-          id: MakeVariantId(v.id),
           size: v.size as PredefinedSize
         }
   ) as [ProductVariant, ...ProductVariant[]],

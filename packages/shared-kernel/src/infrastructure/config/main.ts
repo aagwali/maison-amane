@@ -13,3 +13,10 @@ export {
   rabbitmqConfigFromEnv,
   type RabbitMQConfigValue,
 } from './rabbitmq.config'
+
+export {
+  ShopifyConfig,
+  ShopifyConfigLive,
+  shopifyConfigFromEnv,
+  type ShopifyConfigValue,
+} from './shopify.config'

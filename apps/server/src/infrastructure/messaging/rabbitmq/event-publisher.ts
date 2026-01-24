@@ -6,16 +6,20 @@ import { EventPublisher, EventPublishError } from '../../../ports/driven'
 import { RabbitMQConnection } from './connection'
 import { Exchanges, RoutingKeys } from './topology'
 
-import type { PilotDomainEvent } from "../../../domain/pilot"
+import type { DomainEvent } from "../../../domain"
+
 // ============================================
 // EVENT TO ROUTING KEY MAPPER
 // ============================================
 
-const getRoutingKey = (event: PilotDomainEvent): string => {
-  // Currently only one event type, will expand as domain grows
+const getRoutingKey = (event: DomainEvent): string => {
   switch (event._tag) {
     case "PilotProductPublished":
       return RoutingKeys.PILOT_PRODUCT_PUBLISHED
+    case "PilotProductSynced":
+      return RoutingKeys.PILOT_PRODUCT_SYNCED
+    case "CatalogProductProjected":
+      return RoutingKeys.CATALOG_PRODUCT_PROJECTED
   }
 }
 
@@ -23,7 +27,7 @@ const getRoutingKey = (event: PilotDomainEvent): string => {
 // SERIALIZE EVENT FOR RABBITMQ
 // ============================================
 
-const serializeEvent = (event: PilotDomainEvent): Buffer => {
+const serializeEvent = (event: DomainEvent): Buffer => {
   return Buffer.from(
     JSON.stringify({
       ...event,
@@ -40,7 +44,7 @@ const makeRabbitMQEventPublisher = Effect.gen(function* () {
   const { channel } = yield* RabbitMQConnection
 
   return {
-    publish: (event: PilotDomainEvent) =>
+    publish: (event: DomainEvent) =>
       Effect.gen(function* () {
         const routingKey = getRoutingKey(event)
         const message = serializeEvent(event)

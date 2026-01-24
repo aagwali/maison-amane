@@ -90,7 +90,11 @@ const program = Effect.gen(function* () {
 
       yield* Effect.never
     }),
-    Layer.mergeAll(RabbitMQLayer, LoggerLive, CatalogProductRepositoryLayer)
+    Layer.mergeAll(
+      RabbitMQLayer,
+      LoggerLive,
+      CatalogProductRepositoryLayer
+    )
   )
 })
 

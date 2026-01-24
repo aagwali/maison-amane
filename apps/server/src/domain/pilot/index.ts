@@ -8,9 +8,6 @@ export {
   ProductIdSchema,
   MakeProductId,
   type ProductId,
-  VariantIdSchema,
-  MakeVariantId,
-  type VariantId,
   ShopifyProductIdSchema,
   MakeShopifyProductId,
   type ShopifyProductId,
@@ -38,7 +35,7 @@ export {
   type ProductView,
   ProductViewsSchema,
   type ProductViews,
-  // Variants (base, without id)
+  // Variants (value objects)
   VariantBaseSchema,
   type VariantBase,
   // Sync Status
@@ -65,7 +62,7 @@ export {
 } from "./services"
 
 // ============================================
-// ENTITIES
+// VARIANTS (value objects, re-exported from entities for compatibility)
 // ============================================
 export {
   StandardVariantSchema,
@@ -120,7 +117,9 @@ export {
 // ============================================
 export {
   MakePilotProductPublished,
+  MakePilotProductSynced,
   type PilotProductPublished,
+  type PilotProductSynced,
   type PilotDomainEvent,
 } from "./events"
 

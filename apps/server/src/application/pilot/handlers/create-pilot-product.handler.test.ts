@@ -89,7 +89,7 @@ describe("handlePilotProductCreation", () => {
       expect(result.updatedAt).toEqual(TEST_DATE)
     })
 
-    it("creates variants with deterministic IDs", async () => {
+    it("creates variants as value objects with correct sizes", async () => {
       const command = makeCommand()
 
       const result = await Effect.runPromise(
@@ -97,8 +97,10 @@ describe("handlePilotProductCreation", () => {
       )
 
       expect(result.variants).toHaveLength(2)
-      expect(result.variants[0]?.id).toBe("test-variant-1")
-      expect(result.variants[1]?.id).toBe("test-variant-2")
+      expect(result.variants[0]?._tag).toBe("StandardVariant")
+      expect(result.variants[0]?.size).toBe(Size.REGULAR)
+      expect(result.variants[1]?._tag).toBe("StandardVariant")
+      expect(result.variants[1]?.size).toBe(Size.LARGE)
     })
 
     it("initializes syncStatus as NotSynced", async () => {

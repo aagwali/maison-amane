@@ -2,7 +2,7 @@
 
 import { Context, Effect } from 'effect'
 
-import type { ProductId, VariantId } from "../../../domain/pilot"
+import type { ProductId } from "../../../domain/pilot"
 
 // ============================================
 // ID GENERATOR
@@ -10,7 +10,6 @@ import type { ProductId, VariantId } from "../../../domain/pilot"
 
 export interface IdGeneratorService {
   readonly generateProductId: () => Effect.Effect<ProductId>
-  readonly generateVariantId: () => Effect.Effect<VariantId>
   readonly generateCorrelationId: () => Effect.Effect<string>
 }
 

@@ -43,7 +43,6 @@ const variantToDto = (variant: ProductVariant): VariantResponseDto => {
   if (variant._tag === 'CustomVariant') {
     return {
       _tag: 'CustomVariant',
-      id: variant.id,
       size: 'CUSTOM',
       customDimensions: {
         width: variant.customDimensions.width,
@@ -54,7 +53,6 @@ const variantToDto = (variant: ProductVariant): VariantResponseDto => {
   }
   return {
     _tag: 'StandardVariant',
-    id: variant.id,
     size: variant.size,
   }
 }

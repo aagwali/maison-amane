@@ -5,12 +5,11 @@
 
 import { Effect, Layer } from 'effect'
 
-import { MakeProductId, MakeVariantId } from '../domain/pilot'
+import { MakeProductId } from '../domain/pilot'
 import { IdGenerator } from '../ports/driven'
 
 export const makeDeterministicIdGenerator = (prefix = "test") => {
   let productCounter = 0
-  let variantCounter = 0
   let correlationCounter = 0
 
   return {
@@ -18,12 +17,6 @@ export const makeDeterministicIdGenerator = (prefix = "test") => {
       Effect.sync(() => {
         productCounter++
         return MakeProductId(`${prefix}-product-${productCounter}`)
-      }),
-
-    generateVariantId: () =>
-      Effect.sync(() => {
-        variantCounter++
-        return MakeVariantId(`${prefix}-variant-${variantCounter}`)
       }),
 
     generateCorrelationId: () =>
@@ -35,7 +28,6 @@ export const makeDeterministicIdGenerator = (prefix = "test") => {
     // Reset counters between tests
     reset: () => {
       productCounter = 0
-      variantCounter = 0
       correlationCounter = 0
     },
   }

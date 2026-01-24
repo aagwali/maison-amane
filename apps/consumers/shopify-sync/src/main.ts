@@ -5,13 +5,16 @@ import { Config, Effect, Layer, Logger, LogLevel } from 'effect'
 
 import { NodeRuntime } from '@effect/platform-node'
 import {
-  helloWorldHandler,
+  FakeShopifyClientLive,
   JsonLogger,
+  MongoDatabaseLive,
+  MongodbPilotProductRepositoryLive,
   PrettyLogger,
   RabbitMQConfigLive,
   RabbitMQConnectionLayer,
   setupConsumerQueue,
   setupTopology,
+  shopifySyncHandler,
   startConsumer,
 } from '@maison-amane/server'
 
@@ -64,6 +67,15 @@ const program = Effect.gen(function* () {
     RabbitMQConfigLive
   )
 
+  // MongoDB repository layer for PilotProduct
+  const PilotProductRepositoryLayer = MongodbPilotProductRepositoryLive.pipe(
+    Layer.provide(MongoDatabaseLive)
+  )
+
+  // Shopify client layer (using fake for now)
+  // TODO: Replace FakeShopifyClientLive with real GraphQL client
+  const ShopifyClientLayer = FakeShopifyClientLive
+
   yield* Effect.provide(
     Effect.gen(function* () {
       yield* Effect.logInfo(`Starting ${CONSUMER_NAME} consumer...`)
@@ -76,14 +88,19 @@ const program = Effect.gen(function* () {
 
       yield* Effect.logInfo("RabbitMQ topology initialized")
 
-      // TODO: Replace with shopifySyncHandler
-      yield* startConsumer(CONSUMER_NAME, helloWorldHandler)
+      // Start shopify sync consumer
+      yield* startConsumer(CONSUMER_NAME, shopifySyncHandler)
 
-      yield* Effect.logInfo("Hello from consumer 1! (Shopify Sync) - waiting for messages...")
+      yield* Effect.logInfo(`${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished events...`)
 
       yield* Effect.never
     }),
-    Layer.mergeAll(RabbitMQLayer, LoggerLive)
+    Layer.mergeAll(
+      RabbitMQLayer,
+      LoggerLive,
+      PilotProductRepositoryLayer,
+      ShopifyClientLayer
+    )
   )
 })
 

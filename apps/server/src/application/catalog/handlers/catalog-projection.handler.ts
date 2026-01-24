@@ -27,35 +27,27 @@ export const catalogProjectionHandler: MessageHandler<
   CatalogProductRepository
 > = (event) =>
     Effect.gen(function* () {
+      const { productId, correlationId, userId } = event
+
       yield* Effect.logInfo("Processing product publication for catalog projection").pipe(
         Effect.annotateLogs({
-          productId: event.productId,
-          correlationId: event.correlationId,
-          userId: event.userId,
+          productId,
+          correlationId,
+          userId,
         }),
         Effect.withLogSpan("catalog-projection.process")
       )
 
-      yield* projectToCatalog(event).pipe(
+      const catalogProduct = yield* projectToCatalog(event).pipe(
         Effect.mapError((projectionError) =>
           new MessageHandlerError({ event, cause: projectionError.cause })
-        ),
-        Effect.matchEffect({
-          onSuccess: (product) =>
-            Effect.logInfo("Successfully projected product to catalog").pipe(
-              Effect.annotateLogs({
-                catalogProductId: product.id,
-                publishedAt: product.publishedAt.toISOString(),
-              })
-            ),
-          onFailure: (error) =>
-            Effect.logError("Failed to project product to catalog").pipe(
-              Effect.annotateLogs({
-                error: String(error.cause),
-                productId: event.productId,
-              })
-            )
-        })
+        )
+      )
 
+      yield* Effect.logInfo("Successfully projected product to catalog").pipe(
+        Effect.annotateLogs({
+          catalogProductId: catalogProduct.id,
+          publishedAt: catalogProduct.publishedAt.toISOString(),
+        })
       )
     })

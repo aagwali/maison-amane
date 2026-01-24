@@ -7,3 +7,8 @@ export {
   EventPublishError,
   type EventPublisherService,
 } from "./event-publisher"
+export {
+  ShopifyClient,
+  ShopifyClientError,
+  type ShopifyClientService,
+} from "./shopify-client"

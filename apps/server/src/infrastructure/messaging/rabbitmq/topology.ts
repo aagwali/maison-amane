@@ -25,7 +25,11 @@ export const makeQueueNames = (consumerName: string) => ({
 
 export const RoutingKeys = {
   PILOT_PRODUCT_PUBLISHED: "product.published",
+  PILOT_PRODUCT_SYNCED: "product.synced",
+  CATALOG_PRODUCT_PROJECTED: "catalog.projected",
   ALL_PILOT_EVENTS: "product.*",
+  ALL_CATALOG_EVENTS: "catalog.*",
+  ALL_EVENTS: "#",
 } as const
 
 // ============================================
@@ -85,11 +89,11 @@ export const setupConsumerQueue = (consumerName: string) =>
           durable: true,
         })
 
-        // Bind DLQ to DLX
+        // Bind DLQ to DLX (only for product.published events)
         await channel.bindQueue(
           queues.dlq,
           Exchanges.PILOT_EVENTS_DLX,
-          RoutingKeys.ALL_PILOT_EVENTS
+          RoutingKeys.PILOT_PRODUCT_PUBLISHED
         )
 
         // 2. Retry Queue (holds messages before retry)
@@ -111,11 +115,12 @@ export const setupConsumerQueue = (consumerName: string) =>
           },
         })
 
-        // Bind main queue to main exchange
+        // Bind main queue to main exchange (explicit routing key, not wildcard)
+        // Each consumer only receives PilotProductPublished events
         await channel.bindQueue(
           queues.main,
           Exchanges.PILOT_EVENTS,
-          RoutingKeys.ALL_PILOT_EVENTS
+          RoutingKeys.PILOT_PRODUCT_PUBLISHED
         )
       },
       catch: (error) => new TopologySetupError({ cause: error }),

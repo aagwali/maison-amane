@@ -1,7 +1,6 @@
 // src/application/pilot/handlers/create-pilot-product.handler.ts
 
 import { Effect } from 'effect'
-import { logLevel } from 'effect/Config'
 
 import {
   MakeCustomVariant,
@@ -18,7 +17,6 @@ import {
   EventPublisher,
   IdGenerator,
   PilotProductRepository,
-  type IdGeneratorService,
 } from '../../../ports/driven'
 import {
   type ValidatedProductData,
@@ -67,7 +65,7 @@ const createAggregate = (
 
     const productId = yield* idGen.generateProductId()
     const now = yield* clock.now()
-    const variants = yield* createVariants(validated.variants, idGen)
+    const variants = createVariants(validated.variants)
 
     return MakePilotProduct({
       _tag: "PilotProduct",
@@ -86,38 +84,27 @@ const createAggregate = (
     })
   })
 
-const createVariant = (
-  v: ValidatedVariant,
-  idGen: IdGeneratorService
-): Effect.Effect<ProductVariant> =>
-  Effect.gen(function* () {
-    const variantId = yield* idGen.generateVariantId()
-    if (v._tag === "CustomVariant") {
-      return MakeCustomVariant({
-        _tag: "CustomVariant",
-        id: variantId,
-        size: Size.CUSTOM,
-        customDimensions: v.customDimensions,
-        price: v.price,
-      })
-    }
-    return MakeStandardVariant({
-      _tag: "StandardVariant",
-      id: variantId,
-      size: v.size,
+const createVariant = (v: ValidatedVariant): ProductVariant => {
+  if (v._tag === "CustomVariant") {
+    return MakeCustomVariant({
+      _tag: "CustomVariant",
+      size: Size.CUSTOM,
+      customDimensions: v.customDimensions,
+      price: v.price,
     })
+  }
+  return MakeStandardVariant({
+    _tag: "StandardVariant",
+    size: v.size,
   })
+}
 
 const createVariants = (
-  validatedVariants: readonly [ValidatedVariant, ...ValidatedVariant[]],
-  idGen: IdGeneratorService
-): Effect.Effect<readonly [ProductVariant, ...ProductVariant[]]> =>
-  Effect.gen(function* () {
-    const [first, ...rest] = validatedVariants
-    const firstVariant = yield* createVariant(first, idGen)
-    const restVariants = yield* Effect.all(rest.map((v) => createVariant(v, idGen)))
-    return [firstVariant, ...restVariants] as const
-  })
+  validatedVariants: readonly [ValidatedVariant, ...ValidatedVariant[]]
+): readonly [ProductVariant, ...ProductVariant[]] => {
+  const [first, ...rest] = validatedVariants
+  return [createVariant(first), ...rest.map(createVariant)] as const
+}
 
 // ============================================
 // EVENT EMISSION

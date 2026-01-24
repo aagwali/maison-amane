@@ -8,13 +8,11 @@ import { Schema as S } from 'effect'
 
 export const StandardVariantResponseDto = S.Struct({
   _tag: S.Literal('StandardVariant'),
-  id: S.String,
   size: S.String,
 })
 
 export const CustomVariantResponseDto = S.Struct({
   _tag: S.Literal('CustomVariant'),
-  id: S.String,
   size: S.Literal('CUSTOM'),
   customDimensions: S.Struct({
     width: S.Number,

@@ -7,27 +7,27 @@ import { Effect, Layer } from 'effect'
 
 import { EventPublisher } from '../ports/driven'
 
-import type { PilotDomainEvent } from "../domain/pilot"
+import type { DomainEvent } from "../domain"
 
 export const makeSpyEventPublisher = () => {
-  const events: PilotDomainEvent[] = []
+  const events: DomainEvent[] = []
 
   return {
-    publish: (event: PilotDomainEvent) =>
+    publish: (event: DomainEvent) =>
       Effect.sync(() => {
         events.push(event)
       }),
 
     // Test helpers
-    get emittedEvents(): readonly PilotDomainEvent[] {
+    get emittedEvents(): readonly DomainEvent[] {
       return events
     },
 
-    get lastEvent(): PilotDomainEvent | undefined {
+    get lastEvent(): DomainEvent | undefined {
       return events[events.length - 1]
     },
 
-    hasEmitted(tag: PilotDomainEvent["_tag"]): boolean {
+    hasEmitted(tag: DomainEvent["_tag"]): boolean {
       return events.some((e) => e._tag === tag)
     },
 

@@ -41,7 +41,32 @@ export const MakePilotProductPublished = (params: {
 })
 
 // ============================================
+// PILOT PRODUCT SYNCED
+// ============================================
+
+const PilotProductSyncedSchema = S.TaggedStruct("PilotProductSynced", {
+  productId: ProductIdSchema,
+  shopifyProductId: S.String,
+  correlationId: CorrelationIdSchema,
+  userId: UserIdSchema,
+  timestamp: S.Date,
+})
+
+export type PilotProductSynced = typeof PilotProductSyncedSchema.Type
+
+export const MakePilotProductSynced = (params: {
+  productId: ProductId
+  shopifyProductId: string
+  correlationId: CorrelationId
+  userId: UserId
+  timestamp: Date
+}): PilotProductSynced => ({
+  _tag: "PilotProductSynced",
+  ...params,
+})
+
+// ============================================
 // DOMAIN EVENTS UNION
 // ============================================
 
-export type PilotDomainEvent = PilotProductPublished
+export type PilotDomainEvent = PilotProductPublished | PilotProductSynced
