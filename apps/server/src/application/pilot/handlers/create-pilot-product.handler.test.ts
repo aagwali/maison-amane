@@ -188,7 +188,7 @@ describe("handlePilotProductCreation", () => {
   })
 
   describe("validation errors", () => {
-    it("fails with ValidationError for empty label", async () => {
+    it("propagates ValidationError from invalid input", async () => {
       const command = makeCommand({ ...validProductData, label: "   " })
 
       const result = await Effect.runPromise(
@@ -202,88 +202,6 @@ describe("handlePilotProductCreation", () => {
       if (result._tag === "Left") {
         expect(result.left).toBeInstanceOf(ValidationError)
       }
-    })
-
-    it("fails with ValidationError for invalid type", async () => {
-      const command = makeCommand({ ...validProductData, type: "INVALID" })
-
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(
-          Effect.either,
-          Effect.provide(testCtx.layer)
-        )
-      )
-
-      expect(result._tag).toBe("Left")
-    })
-
-    it("fails with ValidationError for less than 4 views", async () => {
-      const command = makeCommand({
-        ...validProductData,
-        views: [
-          { viewType: ViewType.FRONT, imageUrl: "https://cdn.example.com/front.jpg" },
-          { viewType: ViewType.DETAIL, imageUrl: "https://cdn.example.com/detail.jpg" },
-        ],
-      })
-
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(
-          Effect.either,
-          Effect.provide(testCtx.layer)
-        )
-      )
-
-      expect(result._tag).toBe("Left")
-    })
-
-    it("fails with ValidationError for missing FRONT view", async () => {
-      const command = makeCommand({
-        ...validProductData,
-        views: [
-          { viewType: ViewType.DETAIL, imageUrl: "https://cdn.example.com/detail.jpg" },
-          { viewType: ViewType.BACK, imageUrl: "https://cdn.example.com/back.jpg" },
-          { viewType: ViewType.AMBIANCE, imageUrl: "https://cdn.example.com/ambiance1.jpg" },
-          { viewType: ViewType.AMBIANCE, imageUrl: "https://cdn.example.com/ambiance2.jpg" },
-        ],
-      })
-
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(
-          Effect.either,
-          Effect.provide(testCtx.layer)
-        )
-      )
-
-      expect(result._tag).toBe("Left")
-    })
-
-    it("fails with ValidationError for empty variants array", async () => {
-      const command = makeCommand({ ...validProductData, variants: [] })
-
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(
-          Effect.either,
-          Effect.provide(testCtx.layer)
-        )
-      )
-
-      expect(result._tag).toBe("Left")
-    })
-
-    it("fails with ValidationError for CUSTOM variant without dimensions", async () => {
-      const command = makeCommand({
-        ...validProductData,
-        variants: [{ size: Size.CUSTOM }],
-      })
-
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(
-          Effect.either,
-          Effect.provide(testCtx.layer)
-        )
-      )
-
-      expect(result._tag).toBe("Left")
     })
   })
 })

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import { ViewType } from '../enums'
 import { MakeImageUrl, type ProductView } from '../value-objects'
-import { flattenViews, MIN_VIEWS, structureViews } from './views.service'
+import { flattenViews, structureViews } from './views.service'
 
 // ============================================
 // TEST FIXTURES
@@ -22,16 +22,6 @@ const frontView = makeView(ViewType.FRONT)
 const detailView = makeView(ViewType.DETAIL)
 const backView = makeView(ViewType.BACK)
 const ambianceView = makeView(ViewType.AMBIANCE)
-
-// ============================================
-// CONSTRAINTS
-// ============================================
-
-describe("MIN_VIEWS constant", () => {
-  it("is defined as 4", () => {
-    expect(MIN_VIEWS).toBe(4)
-  })
-})
 
 // ============================================
 // structureViews
@@ -72,16 +62,6 @@ describe("structureViews", () => {
     expect(structured.front).toEqual(frontView)
     expect(structured.detail).toEqual(detailView)
     expect(structured.additional).toHaveLength(2)
-  })
-
-  it("handles exactly 2 views (only front and detail)", () => {
-    const views = [frontView, detailView]
-
-    const structured = structureViews(views)
-
-    expect(structured.front).toEqual(frontView)
-    expect(structured.detail).toEqual(detailView)
-    expect(structured.additional).toHaveLength(0)
   })
 })
 

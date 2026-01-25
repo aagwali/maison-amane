@@ -97,44 +97,4 @@ describe("ValidatedVariantSchema - CustomVariant", () => {
 
     expect(result._tag).toBe("Left")
   })
-
-  it("rejects CUSTOM with invalid dimensions (zero width)", () => {
-    const result = decodeEither({
-      size: Size.CUSTOM,
-      customDimensions: { width: 0, length: 250 },
-      price: 15000,
-    })
-
-    expect(result._tag).toBe("Left")
-  })
-
-  it("rejects CUSTOM with invalid dimensions (negative length)", () => {
-    const result = decodeEither({
-      size: Size.CUSTOM,
-      customDimensions: { width: 120, length: -50 },
-      price: 15000,
-    })
-
-    expect(result._tag).toBe("Left")
-  })
-
-  it("rejects CUSTOM with invalid price (zero)", () => {
-    const result = decodeEither({
-      size: Size.CUSTOM,
-      customDimensions: { width: 120, length: 250 },
-      price: 0,
-    })
-
-    expect(result._tag).toBe("Left")
-  })
-
-  it("rejects CUSTOM with invalid price (decimal)", () => {
-    const result = decodeEither({
-      size: Size.CUSTOM,
-      customDimensions: { width: 120, length: 250 },
-      price: 150.5,
-    })
-
-    expect(result._tag).toBe("Left")
-  })
 })

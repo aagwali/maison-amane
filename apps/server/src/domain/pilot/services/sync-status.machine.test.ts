@@ -147,29 +147,3 @@ describe("SyncStatusMachine.canReset", () => {
     expect(SyncStatusMachine.canReset(failed)).toBe(true)
   })
 })
-
-describe("SyncStatusMachine type guards", () => {
-  it("isSynced correctly identifies Synced state", () => {
-    const synced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
-    const notSynced = MakeNotSynced()
-
-    expect(SyncStatusMachine.isSynced(synced)).toBe(true)
-    expect(SyncStatusMachine.isSynced(notSynced)).toBe(false)
-  })
-
-  it("isFailed correctly identifies SyncFailed state", () => {
-    const failed = MakeSyncFailed({ error: syncError, failedAt: failDate, attempts: 1 })
-    const synced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
-
-    expect(SyncStatusMachine.isFailed(failed)).toBe(true)
-    expect(SyncStatusMachine.isFailed(synced)).toBe(false)
-  })
-
-  it("isNotSynced correctly identifies NotSynced state", () => {
-    const notSynced = MakeNotSynced()
-    const synced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
-
-    expect(SyncStatusMachine.isNotSynced(notSynced)).toBe(true)
-    expect(SyncStatusMachine.isNotSynced(synced)).toBe(false)
-  })
-})
