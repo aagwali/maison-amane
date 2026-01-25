@@ -8,7 +8,7 @@ import { Effect, Layer } from 'effect'
 import { MakeProductId } from '../domain/pilot'
 import { IdGenerator } from '../ports/driven'
 
-export const makeDeterministicIdGenerator = (prefix = "test") => {
+export const stubIdGenerator = (prefix = "test") => {
   let productCounter = 0
   let correlationCounter = 0
 
@@ -33,7 +33,7 @@ export const makeDeterministicIdGenerator = (prefix = "test") => {
   }
 }
 
-export type DeterministicIdGenerator = ReturnType<typeof makeDeterministicIdGenerator>
+export type StubIdGenerator = ReturnType<typeof stubIdGenerator>
 
-export const DeterministicIdGeneratorLive = (prefix = "test") =>
-  Layer.succeed(IdGenerator, makeDeterministicIdGenerator(prefix))
+export const StubIdGeneratorLive = (prefix = "test") =>
+  Layer.succeed(IdGenerator, stubIdGenerator(prefix))

@@ -1,14 +1,13 @@
 // src/domain/catalog/events.ts
 
+import { Data } from 'effect'
 import * as S from 'effect/Schema'
 
 import {
-  type CorrelationId,
   CorrelationIdSchema,
-  type UserId,
   UserIdSchema,
 } from '../shared'
-import { type ProductId, ProductIdSchema } from '../pilot'
+import { ProductIdSchema } from '../pilot'
 
 // ============================================
 // CATALOG PRODUCT PROJECTED
@@ -23,15 +22,10 @@ const CatalogProductProjectedSchema = S.TaggedStruct("CatalogProductProjected", 
 
 export type CatalogProductProjected = typeof CatalogProductProjectedSchema.Type
 
-export const MakeCatalogProductProjected = (params: {
-  productId: ProductId
-  correlationId: CorrelationId
-  userId: UserId
-  timestamp: Date
-}): CatalogProductProjected => ({
-  _tag: "CatalogProductProjected",
-  ...params,
-})
+export const MakeCatalogProductProjected = (
+  params: Omit<CatalogProductProjected, "_tag">
+): CatalogProductProjected =>
+   Data.case<CatalogProductProjected>()({ _tag: "CatalogProductProjected", ...params })
 
 // ============================================
 // CATALOG DOMAIN EVENTS UNION

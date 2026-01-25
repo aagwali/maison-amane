@@ -16,7 +16,7 @@ export interface InMemoryRepository<T, Id extends string> {
   readonly upsert: (entity: T) => Effect.Effect<T, PersistenceError>
 }
 
-export const makeInMemoryRepository = <T, Id extends string>(
+export const createInMemoryRepository = <T, Id extends string>(
   getId: (entity: T) => Id
 ): InMemoryRepository<T, Id> => {
   const store = new Map<Id, T>()

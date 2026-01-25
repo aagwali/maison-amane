@@ -20,7 +20,7 @@ import type { CatalogProductRepositoryService } from "../../../ports/driven"
 // MONGODB CATALOG PRODUCT REPOSITORY
 // ============================================
 
-export const makeMongodbCatalogProductRepository = (
+export const createMongodbCatalogProductRepository = (
   db: any // MongoDB Db instance
 ): CatalogProductRepositoryService => {
   const collection = db.collection("catalog_products")
@@ -38,11 +38,11 @@ export const makeMongodbCatalogProductRepository = (
 }
 
 // Layer factory (requires db instance at runtime)
-export const makeMongodbCatalogProductRepositoryLayer = (db: any) =>
-  Layer.succeed(CatalogProductRepositoryTag, makeMongodbCatalogProductRepository(db))
+export const provideMongodbCatalogProductRepository = (db: any) =>
+  Layer.succeed(CatalogProductRepositoryTag, createMongodbCatalogProductRepository(db))
 
 // Live layer using MongoDatabase service
 export const MongodbCatalogProductRepositoryLive = Layer.effect(
   CatalogProductRepositoryTag,
-  Effect.map(MongoDatabase, (db) => makeMongodbCatalogProductRepository(db))
+  Effect.map(MongoDatabase, (db) => createMongodbCatalogProductRepository(db))
 )

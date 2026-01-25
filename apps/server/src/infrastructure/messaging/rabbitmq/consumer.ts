@@ -5,9 +5,9 @@ import { Data, Duration, Effect, Fiber, Runtime } from 'effect'
 import { RabbitMQConfig } from '../../../composition/config'
 import { RabbitMQConnection } from './connection'
 import {
+  buildQueueNames,
   calculateDelay,
   getRetryCount,
-  makeQueueNames,
 } from './topology'
 
 import type * as amqp from "amqplib"
@@ -90,7 +90,7 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
     const config = yield* RabbitMQConfig
     const runtime = yield* Effect.runtime<R>()
     const runFork = Runtime.runFork(runtime)
-    const queues = makeQueueNames(consumerName)
+    const queues = buildQueueNames(consumerName)
 
     yield* Effect.sync(() => {
       channel.consume(

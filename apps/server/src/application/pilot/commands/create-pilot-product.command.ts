@@ -1,6 +1,6 @@
 // src/application/pilot/commands/create-pilot-product.command.ts
 
-import { case as constructor } from 'effect/Data'
+import { Data } from 'effect'
 import * as S from 'effect/Schema'
 
 import { CorrelationIdSchema, UserIdSchema } from '../../../domain/shared'
@@ -51,5 +51,7 @@ const PilotProductCreationCommandSchema = S.TaggedStruct(
 export type PilotProductCreationCommand =
   typeof PilotProductCreationCommandSchema.Type
 
-export const MakePilotProductCreationCommand =
-  constructor<PilotProductCreationCommand>()
+export const MakePilotProductCreationCommand = (
+  params: Omit<PilotProductCreationCommand, "_tag">
+): PilotProductCreationCommand =>
+   Data.case<PilotProductCreationCommand>()({ _tag: "CreatePilotProductCommand", ...params })

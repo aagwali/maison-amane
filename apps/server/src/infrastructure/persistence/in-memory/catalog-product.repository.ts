@@ -3,17 +3,17 @@
 import { Layer } from 'effect'
 
 import { CatalogProductRepository } from '../../../ports/driven'
-import { makeInMemoryRepository } from './generic.repository'
+import { createInMemoryRepository } from './generic.repository'
 
 import type { CatalogProduct } from "../../../domain/catalog"
 // ============================================
 // IN-MEMORY CATALOG PRODUCT REPOSITORY
 // ============================================
 
-export const makeInMemoryCatalogProductRepository = () =>
-  makeInMemoryRepository<CatalogProduct, string>((product) => product.id)
+export const createInMemoryCatalogProductRepository = () =>
+  createInMemoryRepository<CatalogProduct, string>((product) => product.id)
 
 export const InMemoryCatalogProductRepositoryLive = Layer.succeed(
   CatalogProductRepository,
-  makeInMemoryCatalogProductRepository()
+  createInMemoryCatalogProductRepository()
 )

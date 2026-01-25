@@ -1,8 +1,9 @@
 // src/domain/pilot/value-objects/sync-status.ts
 
+import { Data } from 'effect'
 import * as S from 'effect/Schema'
 
-import { type ShopifyProductId, ShopifyProductIdSchema } from './ids'
+import { ShopifyProductIdSchema } from './ids'
 
 // ============================================
 // SYNC ERROR
@@ -56,24 +57,13 @@ export const SyncStatusSchema = S.Union(NotSyncedSchema, SyncedSchema, SyncFaile
 export type SyncStatus = typeof SyncStatusSchema.Type
 
 // ============================================
-// FACTORIES
+// CONSTRUCTORS
 // ============================================
 
-export const MakeNotSynced = (): NotSynced => ({ _tag: "NotSynced" })
+export const MakeNotSynced = (): NotSynced => Data.case<NotSynced>()({ _tag: "NotSynced" })
 
-export const MakeSynced = (params: {
-  shopifyProductId: ShopifyProductId
-  syncedAt: Date
-}): Synced => ({
-  _tag: "Synced",
-  ...params,
-})
+export const MakeSynced = (params: Omit<Synced, "_tag">): Synced =>
+  Data.case<Synced>()({ _tag: "Synced", ...params })
 
-export const MakeSyncFailed = (params: {
-  error: SyncError
-  failedAt: Date
-  attempts: number
-}): SyncFailed => ({
-  _tag: "SyncFailed",
-  ...params,
-})
+export const MakeSyncFailed = (params: Omit<SyncFailed, "_tag">): SyncFailed =>
+  Data.case<SyncFailed>()({ _tag: "SyncFailed", ...params })

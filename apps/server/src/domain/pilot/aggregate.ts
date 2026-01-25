@@ -54,8 +54,13 @@ import {
 // VARIANT CONSTRUCTORS
 // ============================================
 
-export const MakeStandardVariant = Data.case<StandardVariant>()
-export const MakeCustomVariant = Data.case<CustomVariant>()
+export const MakeStandardVariant = (
+  params: Omit<StandardVariant, "_tag">
+): StandardVariant => Data.case<StandardVariant>()({ _tag: "StandardVariant", ...params })
+
+export const MakeCustomVariant = (
+  params: Omit<CustomVariant, "_tag">
+): CustomVariant => Data.case<CustomVariant>()({ _tag: "CustomVariant", ...params })
 
 // ============================================
 // PILOT PRODUCT (Aggregate Root)
@@ -80,4 +85,6 @@ const PilotProductSchema = S.TaggedStruct("PilotProduct", {
 
 export type PilotProduct = typeof PilotProductSchema.Type
 
-export const MakePilotProduct = Data.case<PilotProduct>()
+export const MakePilotProduct = (
+  params: Omit<PilotProduct, "_tag">
+): PilotProduct => Data.case<PilotProduct>()({ _tag: "PilotProduct", ...params })

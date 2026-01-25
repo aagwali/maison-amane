@@ -35,7 +35,6 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
         const errorCtx = { correlationId, instance: FullPaths.PILOT_PRODUCT }
 
         const command = MakePilotProductCreationCommand({
-          _tag: 'CreatePilotProductCommand',
           data: toUnvalidatedProductData(payload),
           correlationId: MakeCorrelationId(correlationId),
           userId: MakeUserId(userId),

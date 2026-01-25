@@ -9,7 +9,7 @@ import { EventPublisher } from '../ports/driven'
 
 import type { DomainEvent } from "../domain"
 
-export const makeSpyEventPublisher = () => {
+export const spyEventPublisher = () => {
   const events: DomainEvent[] = []
 
   return {
@@ -37,10 +37,10 @@ export const makeSpyEventPublisher = () => {
   }
 }
 
-export type SpyEventPublisher = ReturnType<typeof makeSpyEventPublisher>
+export type SpyEventPublisher = ReturnType<typeof spyEventPublisher>
 
 export const SpyEventPublisherLive = () => {
-  const spy = makeSpyEventPublisher()
+  const spy = spyEventPublisher()
   return {
     layer: Layer.succeed(EventPublisher, spy),
     spy,

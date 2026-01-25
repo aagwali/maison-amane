@@ -35,8 +35,8 @@ import {
   IdGenerator,
   PilotProductRepository,
 } from '../ports/driven'
-import { DeterministicIdGeneratorLive } from './deterministic-id-generator'
-import { FixedClockLive, TEST_DATE } from './fixed-clock'
+import { StubIdGeneratorLive } from './deterministic-id-generator'
+import { StubClockLive, TEST_DATE } from './fixed-clock'
 import {
   type SpyEventPublisher,
   SpyEventPublisherLive,
@@ -52,13 +52,13 @@ export interface TestContext {
   eventSpy: SpyEventPublisher
 }
 
-export const makeTestLayer = (): TestContext => {
+export const provideTestLayer = (): TestContext => {
   const { layer: eventPublisherLayer, spy: eventSpy } = SpyEventPublisherLive()
 
   const layer = Layer.mergeAll(
     InMemoryPilotProductRepositoryLive,
-    DeterministicIdGeneratorLive(),
-    FixedClockLive(),
+    StubIdGeneratorLive(),
+    StubClockLive(),
     eventPublisherLayer
   )
 

@@ -9,13 +9,13 @@ export {
 } from "./mongo-database"
 
 export {
-  makeMongodbPilotProductRepository,
+  createMongodbPilotProductRepository,
   MongodbPilotProductRepositoryLive
 } from "./pilot-product.repository"
 
 export {
-  makeMongodbCatalogProductRepository,
-  makeMongodbCatalogProductRepositoryLayer,
+  createMongodbCatalogProductRepository,
+  provideMongodbCatalogProductRepository,
   MongodbCatalogProductRepositoryLive
 } from "./catalog-product.repository"
 

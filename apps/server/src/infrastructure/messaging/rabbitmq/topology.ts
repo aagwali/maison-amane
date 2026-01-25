@@ -17,7 +17,7 @@ export const Exchanges = {
 } as const
 
 // Queue names are dynamic per consumer
-export const makeQueueNames = (consumerName: string) => ({
+export const buildQueueNames = (consumerName: string) => ({
   main: `${consumerName}.queue`,
   dlq: `${consumerName}.dlq`,
   retry: `${consumerName}.retry`,
@@ -80,7 +80,7 @@ export const setupConsumerQueue = (consumerName: string) =>
   Effect.gen(function* () {
     const { channel } = yield* RabbitMQConnection
     const config = yield* RabbitMQConfig
-    const queues = makeQueueNames(consumerName)
+    const queues = buildQueueNames(consumerName)
 
     yield* Effect.tryPromise({
       try: async () => {

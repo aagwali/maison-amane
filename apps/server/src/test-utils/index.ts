@@ -1,24 +1,24 @@
 // src/test-utils/index.ts
 
 export {
-  makeDeterministicIdGenerator,
-  DeterministicIdGeneratorLive,
-  type DeterministicIdGenerator,
+  stubIdGenerator,
+  StubIdGeneratorLive,
+  type StubIdGenerator,
 } from "./deterministic-id-generator"
 
 export {
-  makeFixedClock,
-  FixedClockLive,
+  stubClock,
+  StubClockLive,
   TEST_DATE,
 } from "./fixed-clock"
 
 export {
-  makeSpyEventPublisher,
+  spyEventPublisher,
   SpyEventPublisherLive,
   type SpyEventPublisher,
 } from "./spy-event-publisher"
 
 export {
-  makeTestLayer,
+  provideTestLayer,
   type TestContext,
 } from "./test-layer"

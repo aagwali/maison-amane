@@ -1,21 +1,16 @@
 // src/domain/catalog/projections/catalog-product.ts
 
+import { Data } from 'effect'
 import * as S from 'effect/Schema'
 
 import {
-  type ImageUrl,
   ImageUrlSchema,
   PositiveCmSchema,
-  PriceRange,
   PriceRangeSchema,
   PriceSchema,
-  ProductCategory,
   ProductCategorySchema,
-  type ProductDescription,
   ProductDescriptionSchema,
-  type ProductId,
   ProductIdSchema,
-  type ProductLabel,
   ProductLabelSchema,
 } from '../../pilot'
 
@@ -66,21 +61,6 @@ const CatalogProductSchema = S.TaggedStruct("CatalogProduct", {
 
 export type CatalogProduct = typeof CatalogProductSchema.Type
 
-export const MakeCatalogProduct = (params: {
-  id: ProductId
-  label: ProductLabel
-  description: ProductDescription
-  category: ProductCategory
-  priceRange: PriceRange
-  variants: CatalogVariant[]
-  images: {
-    front: ImageUrl
-    detail: ImageUrl
-    gallery: ImageUrl[]
-  }
-  shopifyUrl?: string
-  publishedAt: Date
-}): CatalogProduct => ({
-  _tag: "CatalogProduct",
-  ...params,
-})
+export const MakeCatalogProduct = (
+  params: Omit<CatalogProduct, "_tag">
+): CatalogProduct => Data.case<CatalogProduct>()({ _tag: "CatalogProduct", ...params })

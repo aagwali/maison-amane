@@ -1,14 +1,13 @@
 // src/domain/pilot/events.ts
 
+import { Data } from 'effect'
 import * as S from 'effect/Schema'
 
 import {
-  type CorrelationId,
   CorrelationIdSchema,
-  type UserId,
   UserIdSchema,
 } from '../shared'
-import { type ProductId, ProductIdSchema } from './value-objects'
+import { ProductIdSchema } from './value-objects'
 
 import type { PilotProduct } from "./aggregate"
 
@@ -29,16 +28,9 @@ const PilotProductPublishedSchema = S.TaggedStruct("PilotProductPublished", {
 
 export type PilotProductPublished = typeof PilotProductPublishedSchema.Type
 
-export const MakePilotProductPublished = (params: {
-  productId: ProductId
-  product: PilotProduct
-  correlationId: CorrelationId
-  userId: UserId
-  timestamp: Date
-}): PilotProductPublished => ({
-  _tag: "PilotProductPublished",
-  ...params,
-})
+export const MakePilotProductPublished = (
+  params: Omit<PilotProductPublished, "_tag">
+): PilotProductPublished => Data.case<PilotProductPublished>()({ _tag: "PilotProductPublished", ...params })
 
 // ============================================
 // PILOT PRODUCT SYNCED
@@ -54,16 +46,9 @@ const PilotProductSyncedSchema = S.TaggedStruct("PilotProductSynced", {
 
 export type PilotProductSynced = typeof PilotProductSyncedSchema.Type
 
-export const MakePilotProductSynced = (params: {
-  productId: ProductId
-  shopifyProductId: string
-  correlationId: CorrelationId
-  userId: UserId
-  timestamp: Date
-}): PilotProductSynced => ({
-  _tag: "PilotProductSynced",
-  ...params,
-})
+export const MakePilotProductSynced = (
+  params: Omit<PilotProductSynced, "_tag">
+): PilotProductSynced => Data.case<PilotProductSynced>()({ _tag: "PilotProductSynced", ...params })
 
 // ============================================
 // DOMAIN EVENTS UNION

@@ -40,7 +40,7 @@ const serializeEvent = (event: DomainEvent): Buffer => {
 // RABBITMQ EVENT PUBLISHER IMPLEMENTATION
 // ============================================
 
-const makeRabbitMQEventPublisher = Effect.gen(function* () {
+const createRabbitMQEventPublisher = Effect.gen(function* () {
   const { channel } = yield* RabbitMQConnection
 
   return {
@@ -96,5 +96,5 @@ const makeRabbitMQEventPublisher = Effect.gen(function* () {
 
 export const RabbitMQEventPublisherLayer = Layer.effect(
   EventPublisher,
-  makeRabbitMQEventPublisher
+  createRabbitMQEventPublisher
 )

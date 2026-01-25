@@ -13,7 +13,7 @@ import type { ShopifyProductSetInput, ShopifyProductSetResponse } from "../../ap
 // FAKE SHOPIFY CLIENT
 // ============================================
 
-const makeFakeShopifyClient = () => ({
+const fakeShopifyClient = () => ({
   productSet: (
     input: ShopifyProductSetInput
   ): Effect.Effect<ShopifyProductSetResponse> =>
@@ -47,5 +47,5 @@ const makeFakeShopifyClient = () => ({
 
 export const FakeShopifyClientLive = Layer.succeed(
   ShopifyClient,
-  makeFakeShopifyClient()
+  fakeShopifyClient()
 )

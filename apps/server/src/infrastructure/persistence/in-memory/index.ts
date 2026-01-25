@@ -1,13 +1,13 @@
 // src/infrastructure/persistence/in-memory/index.ts
 
-export { makeInMemoryRepository, type InMemoryRepository } from "./generic.repository"
+export { createInMemoryRepository, type InMemoryRepository } from "./generic.repository"
 
 export {
-  makeInMemoryPilotProductRepository,
+  createInMemoryPilotProductRepository,
   InMemoryPilotProductRepositoryLive
 } from "./pilot-product.repository"
 
 export {
-  makeInMemoryCatalogProductRepository,
+  createInMemoryCatalogProductRepository,
   InMemoryCatalogProductRepositoryLive
 } from "./catalog-product.repository"

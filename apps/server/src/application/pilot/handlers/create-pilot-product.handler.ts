@@ -68,7 +68,6 @@ const createAggregate = (
     const variants = createVariants(validated.variants)
 
     return MakePilotProduct({
-      _tag: "PilotProduct",
       syncStatus: MakeNotSynced(),
       id: productId,
       label: validated.label,
@@ -87,14 +86,12 @@ const createAggregate = (
 const createVariant = (v: ValidatedVariant): ProductVariant => {
   if (v._tag === "CustomVariant") {
     return MakeCustomVariant({
-      _tag: "CustomVariant",
       size: Size.CUSTOM,
       customDimensions: v.customDimensions,
       price: v.price,
     })
   }
   return MakeStandardVariant({
-    _tag: "StandardVariant",
     size: v.size,
   })
 }

@@ -24,7 +24,7 @@ import type { PilotProductRepositoryService } from "../../../ports/driven"
 
 const COLLECTION_NAME = "pilot_products"
 
-export const makeMongodbPilotProductRepository = (db: Db): PilotProductRepositoryService => {
+export const createMongodbPilotProductRepository = (db: Db): PilotProductRepositoryService => {
   // Type-safe collection with PilotProductDocument schema
   const collection: Collection<PilotProductDocument> = db.collection(COLLECTION_NAME)
 
@@ -46,5 +46,5 @@ export const makeMongodbPilotProductRepository = (db: Db): PilotProductRepositor
 // Layer that requires MongoDatabase and provides PilotProductRepository
 export const MongodbPilotProductRepositoryLive = Layer.effect(
   PilotProductRepositoryTag,
-  Effect.map(MongoDatabase, (db) => makeMongodbPilotProductRepository(db))
+  Effect.map(MongoDatabase, (db) => createMongodbPilotProductRepository(db))
 )

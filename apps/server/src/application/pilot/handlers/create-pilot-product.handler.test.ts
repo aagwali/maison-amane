@@ -16,7 +16,7 @@ import {
   ViewType,
 } from '../../../domain/pilot'
 import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
-import { makeTestLayer, TEST_DATE } from '../../../test-utils'
+import { provideTestLayer, TEST_DATE } from '../../../test-utils'
 import {
   MakePilotProductCreationCommand,
   type UnvalidatedProductData,
@@ -46,9 +46,8 @@ const validProductData: UnvalidatedProductData = {
   status: ProductStatus.DRAFT,
 }
 
-const makeCommand = (data: UnvalidatedProductData = validProductData) =>
+const buildCommand = (data: UnvalidatedProductData = validProductData) =>
   MakePilotProductCreationCommand({
-    _tag: "CreatePilotProductCommand",
     data,
     correlationId: MakeCorrelationId("test-correlation-id"),
     userId: MakeUserId("test-user"),
@@ -60,15 +59,15 @@ const makeCommand = (data: UnvalidatedProductData = validProductData) =>
 // ============================================
 
 describe("handlePilotProductCreation", () => {
-  let testCtx: ReturnType<typeof makeTestLayer>
+  let testCtx: ReturnType<typeof provideTestLayer>
 
   beforeEach(() => {
-    testCtx = makeTestLayer()
+    testCtx = provideTestLayer()
   })
 
   describe("success cases", () => {
     it("creates a product with deterministic ID", async () => {
-      const command = makeCommand()
+      const command = buildCommand()
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -79,7 +78,7 @@ describe("handlePilotProductCreation", () => {
     })
 
     it("creates product with correct timestamps from fixed clock", async () => {
-      const command = makeCommand()
+      const command = buildCommand()
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -90,7 +89,7 @@ describe("handlePilotProductCreation", () => {
     })
 
     it("creates variants as value objects with correct sizes", async () => {
-      const command = makeCommand()
+      const command = buildCommand()
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -104,7 +103,7 @@ describe("handlePilotProductCreation", () => {
     })
 
     it("initializes syncStatus as NotSynced", async () => {
-      const command = makeCommand()
+      const command = buildCommand()
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -114,7 +113,7 @@ describe("handlePilotProductCreation", () => {
     })
 
     it("structures views correctly", async () => {
-      const command = makeCommand()
+      const command = buildCommand()
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -136,7 +135,7 @@ describe("handlePilotProductCreation", () => {
           },
         ],
       }
-      const command = makeCommand(dataWithCustom)
+      const command = buildCommand(dataWithCustom)
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -153,7 +152,7 @@ describe("handlePilotProductCreation", () => {
 
   describe("event emission", () => {
     it("does NOT emit event for DRAFT status", async () => {
-      const command = makeCommand({ ...validProductData, status: ProductStatus.DRAFT })
+      const command = buildCommand({ ...validProductData, status: ProductStatus.DRAFT })
 
       await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -163,7 +162,7 @@ describe("handlePilotProductCreation", () => {
     })
 
     it("emits PilotProductPublished for PUBLISHED status", async () => {
-      const command = makeCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
+      const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
       await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -174,7 +173,7 @@ describe("handlePilotProductCreation", () => {
     })
 
     it("includes product and correlation info in event", async () => {
-      const command = makeCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
+      const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
       await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
@@ -189,7 +188,7 @@ describe("handlePilotProductCreation", () => {
 
   describe("validation errors", () => {
     it("propagates ValidationError from invalid input", async () => {
-      const command = makeCommand({ ...validProductData, label: "   " })
+      const command = buildCommand({ ...validProductData, label: "   " })
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(

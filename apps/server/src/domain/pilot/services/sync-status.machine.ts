@@ -2,6 +2,8 @@
 
 import {
   MakeNotSynced,
+  MakeSynced,
+  MakeSyncFailed,
   type NotSynced,
   type ShopifyProductId,
   type Synced,
@@ -16,33 +18,27 @@ import {
 
 export const SyncStatusMachine = {
   // Initial state
-  initial: MakeNotSynced,
+  initial: (): NotSynced => MakeNotSynced(),
 
   // Transitions
   markSynced: (
     _current: NotSynced | SyncFailed,
     shopifyProductId: ShopifyProductId,
     syncedAt: Date
-  ): Synced => ({
-    _tag: "Synced",
-    shopifyProductId,
-    syncedAt,
-  }),
+  ): Synced => MakeSynced({ shopifyProductId, syncedAt }),
 
   markFailed: (
     current: NotSynced | SyncFailed,
     error: SyncError,
     failedAt: Date
-  ): SyncFailed => ({
-    _tag: "SyncFailed",
-    error,
-    failedAt,
-    attempts: current._tag === "SyncFailed" ? current.attempts + 1 : 1,
-  }),
+  ): SyncFailed =>
+    MakeSyncFailed({
+      error,
+      failedAt,
+      attempts: current._tag === "SyncFailed" ? current.attempts + 1 : 1,
+    }),
 
-  reset: (_current: Synced | SyncFailed): NotSynced => ({
-    _tag: "NotSynced",
-  }),
+  reset: (_current: Synced | SyncFailed): NotSynced => MakeNotSynced(),
 
   // Guards
   canSync: (status: SyncStatus): status is NotSynced | SyncFailed =>
