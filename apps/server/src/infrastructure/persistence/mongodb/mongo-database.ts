@@ -12,12 +12,9 @@ export { MongoConfig, MongoConfigLive }
 // MONGO DATABASE SERVICE
 // ============================================
 
-export class MongoDatabase extends Context.Tag("MongoDatabase")<
-  MongoDatabase,
-  Db
->() {}
+export class MongoDatabase extends Context.Tag('MongoDatabase')<MongoDatabase, Db>() {}
 
-export class MongoDatabaseError extends Data.TaggedError("MongoDatabaseError")<{
+export class MongoDatabaseError extends Data.TaggedError('MongoDatabaseError')<{
   readonly cause: unknown
 }> {}
 
@@ -31,18 +28,18 @@ export const MongoDatabaseLive = Layer.scoped(
     const config = yield* MongoConfig
     const uri = Redacted.value(config.uri)
 
-    const { client, db } = yield* Effect.acquireRelease(
+    const { client: _client, db } = yield* Effect.acquireRelease(
       Effect.tryPromise({
         try: async () => {
           const mongoClient = new MongoClient(uri)
           await mongoClient.connect()
           return { client: mongoClient, db: mongoClient.db(config.database) }
         },
-        catch: (error) => new MongoDatabaseError({ cause: error })
+        catch: (error) => new MongoDatabaseError({ cause: error }),
       }),
       ({ client: mongoClient }) =>
         Effect.promise(() => mongoClient.close()).pipe(
-          Effect.tap(() => Effect.logInfo("MongoDB connection closed"))
+          Effect.tap(() => Effect.logInfo('MongoDB connection closed'))
         )
     )
 
