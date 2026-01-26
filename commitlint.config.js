@@ -31,6 +31,7 @@ export default {
         'client',
         'catalog-projection',
         'shopify-sync',
+        'docs',
 
         // Packages
         'api',

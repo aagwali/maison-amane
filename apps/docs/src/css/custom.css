@@ -1,0 +1,122 @@
+/**
+ * Maison Amane - Documentation Theme
+ *
+ * Couleurs personnalisees et styles globaux.
+ */
+
+:root {
+  --ifm-color-primary: #2e5d4e;
+  --ifm-color-primary-dark: #29534a;
+  --ifm-color-primary-darker: #264e45;
+  --ifm-color-primary-darkest: #1f4139;
+  --ifm-color-primary-light: #336752;
+  --ifm-color-primary-lighter: #366c57;
+  --ifm-color-primary-lightest: #3d7963;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --ifm-heading-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #5ba88a;
+  --ifm-color-primary-dark: #4f9a7d;
+  --ifm-color-primary-darker: #499377;
+  --ifm-color-primary-darkest: #3c7962;
+  --ifm-color-primary-light: #69b297;
+  --ifm-color-primary-lighter: #71b69d;
+  --ifm-color-primary-lightest: #87c3ad;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Tables styling */
+table {
+  display: table;
+  width: 100%;
+}
+
+table th {
+  background-color: var(--ifm-color-emphasis-100);
+  font-weight: 600;
+}
+
+[data-theme='dark'] table th {
+  background-color: var(--ifm-color-emphasis-200);
+}
+
+/* Mermaid diagram container */
+.mermaid {
+  background-color: transparent !important;
+}
+
+/* Code block styling */
+.prism-code {
+  font-size: 0.9rem;
+}
+
+/* Admonitions */
+.admonition {
+  margin-bottom: 1.5rem;
+}
+
+/* Custom component styles */
+.flow-step {
+  border-left: 3px solid var(--ifm-color-primary);
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+}
+
+.source-link {
+  font-size: 0.85rem;
+  color: var(--ifm-color-primary);
+}
+
+/* Data flow table */
+.data-flow-table-container {
+  margin: 1.5rem 0;
+}
+
+.data-flow-table td:first-child {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.data-flow-table code {
+  font-size: 0.8rem;
+}
+
+/* Step number badge */
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--ifm-color-primary);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* File reference styling */
+.file-ref {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.85em;
+  background-color: var(--ifm-color-emphasis-100);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+}
+
+/* Glossary definition list */
+.glossary-term {
+  font-weight: 600;
+  color: var(--ifm-color-primary-dark);
+  margin-top: 1.5rem;
+}
+
+.glossary-definition {
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--ifm-color-emphasis-300);
+}
