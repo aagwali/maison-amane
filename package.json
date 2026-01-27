@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "install": "pnpm install",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "test": "turbo run test",
