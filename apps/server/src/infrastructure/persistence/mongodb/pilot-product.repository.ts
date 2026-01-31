@@ -1,28 +1,22 @@
 // src/infrastructure/persistence/mongodb/pilot-product.repository.ts
 
 import { Effect, Layer } from 'effect'
+import type { Collection, Db } from 'mongodb'
 
-import { PilotProductRepository as PilotProductRepositoryTag } from '../../../ports/driven'
 import {
-  fromDocument,
-  type PilotProductDocument,
-  toDocument,
-} from './mappers'
+  PilotProductRepository as PilotProductRepositoryTag,
+  type PilotProductRepositoryService,
+} from '../../../ports/driven'
+
+import { fromDocument, type PilotProductDocument, toDocument } from './mappers'
 import { MongoDatabase } from './mongo-database'
-import {
-  findDocumentById,
-  insertDocument,
-  replaceDocument,
-} from './base-repository'
-
-import type { Collection, Db } from "mongodb"
-import type { PilotProductRepositoryService } from "../../../ports/driven"
+import { findDocumentById, insertDocument, replaceDocument } from './base-repository'
 
 // ============================================
 // MONGODB PILOT PRODUCT REPOSITORY
 // ============================================
 
-const COLLECTION_NAME = "pilot_products"
+const COLLECTION_NAME = 'pilot_products'
 
 export const createMongodbPilotProductRepository = (db: Db): PilotProductRepositoryService => {
   // Type-safe collection with PilotProductDocument schema

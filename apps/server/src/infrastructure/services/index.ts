@@ -1,11 +1,10 @@
 // src/infrastructure/services/index.ts
 
-export { UuidIdGeneratorLive } from "./uuid-id-generator"
-export { SystemClockLive } from "./system-clock"
-export { ConsoleEventPublisherLive } from "./console-event-publisher"
-export { FakeShopifyClientLive } from "./fake-shopify-client"
-export { JsonLogger } from "./json-logger"
-export { PrettyLogger } from "./pretty-logger"
+export { UuidIdGeneratorLive } from './uuid-id-generator'
+export { SystemClockLive } from './system-clock'
+export { FakeShopifyClientLive } from './fake-shopify-client'
+export { JsonLogger } from './json-logger'
+export { PrettyLogger } from './pretty-logger'
 export {
   RequestContext,
   RequestContextLive,
@@ -14,4 +13,4 @@ export {
   withRequestContextLogs,
   withObservability,
   type RequestContextValue,
-} from "./request-context"
+} from './request-context'

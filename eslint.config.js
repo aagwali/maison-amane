@@ -2,6 +2,7 @@ import eslint from '@eslint/js'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 import prettier from 'eslint-config-prettier'
+import pluginImportX from 'eslint-plugin-import-x'
 
 export default [
   // Ignore patterns
@@ -39,6 +40,7 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tseslint,
+      'import-x': pluginImportX,
     },
     rules: {
       // TypeScript recommended rules (without type-checking)
@@ -68,6 +70,13 @@ export default [
       'no-console': ['warn', { allow: ['warn', 'error', 'log'] }],
       'prefer-const': 'error',
       'no-var': 'error',
+      'import-x/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          'newlines-between': 'always',
+        },
+      ],
     },
   },
 

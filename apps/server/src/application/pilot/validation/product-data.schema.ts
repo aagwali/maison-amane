@@ -19,12 +19,10 @@ import {
   ValidationError,
   ViewType,
 } from '../../../domain/pilot'
-import {
-  type ValidatedVariant,
-  ValidatedVariantSchema,
-} from './variant-input.schema'
+import type { UnvalidatedProductData } from '../commands'
 
-import type { UnvalidatedProductData } from "../commands"
+import { type ValidatedVariant, ValidatedVariantSchema } from './variant-input.schema'
+
 // Re-export for convenience
 export type { ValidatedVariant }
 
@@ -33,20 +31,17 @@ export type { ValidatedVariant }
 // ============================================
 
 const ProductViewsInputSchema = S.Array(ProductViewSchema).pipe(
+  S.filter((views): views is readonly ProductView[] => views.length >= MIN_VIEWS, {
+    message: () => `Minimum ${MIN_VIEWS} views required`,
+  }),
   S.filter(
-    (views): views is readonly ProductView[] => views.length >= MIN_VIEWS,
-    { message: () => `Minimum ${MIN_VIEWS} views required` },
+    (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.FRONT),
+    { message: () => 'FRONT view is required' }
   ),
   S.filter(
-    (views): views is readonly ProductView[] =>
-      views.some((v) => v.viewType === ViewType.FRONT),
-    { message: () => "FRONT view is required" },
-  ),
-  S.filter(
-    (views): views is readonly ProductView[] =>
-      views.some((v) => v.viewType === ViewType.DETAIL),
-    { message: () => "DETAIL view is required" },
-  ),
+    (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.DETAIL),
+    { message: () => 'DETAIL view is required' }
+  )
 )
 
 const ProductViewsTransformSchema = S.transform(
@@ -56,7 +51,7 @@ const ProductViewsTransformSchema = S.transform(
     strict: true,
     decode: structureViews,
     encode: flattenViews,
-  },
+  }
 )
 
 // ============================================
@@ -81,8 +76,8 @@ export type ValidatedProductData = typeof ValidatedProductDataSchema.Type
 // ============================================
 
 export const validateProductData = (
-  data: UnvalidatedProductData,
+  data: UnvalidatedProductData
 ): Effect.Effect<ValidatedProductData, ValidationError> =>
   S.decodeUnknown(ValidatedProductDataSchema)(data).pipe(
-    Effect.mapError(ValidationError.fromParseError),
+    Effect.mapError(ValidationError.fromParseError)
   )
