@@ -2,7 +2,6 @@
 // Catalog Projection Consumer - maintains read model for alternative UI
 
 import { Config, Effect, Layer, Logger, LogLevel } from 'effect'
-
 import { NodeRuntime } from '@effect/platform-node'
 import {
   catalogProjectionHandler,
@@ -12,28 +11,32 @@ import {
   PrettyLogger,
   RabbitMQConfigLive,
   RabbitMQConnectionLayer,
-  setupConsumerQueue,
-  setupTopology,
   startConsumer,
 } from '@maison-amane/server'
+import { declareCatalogProjectionInfra, declareExchanges } from '@maison-amane/shared-kernel'
 
 // ============================================
 // CONSUMER IDENTITY
 // ============================================
 
-const CONSUMER_NAME = "catalog-projection"
+const CONSUMER_NAME = 'catalog-projection'
 
 // ============================================
 // CONSUMER CONFIGURATION
 // ============================================
 
 const ConsumerConfig = Config.all({
-  nodeEnv: Config.literal("development", "production", "test")("NODE_ENV").pipe(
-    Config.withDefault("development")
-  ),
-  logLevel: Config.literal("debug", "info", "warn", "error")("LOG_LEVEL").pipe(
-    Config.withDefault("info")
-  ),
+  nodeEnv: Config.literal(
+    'development',
+    'production',
+    'test'
+  )('NODE_ENV').pipe(Config.withDefault('development')),
+  logLevel: Config.literal(
+    'debug',
+    'info',
+    'warn',
+    'error'
+  )('LOG_LEVEL').pipe(Config.withDefault('info')),
 })
 
 // ============================================
@@ -54,17 +57,14 @@ const logLevelMap = {
 const program = Effect.gen(function* () {
   const { nodeEnv, logLevel } = yield* ConsumerConfig
 
-  const isDev = nodeEnv !== "production"
+  const isDev = nodeEnv !== 'production'
   const minLevel = Logger.minimumLogLevel(logLevelMap[logLevel])
 
   const LoggerLive = isDev
     ? Layer.mergeAll(Logger.replace(Logger.defaultLogger, PrettyLogger), minLevel)
     : Layer.mergeAll(Logger.replace(Logger.defaultLogger, JsonLogger), minLevel)
 
-  const RabbitMQLayer = Layer.provideMerge(
-    RabbitMQConnectionLayer,
-    RabbitMQConfigLive
-  )
+  const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLayer, RabbitMQConfigLive)
 
   // MongoDB repository layer with its database dependency
   const CatalogProductRepositoryLayer = MongodbCatalogProductRepositoryLive.pipe(
@@ -75,26 +75,24 @@ const program = Effect.gen(function* () {
     Effect.gen(function* () {
       yield* Effect.logInfo(`Starting ${CONSUMER_NAME} consumer...`)
 
-      // Setup shared exchanges
-      yield* setupTopology
+      // Declare exchanges (shared topology)
+      yield* declareExchanges
 
-      // Setup this consumer's queues
-      yield* setupConsumerQueue(CONSUMER_NAME)
+      // Declare catalog projection infrastructure (queues, bindings)
+      yield* declareCatalogProjectionInfra
 
-      yield* Effect.logInfo("RabbitMQ topology initialized")
+      yield* Effect.logInfo('RabbitMQ topology initialized')
 
       // Start catalog projection consumer
       yield* startConsumer(CONSUMER_NAME, catalogProjectionHandler)
 
-      yield* Effect.logInfo(`${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished events...`)
+      yield* Effect.logInfo(
+        `${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished events...`
+      )
 
       yield* Effect.never
     }),
-    Layer.mergeAll(
-      RabbitMQLayer,
-      LoggerLive,
-      CatalogProductRepositoryLayer
-    )
+    Layer.mergeAll(RabbitMQLayer, LoggerLive, CatalogProductRepositoryLayer)
   )
 })
 

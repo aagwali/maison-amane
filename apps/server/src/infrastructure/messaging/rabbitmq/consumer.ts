@@ -1,33 +1,30 @@
 // src/infrastructure/messaging/rabbitmq/consumer.ts
 
 import { Data, Duration, Effect, Fiber, Runtime } from 'effect'
+import { RabbitMQConnection } from '@maison-amane/shared-kernel'
+import type * as amqp from 'amqplib'
 
 import { RabbitMQConfig } from '../../../composition/config'
-import { RabbitMQConnection } from './connection'
-import {
-  buildQueueNames,
-  calculateDelay,
-  getRetryCount,
-} from './topology'
+import type { PilotDomainEvent } from '../../../domain/pilot'
 
-import type * as amqp from "amqplib"
-import type { PilotDomainEvent } from "../../../domain/pilot"
+import { buildQueueNames, calculateDelay, getRetryCount } from './topology'
+
 
 // ============================================
 // CONSUMER ERRORS
 // ============================================
 
-export class MessageParseError extends Data.TaggedError("MessageParseError")<{
+export class MessageParseError extends Data.TaggedError('MessageParseError')<{
   readonly rawMessage: string
   readonly cause: unknown
 }> {}
 
-export class MessageHandlerError extends Data.TaggedError("MessageHandlerError")<{
+export class MessageHandlerError extends Data.TaggedError('MessageHandlerError')<{
   readonly event: PilotDomainEvent
   readonly cause: unknown
 }> {}
 
-export class MessageTimeoutError extends Data.TaggedError("MessageTimeoutError")<{
+export class MessageTimeoutError extends Data.TaggedError('MessageTimeoutError')<{
   readonly event: PilotDomainEvent
   readonly timeoutMs: number
 }> {}
@@ -55,10 +52,9 @@ const deserializeEvent = (
 // MESSAGE HANDLER TYPE
 // ============================================
 
-export type MessageHandler<
-  E extends PilotDomainEvent = PilotDomainEvent,
-  R = never
-> = (event: E) => Effect.Effect<void, MessageHandlerError, R>
+export type MessageHandler<E extends PilotDomainEvent = PilotDomainEvent, R = never> = (
+  event: E
+) => Effect.Effect<void, MessageHandlerError, R>
 
 // ============================================
 // HELLO WORLD HANDLER (for testing)
@@ -66,13 +62,13 @@ export type MessageHandler<
 
 export const helloWorldHandler: MessageHandler = (event) =>
   Effect.gen(function* () {
-    yield* Effect.logInfo("Hello from consumer! Event received").pipe(
+    yield* Effect.logInfo('Hello from consumer! Event received').pipe(
       Effect.annotateLogs({
         eventType: event._tag,
         productId: event.productId,
         correlationId: event.correlationId,
       }),
-      Effect.withLogSpan("consumer.helloWorld")
+      Effect.withLogSpan('consumer.helloWorld')
     )
   })
 
@@ -103,7 +99,7 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
               const event = yield* deserializeEvent(msg)
               const retryCount = getRetryCount(msg, queues.retry)
 
-              yield* Effect.logDebug("Processing message").pipe(
+              yield* Effect.logDebug('Processing message').pipe(
                 Effect.annotateLogs({
                   retryCount,
                   maxAttempts: config.retry.maxAttempts,
@@ -113,10 +109,11 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
               const handleWithTimeout = handler(event as E).pipe(
                 Effect.timeoutFail({
                   duration: Duration.millis(config.handlerTimeoutMs),
-                  onTimeout: () => new MessageTimeoutError({
-                    event,
-                    timeoutMs: config.handlerTimeoutMs
-                  }),
+                  onTimeout: () =>
+                    new MessageTimeoutError({
+                      event,
+                      timeoutMs: config.handlerTimeoutMs,
+                    }),
                 })
               )
 
@@ -125,11 +122,12 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
                   onSuccess: () => Effect.sync(() => channel.ack(msg)),
                   onFailure: (error) =>
                     Effect.gen(function* () {
-                      const errorMessage = error._tag === "MessageTimeoutError"
-                        ? `Handler timeout after ${error.timeoutMs}ms`
-                        : String(error.cause)
+                      const errorMessage =
+                        error._tag === 'MessageTimeoutError'
+                          ? `Handler timeout after ${error.timeoutMs}ms`
+                          : String(error.cause)
 
-                      yield* Effect.logWarning("Handler failed").pipe(
+                      yield* Effect.logWarning('Handler failed').pipe(
                         Effect.annotateLogs({
                           error: errorMessage,
                           errorType: error._tag,
@@ -139,9 +137,7 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
 
                       if (retryCount >= config.retry.maxAttempts - 1) {
                         // Max retries reached → send to DLQ
-                        yield* Effect.logError(
-                          "Max retries reached, sending to DLQ"
-                        ).pipe(
+                        yield* Effect.logError('Max retries reached, sending to DLQ').pipe(
                           Effect.annotateLogs({
                             queue: queues.dlq,
                           })
@@ -156,7 +152,7 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
                           config.retry.multiplier
                         )
 
-                        yield* Effect.logInfo("Scheduling retry").pipe(
+                        yield* Effect.logInfo('Scheduling retry').pipe(
                           Effect.annotateLogs({
                             nextRetryIn: `${delay}ms`,
                             attempt: retryCount + 2,
@@ -167,14 +163,14 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
                         // Publish to retry queue with TTL
                         yield* Effect.sync(() => {
                           channel.publish(
-                            "", // Default exchange
+                            '', // Default exchange
                             queues.retry,
                             msg.content,
                             {
                               persistent: true,
                               headers: {
                                 ...msg.properties.headers,
-                                "x-death": msg.properties.headers?.["x-death"],
+                                'x-death': msg.properties.headers?.['x-death'],
                               },
                               expiration: String(delay),
                             }
@@ -188,7 +184,7 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
             }).pipe(
               Effect.catchAll((parseError) =>
                 Effect.gen(function* () {
-                  yield* Effect.logError("Failed to parse message").pipe(
+                  yield* Effect.logError('Failed to parse message').pipe(
                     Effect.annotateLogs({ error: String(parseError) })
                   )
                   // Invalid message → send to DLQ directly
@@ -204,13 +200,13 @@ export const startConsumer = <E extends PilotDomainEvent, R>(
       )
     })
 
-    yield* Effect.logInfo("Consumer started").pipe(
+    yield* Effect.logInfo('Consumer started').pipe(
       Effect.annotateLogs({
         consumer: consumerName,
         queue: queues.main,
         maxRetries: config.retry.maxAttempts,
         handlerTimeoutMs: config.handlerTimeoutMs,
       }),
-      Effect.withLogSpan("consumer.start")
+      Effect.withLogSpan('consumer.start')
     )
   })

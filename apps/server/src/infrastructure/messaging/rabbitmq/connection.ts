@@ -1,7 +1,8 @@
 // src/infrastructure/messaging/rabbitmq/connection.ts
 
 import amqp from 'amqplib'
-import { Context, Data, Effect, Layer, Redacted } from 'effect'
+import { Data, Effect, Layer, Redacted } from 'effect'
+import { RabbitMQConnection } from '@maison-amane/shared-kernel'
 
 import { RabbitMQConfig } from '../../../composition/config'
 
@@ -9,23 +10,9 @@ import { RabbitMQConfig } from '../../../composition/config'
 // RABBITMQ CONNECTION ERROR
 // ============================================
 
-export class RabbitMQConnectionError extends Data.TaggedError("RabbitMQConnectionError")<{
+export class RabbitMQConnectionError extends Data.TaggedError('RabbitMQConnectionError')<{
   readonly cause: unknown
 }> {}
-
-// ============================================
-// RABBITMQ CONNECTION SERVICE
-// ============================================
-
-export interface RabbitMQConnectionValue {
-  readonly connection: amqp.ChannelModel
-  readonly channel: amqp.Channel
-}
-
-export class RabbitMQConnection extends Context.Tag("RabbitMQConnection")<
-  RabbitMQConnection,
-  RabbitMQConnectionValue
->() {}
 
 // ============================================
 // RABBITMQ CONNECTION LAYER (scoped)
@@ -51,10 +38,10 @@ export const RabbitMQConnectionLayer = Layer.scoped(
         Effect.promise(async () => {
           await ch.close()
           await conn.close()
-        }).pipe(Effect.tap(() => Effect.logInfo("RabbitMQ connection closed")))
+        }).pipe(Effect.tap(() => Effect.logInfo('RabbitMQ connection closed')))
     )
 
-    yield* Effect.logInfo("RabbitMQ connected")
+    yield* Effect.logInfo('RabbitMQ connected')
     return { connection, channel }
   })
 )

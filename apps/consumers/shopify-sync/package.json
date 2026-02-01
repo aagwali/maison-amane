@@ -13,6 +13,7 @@
     "@effect/platform": "^0.77.1",
     "@effect/platform-node": "^0.73.1",
     "@maison-amane/server": "workspace:*",
+    "@maison-amane/shared-kernel": "workspace:*",
     "effect": "^3.13.1",
     "amqplib": "^0.10.9"
   },

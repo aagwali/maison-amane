@@ -1,19 +1,19 @@
 // src/infrastructure/messaging/rabbitmq/topology.ts
 
 import { Data, Effect } from 'effect'
+import { RabbitMQConnection } from '@maison-amane/shared-kernel'
+import type * as amqp from 'amqplib'
 
 import { RabbitMQConfig } from '../../../composition/config'
-import { RabbitMQConnection } from './connection'
 
-import type * as amqp from "amqplib"
 
 // ============================================
 // EXCHANGE & QUEUE NAMES
 // ============================================
 
 export const Exchanges = {
-  PILOT_EVENTS: "pilot.events",
-  PILOT_EVENTS_DLX: "pilot.events.dlx",
+  PILOT_EVENTS: 'pilot.events',
+  PILOT_EVENTS_DLX: 'pilot.events.dlx',
 } as const
 
 // Queue names are dynamic per consumer
@@ -24,19 +24,19 @@ export const buildQueueNames = (consumerName: string) => ({
 })
 
 export const RoutingKeys = {
-  PILOT_PRODUCT_PUBLISHED: "product.published",
-  PILOT_PRODUCT_SYNCED: "product.synced",
-  CATALOG_PRODUCT_PROJECTED: "catalog.projected",
-  ALL_PILOT_EVENTS: "product.*",
-  ALL_CATALOG_EVENTS: "catalog.*",
-  ALL_EVENTS: "#",
+  PILOT_PRODUCT_PUBLISHED: 'product.published',
+  PILOT_PRODUCT_SYNCED: 'product.synced',
+  CATALOG_PRODUCT_PROJECTED: 'catalog.projected',
+  ALL_PILOT_EVENTS: 'product.*',
+  ALL_CATALOG_EVENTS: 'catalog.*',
+  ALL_EVENTS: '#',
 } as const
 
 // ============================================
 // TOPOLOGY SETUP ERROR
 // ============================================
 
-export class TopologySetupError extends Data.TaggedError("TopologySetupError")<{
+export class TopologySetupError extends Data.TaggedError('TopologySetupError')<{
   readonly cause: unknown
 }> {}
 
@@ -51,21 +51,21 @@ export const setupTopology = Effect.gen(function* () {
   yield* Effect.tryPromise({
     try: async () => {
       // Dead Letter Exchange (for failed messages)
-      await channel.assertExchange(Exchanges.PILOT_EVENTS_DLX, "topic", {
+      await channel.assertExchange(Exchanges.PILOT_EVENTS_DLX, 'topic', {
         durable: true,
       })
 
       // Main Exchange (for domain events)
-      await channel.assertExchange(Exchanges.PILOT_EVENTS, "topic", {
+      await channel.assertExchange(Exchanges.PILOT_EVENTS, 'topic', {
         durable: true,
       })
     },
     catch: (error) => new TopologySetupError({ cause: error }),
   })
 
-  yield* Effect.logInfo("RabbitMQ exchanges configured").pipe(
+  yield* Effect.logInfo('RabbitMQ exchanges configured').pipe(
     Effect.annotateLogs({
-      exchanges: Object.values(Exchanges).join(", "),
+      exchanges: Object.values(Exchanges).join(', '),
     })
   )
 })
@@ -100,9 +100,9 @@ export const setupConsumerQueue = (consumerName: string) =>
         await channel.assertQueue(queues.retry, {
           durable: true,
           arguments: {
-            "x-dead-letter-exchange": Exchanges.PILOT_EVENTS,
-            "x-dead-letter-routing-key": RoutingKeys.PILOT_PRODUCT_PUBLISHED,
-            "x-message-ttl": config.retry.initialDelayMs,
+            'x-dead-letter-exchange': Exchanges.PILOT_EVENTS,
+            'x-dead-letter-routing-key': RoutingKeys.PILOT_PRODUCT_PUBLISHED,
+            'x-message-ttl': config.retry.initialDelayMs,
           },
         })
 
@@ -110,8 +110,8 @@ export const setupConsumerQueue = (consumerName: string) =>
         await channel.assertQueue(queues.main, {
           durable: true,
           arguments: {
-            "x-dead-letter-exchange": Exchanges.PILOT_EVENTS_DLX,
-            "x-dead-letter-routing-key": RoutingKeys.PILOT_PRODUCT_PUBLISHED,
+            'x-dead-letter-exchange': Exchanges.PILOT_EVENTS_DLX,
+            'x-dead-letter-routing-key': RoutingKeys.PILOT_PRODUCT_PUBLISHED,
           },
         })
 
@@ -126,10 +126,10 @@ export const setupConsumerQueue = (consumerName: string) =>
       catch: (error) => new TopologySetupError({ cause: error }),
     })
 
-    yield* Effect.logInfo("Consumer queue configured").pipe(
+    yield* Effect.logInfo('Consumer queue configured').pipe(
       Effect.annotateLogs({
         consumer: consumerName,
-        queues: Object.values(queues).join(", "),
+        queues: Object.values(queues).join(', '),
       })
     )
 
@@ -141,10 +141,12 @@ export const setupConsumerQueue = (consumerName: string) =>
 // ============================================
 
 export const getRetryCount = (msg: amqp.ConsumeMessage, retryQueueName: string): number => {
-  const xDeath = msg.properties.headers?.["x-death"] as Array<{
-    count: number
-    queue: string
-  }> | undefined
+  const xDeath = msg.properties.headers?.['x-death'] as
+    | Array<{
+        count: number
+        queue: string
+      }>
+    | undefined
 
   if (!xDeath || xDeath.length === 0) return 0
 

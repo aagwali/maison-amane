@@ -12,9 +12,11 @@
     "./config": "./src/infrastructure/config/main.ts"
   },
   "dependencies": {
-    "effect": "^3.13.1"
+    "effect": "^3.13.1",
+    "amqplib": "^0.10.5"
   },
   "devDependencies": {
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "@types/amqplib": "^0.10.5"
   }
 }

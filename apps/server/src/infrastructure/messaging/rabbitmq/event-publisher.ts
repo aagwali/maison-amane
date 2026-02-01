@@ -1,12 +1,10 @@
 // src/infrastructure/messaging/rabbitmq/event-publisher.ts
 
 import { Effect, Layer } from 'effect'
+import { EXCHANGES, ROUTING_KEYS, RabbitMQConnection } from '@maison-amane/shared-kernel'
 
 import { EventPublisher, EventPublishError } from '../../../ports/driven'
-import { RabbitMQConnection } from './connection'
-import { Exchanges, RoutingKeys } from './topology'
-
-import type { DomainEvent } from "../../../domain"
+import type { DomainEvent } from '../../../domain'
 
 // ============================================
 // EVENT TO ROUTING KEY MAPPER
@@ -14,12 +12,12 @@ import type { DomainEvent } from "../../../domain"
 
 const getRoutingKey = (event: DomainEvent): string => {
   switch (event._tag) {
-    case "PilotProductPublished":
-      return RoutingKeys.PILOT_PRODUCT_PUBLISHED
-    case "PilotProductSynced":
-      return RoutingKeys.PILOT_PRODUCT_SYNCED
-    case "CatalogProductProjected":
-      return RoutingKeys.CATALOG_PRODUCT_PROJECTED
+    case 'PilotProductPublished':
+      return ROUTING_KEYS.PRODUCT_PUBLISHED
+    case 'PilotProductSynced':
+      return ROUTING_KEYS.PRODUCT_SYNCED
+    case 'CatalogProductProjected':
+      return ROUTING_KEYS.CATALOG_PROJECTED
   }
 }
 
@@ -51,41 +49,36 @@ const createRabbitMQEventPublisher = Effect.gen(function* () {
 
         yield* Effect.tryPromise({
           try: async () => {
-            const published = channel.publish(
-              Exchanges.PILOT_EVENTS,
-              routingKey,
-              message,
-              {
-                persistent: true, // Durable messages
-                contentType: "application/json",
-                headers: {
-                  eventType: event._tag,
-                  correlationId: event.correlationId,
-                  userId: event.userId,
-                  publishedAt: new Date().toISOString(),
-                },
-              }
-            )
+            const published = channel.publish(EXCHANGES.PILOT_EVENTS, routingKey, message, {
+              persistent: true, // Durable messages
+              contentType: 'application/json',
+              headers: {
+                eventType: event._tag,
+                correlationId: event.correlationId,
+                userId: event.userId,
+                publishedAt: new Date().toISOString(),
+              },
+            })
 
             if (!published) {
-              throw new Error("Channel buffer full, message not published")
+              throw new Error('Channel buffer full, message not published')
             }
           },
           catch: (error) => new EventPublishError({ event, cause: error }),
         })
 
-        yield* Effect.logInfo("Domain event published to RabbitMQ").pipe(
+        yield* Effect.logInfo('Domain event published to RabbitMQ').pipe(
           Effect.annotateLogs({
             eventType: event._tag,
             productId: event.productId,
             correlationId: event.correlationId,
             userId: event.userId,
-            exchange: Exchanges.PILOT_EVENTS,
+            exchange: EXCHANGES.PILOT_EVENTS,
             routingKey,
           }),
-          Effect.withLogSpan("rabbitmq.publish")
+          Effect.withLogSpan('rabbitmq.publish')
         )
-      })
+      }),
   }
 })
 
