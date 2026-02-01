@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: maison-amane-server
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/maison-amane
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: password
+    virtual-host: maison_amane
+
+server:
+  port: 3002
+
+info:
+  app:
+    name: Maison Amane Server (Java)
+    description: Migration Effect-TS vers Java 21 + Spring Boot + Vavr
+    version: 0.0.1-SNAPSHOT
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+shopify:
+  store-domain: ${SHOPIFY_STORE_DOMAIN:}
+  access-token: ${SHOPIFY_ACCESS_TOKEN:}
+  api-version: '2024-01'
