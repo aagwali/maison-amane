@@ -7,9 +7,7 @@ import com.maisonamane.domain.pilot.aggregate.PilotProduct;
 import com.maisonamane.domain.pilot.enums.ProductStatus;
 import com.maisonamane.domain.pilot.error.PilotProductError;
 import com.maisonamane.domain.pilot.error.PilotProductError.PersistenceError;
-import com.maisonamane.domain.pilot.error.PilotProductError.ValidationError;
 import com.maisonamane.domain.pilot.event.PilotProductPublished;
-import com.maisonamane.domain.pilot.valueobject.SyncStatus;
 import com.maisonamane.port.driven.repository.PilotProductRepository;
 import com.maisonamane.port.driven.service.Clock;
 import com.maisonamane.port.driven.service.EventPublisher;
@@ -37,11 +35,10 @@ public class CreatePilotProductHandler {
     private final EventPublisher eventPublisher;
 
     public CreatePilotProductHandler(
-        PilotProductRepository repository,
-        IdGenerator idGenerator,
-        Clock clock,
-        EventPublisher eventPublisher
-    ) {
+            PilotProductRepository repository,
+            IdGenerator idGenerator,
+            Clock clock,
+            EventPublisher eventPublisher) {
         this.repository = repository;
         this.idGenerator = idGenerator;
         this.clock = clock;
@@ -59,14 +56,14 @@ public class CreatePilotProductHandler {
      */
     public Either<PilotProductError, PilotProduct> handle(CreatePilotProductCommand command) {
         return ProductDataValidator.validate(command.data())
-            .mapLeft(err -> (PilotProductError) err)
-            .flatMap(this::createAggregate)
-            .flatMap(this::saveProduct)
-            .peek(product -> {
-                if (product.status() == ProductStatus.PUBLISHED) {
-                    emitEvent(product, command);
-                }
-            });
+                .mapLeft(err -> (PilotProductError) err)
+                .flatMap(this::createAggregate)
+                .flatMap(this::saveProduct)
+                .peek(product -> {
+                    if (product.status() == ProductStatus.PUBLISHED) {
+                        emitEvent(product, command);
+                    }
+                });
     }
 
     private Either<PilotProductError, PilotProduct> createAggregate(ValidatedProductData validated) {
@@ -74,39 +71,36 @@ public class CreatePilotProductHandler {
         var now = clock.now();
 
         var product = PilotProduct.create(
-            productId,
-            validated.label(),
-            validated.type(),
-            validated.category(),
-            validated.description(),
-            validated.priceRange(),
-            validated.variants(),
-            validated.views(),
-            validated.status(),
-            now
-        );
+                productId,
+                validated.label(),
+                validated.type(),
+                validated.category(),
+                validated.description(),
+                validated.priceRange(),
+                validated.variants(),
+                validated.views(),
+                validated.status(),
+                now);
 
         return Either.right(product);
     }
 
     private Either<PilotProductError, PilotProduct> saveProduct(PilotProduct product) {
         return repository.save(product)
-            .mapLeft(err -> PersistenceError.of(err.message(), err.cause()));
+                .mapLeft(err -> PersistenceError.of(err.message(), err.cause()));
     }
 
     private void emitEvent(PilotProduct product, CreatePilotProductCommand command) {
         var now = clock.now();
         var event = PilotProductPublished.of(
-            product,
-            command.correlationId(),
-            command.userId(),
-            now
-        );
+                product,
+                command.correlationId(),
+                command.userId(),
+                now);
 
         eventPublisher.publish(event)
-            .peekLeft(error -> log.error(
-                "Failed to publish event, will be retried. Error: {}",
-                error.message()
-            ));
+                .peekLeft(error -> log.error(
+                        "Failed to publish event, will be retried. Error: {}",
+                        error.message()));
     }
 }

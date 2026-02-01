@@ -19,7 +19,7 @@ public class FixedClock implements Clock {
         return new FixedClock(Instant.parse(isoDateTime));
     }
 
-    public static FixedClock now() {
+    public static FixedClock atNow() {
         return new FixedClock(Instant.now());
     }
 

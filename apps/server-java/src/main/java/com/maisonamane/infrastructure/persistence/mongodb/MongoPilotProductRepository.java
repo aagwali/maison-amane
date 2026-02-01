@@ -9,9 +9,11 @@ import com.maisonamane.port.driven.repository.PilotProductRepository;
 import io.vavr.control.Either;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
+import java.util.Objects;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -25,14 +27,18 @@ public class MongoPilotProductRepository implements PilotProductRepository {
 
     private final MongoTemplate mongoTemplate;
 
-    public MongoPilotProductRepository(MongoTemplate mongoTemplate) {
+    public MongoPilotProductRepository(@NonNull MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 
     @Override
+    @SuppressWarnings("null")
     public Either<PersistenceError, PilotProduct> save(PilotProduct product) {
         return Try.of(() -> {
-                PilotProductDocument doc = PilotProductMapper.toDocument(product);
+                PilotProductDocument doc = Objects.requireNonNull(
+                    PilotProductMapper.toDocument(product),
+                    "Product mapper returned null"
+                );
                 mongoTemplate.insert(doc, COLLECTION_NAME);
                 return product;
             })
@@ -41,6 +47,7 @@ public class MongoPilotProductRepository implements PilotProductRepository {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Either<PersistenceError, Option<PilotProduct>> findById(ProductId id) {
         return Try.of(() -> {
                 Query query = Query.query(Criteria.where("_id").is(id.value()));
@@ -52,9 +59,13 @@ public class MongoPilotProductRepository implements PilotProductRepository {
     }
 
     @Override
+    @SuppressWarnings("null")
     public Either<PersistenceError, PilotProduct> update(PilotProduct product) {
         return Try.of(() -> {
-                PilotProductDocument doc = PilotProductMapper.toDocument(product);
+                PilotProductDocument doc = Objects.requireNonNull(
+                    PilotProductMapper.toDocument(product),
+                    "Product mapper returned null"
+                );
                 Query query = Query.query(Criteria.where("_id").is(product.id().value()));
                 mongoTemplate.findAndReplace(query, doc, COLLECTION_NAME);
                 return product;

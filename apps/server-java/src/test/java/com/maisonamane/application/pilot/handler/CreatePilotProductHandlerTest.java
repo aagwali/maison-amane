@@ -4,7 +4,6 @@ import com.maisonamane.application.pilot.command.CreatePilotProductCommand;
 import com.maisonamane.application.pilot.command.UnvalidatedProductData;
 import com.maisonamane.application.pilot.command.UnvalidatedProductData.*;
 import com.maisonamane.domain.pilot.aggregate.PilotProduct;
-import com.maisonamane.domain.pilot.enums.ProductStatus;
 import com.maisonamane.domain.pilot.event.PilotProductPublished;
 import com.maisonamane.domain.shared.CorrelationId;
 import com.maisonamane.domain.shared.UserId;
@@ -15,7 +14,6 @@ import com.maisonamane.testutil.SpyEventPublisher;
 import io.vavr.control.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,11 +38,10 @@ class CreatePilotProductHandlerTest {
         eventPublisher = new SpyEventPublisher();
 
         handler = new CreatePilotProductHandler(
-            repository,
-            idGenerator,
-            clock,
-            eventPublisher
-        );
+                repository,
+                idGenerator,
+                clock,
+                eventPublisher);
     }
 
     @Test
@@ -52,11 +49,10 @@ class CreatePilotProductHandlerTest {
         // Given
         UnvalidatedProductData data = createValidProductData();
         CreatePilotProductCommand command = CreatePilotProductCommand.of(
-            data,
-            CorrelationId.of("test-correlation-id"),
-            UserId.of("test-user-id"),
-            clock.now()
-        );
+                data,
+                CorrelationId.of("test-correlation-id"),
+                UserId.of("test-user-id"),
+                clock.now());
 
         // When
         Either<?, PilotProduct> result = handler.handle(command);
@@ -71,11 +67,10 @@ class CreatePilotProductHandlerTest {
         // Given
         UnvalidatedProductData data = createValidProductData();
         CreatePilotProductCommand command = CreatePilotProductCommand.of(
-            data,
-            CorrelationId.of("test-correlation-id"),
-            UserId.of("test-user-id"),
-            clock.now()
-        );
+                data,
+                CorrelationId.of("test-correlation-id"),
+                UserId.of("test-user-id"),
+                clock.now());
 
         // When
         handler.handle(command);
@@ -90,11 +85,10 @@ class CreatePilotProductHandlerTest {
         // Given
         UnvalidatedProductData data = createValidProductData("DRAFT");
         CreatePilotProductCommand command = CreatePilotProductCommand.of(
-            data,
-            CorrelationId.of("test-correlation-id"),
-            UserId.of("test-user-id"),
-            clock.now()
-        );
+                data,
+                CorrelationId.of("test-correlation-id"),
+                UserId.of("test-user-id"),
+                clock.now());
 
         // When
         handler.handle(command);
@@ -109,19 +103,16 @@ class CreatePilotProductHandlerTest {
 
     private UnvalidatedProductData createValidProductData(String status) {
         return new UnvalidatedProductData(
-            "Test Product",
-            "TAPIS",
-            "STANDARD",
-            "Test description",
-            "STANDARD",
-            List.of(
-                new UnvalidatedVariant("REGULAR", null, null)
-            ),
-            List.of(
-                new UnvalidatedView("FRONT", "https://example.com/front.jpg"),
-                new UnvalidatedView("DETAIL", "https://example.com/detail.jpg")
-            ),
-            status
-        );
+                "Test Product",
+                "TAPIS",
+                "STANDARD",
+                "Test description",
+                "STANDARD",
+                List.of(
+                        new UnvalidatedVariant("REGULAR", null, null)),
+                List.of(
+                        new UnvalidatedView("FRONT", "https://example.com/front.jpg"),
+                        new UnvalidatedView("DETAIL", "https://example.com/detail.jpg")),
+                status);
     }
 }
