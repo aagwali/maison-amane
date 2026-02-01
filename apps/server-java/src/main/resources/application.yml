@@ -3,7 +3,7 @@ spring:
     name: maison-amane-server
   data:
     mongodb:
-      uri: mongodb://localhost:27017/maison-amane
+      uri: mongodb://admin:password@localhost:27017/maison_amane?authSource=admin
   rabbitmq:
     host: localhost
     port: 5672
