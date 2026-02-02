@@ -1,0 +1,52 @@
+# 📦 Fichiers de la refonte DDD Skills - À sauvegarder
+
+## 📄 Documentation (4 fichiers)
+.claude/skills/README.md
+.claude/skills/MIGRATION.md
+.claude/skills/QUICKSTART.md
+.claude/skills/SUMMARY.md
+
+## 🎯 Skill Principal : ddd-feature-complete
+.claude/skills/ddd-feature-complete/skill.md
+.claude/skills/ddd-feature-complete/scripts/scaffold_bounded_context.py
+.claude/skills/ddd-feature-complete/scripts/generate_repository.py
+.claude/skills/ddd-feature-complete/scripts/generate_handler.py
+
+## 🏗️ Skill : domain-modeling
+.claude/skills/domain-modeling/skill.md
+.claude/skills/domain-modeling/references/aggregates.md
+.claude/skills/domain-modeling/references/value-objects.md
+.claude/skills/domain-modeling/references/unions.md
+.claude/skills/domain-modeling/references/events.md
+.claude/skills/domain-modeling/references/state-machines.md
+
+## ⚙️ Skill : application-use-cases
+.claude/skills/application-use-cases/skill.md
+.claude/skills/application-use-cases/references/command-handlers.md
+.claude/skills/application-use-cases/references/query-handlers.md
+.claude/skills/application-use-cases/references/validation-schemas.md
+.claude/skills/application-use-cases/references/event-handlers.md
+
+## 🔌 Skill : infrastructure-adapters
+.claude/skills/infrastructure-adapters/skill.md
+.claude/skills/infrastructure-adapters/references/mongodb/repository.md
+.claude/skills/infrastructure-adapters/references/mongodb/mapper.md
+.claude/skills/infrastructure-adapters/references/rabbitmq/publisher.md
+.claude/skills/infrastructure-adapters/references/testing/in-memory.md
+
+## 🧪 Skill : testing-effect
+.claude/skills/testing-effect/skill.md
+.claude/skills/testing-effect/references/integration-testing.md
+.claude/skills/testing-effect/references/test-doubles.md
+.claude/skills/testing-effect/references/fixtures.md
+
+## 📊 Résumé
+Total: 29 fichiers créés
+- 5 skills (skill.md)
+- 16 références (patterns détaillés)
+- 3 scripts Python (génération automatique)
+- 4 documents (README, MIGRATION, QUICKSTART, SUMMARY)
+- 1 liste de fichiers (ce fichier)
+
+## ✅ Status
+Refonte complète terminée le 2026-02-02 par Claude Opus 4.5
