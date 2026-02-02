@@ -92,7 +92,7 @@ const program = Effect.gen(function* () {
       yield* startConsumer(CONSUMER_NAME, shopifySyncHandler)
 
       yield* Effect.logInfo(
-        `${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished events...`
+        `${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished and PilotProductUpdated events...`
       )
 
       yield* Effect.never

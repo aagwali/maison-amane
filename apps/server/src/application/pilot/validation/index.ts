@@ -4,8 +4,8 @@ export {
   validateProductData,
   type ValidatedProductData,
   type ValidatedVariant,
-} from "./product-data.schema"
+} from './product-data.schema'
 
-export {
-  ValidatedVariantSchema,
-} from "./variant-input.schema"
+export { ValidatedVariantSchema } from './variant-input.schema'
+
+export { validateUpdateData, type ValidatedUpdateData } from './update-product-data.schema'

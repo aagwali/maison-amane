@@ -49,17 +49,12 @@ export {
   type SyncFailed,
   SyncStatusSchema,
   type SyncStatus,
-} from "./value-objects"
+} from './value-objects'
 
 // ============================================
 // SERVICES
 // ============================================
-export {
-  SyncStatusMachine,
-  structureViews,
-  flattenViews,
-  MIN_VIEWS,
-} from "./services"
+export { SyncStatusMachine, structureViews, flattenViews, MIN_VIEWS } from './services'
 
 // ============================================
 // VARIANTS (value objects, re-exported from entities for compatibility)
@@ -71,7 +66,7 @@ export {
   type CustomVariant,
   ProductVariantSchema,
   type ProductVariant,
-} from "./entities"
+} from './entities'
 
 // ============================================
 // ENUMS
@@ -91,16 +86,12 @@ export {
   ProductStatusSchema,
   ViewTypeSchema,
   type PredefinedSize,
-} from "./enums"
+} from './enums'
 
 // ============================================
 // REFERENCE DATA
 // ============================================
-export {
-  DIMENSION_SETS,
-  getDimensionsForSize,
-  type Dimension,
-} from "./reference-data"
+export { DIMENSION_SETS, getDimensionsForSize, type Dimension } from './reference-data'
 
 // ============================================
 // AGGREGATE
@@ -110,26 +101,30 @@ export {
   MakePilotProduct,
   MakeCustomVariant,
   type PilotProduct,
-} from "./aggregate"
+} from './aggregate'
 
 // ============================================
 // EVENTS
 // ============================================
 export {
   MakePilotProductPublished,
+  MakePilotProductUpdated,
   MakePilotProductSynced,
   type PilotProductPublished,
+  type PilotProductUpdated,
   type PilotProductSynced,
   type PilotDomainEvent,
-} from "./events"
+} from './events'
 
 // ============================================
 // ERRORS
 // ============================================
 export {
   ValidationError,
+  ProductNotFoundError,
   type PilotProductCreationError,
-} from "./errors"
+  type PilotProductUpdateError,
+} from './errors'
 
 // ============================================
 // POLICIES (placeholder - see policies/index.ts for patterns)

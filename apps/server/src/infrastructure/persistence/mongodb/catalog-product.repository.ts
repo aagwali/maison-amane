@@ -1,29 +1,25 @@
 // src/infrastructure/persistence/mongodb/catalog-product.repository.ts
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import type { Collection, Db } from 'mongodb'
 
 import { CatalogProductRepository as CatalogProductRepositoryTag } from '../../../ports/driven'
+import type { CatalogProductRepositoryService } from '../../../ports/driven'
+
 import {
   catalogFromDocument,
   catalogToDocument,
+  type CatalogProductDocument,
 } from './mappers/catalog-product.mapper'
-import { MongoDatabase } from './mongo-database'
-import {
-  findAllDocuments,
-  findDocumentById,
-  upsertDocument,
-} from './base-repository'
-
-import type { CatalogProductRepositoryService } from "../../../ports/driven"
+import { findAllDocuments, findDocumentById, upsertDocument } from './base-repository'
+import { createRepositoryLayer } from './repository-layer-factory'
 
 // ============================================
 // MONGODB CATALOG PRODUCT REPOSITORY
 // ============================================
 
-export const createMongodbCatalogProductRepository = (
-  db: any // MongoDB Db instance
-): CatalogProductRepositoryService => {
-  const collection = db.collection("catalog_products")
+export const createMongodbCatalogProductRepository = (db: Db): CatalogProductRepositoryService => {
+  const collection: Collection<CatalogProductDocument> = db.collection('catalog_products')
 
   return {
     upsert: (product) => {
@@ -38,11 +34,11 @@ export const createMongodbCatalogProductRepository = (
 }
 
 // Layer factory (requires db instance at runtime)
-export const provideMongodbCatalogProductRepository = (db: any) =>
+export const provideMongodbCatalogProductRepository = (db: Db) =>
   Layer.succeed(CatalogProductRepositoryTag, createMongodbCatalogProductRepository(db))
 
 // Live layer using MongoDatabase service
-export const MongodbCatalogProductRepositoryLive = Layer.effect(
+export const MongodbCatalogProductRepositoryLive = createRepositoryLayer(
   CatalogProductRepositoryTag,
-  Effect.map(MongoDatabase, (db) => createMongodbCatalogProductRepository(db))
+  createMongodbCatalogProductRepository
 )

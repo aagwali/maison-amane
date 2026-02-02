@@ -4,16 +4,37 @@ import type {
   CreatePilotProductRequest,
   PilotProductResponse,
   SyncStatusResponseDto,
+  UpdatePilotProductRequest,
   VariantResponseDto,
   ViewsResponseDto,
 } from '@maison-amane/api'
 
-import type { UnvalidatedProductData } from '../../../application/pilot/commands'
+import type {
+  UnvalidatedProductData,
+  UnvalidatedUpdateData,
+} from '../../../application/pilot/commands'
 import type { PilotProduct, ProductVariant, SyncStatus } from '../../../domain/pilot'
 
 // ============================================
 // REQUEST DTO → COMMAND INPUT
 // ============================================
+
+/**
+ * Maps a variant from the request DTO to unvalidated command format
+ */
+const mapVariantDto = (v: CreatePilotProductRequest['variants'][number]) => ({
+  size: v.size,
+  customDimensions: v.customDimensions,
+  price: v.price,
+})
+
+/**
+ * Maps a view from the request DTO to unvalidated command format
+ */
+const mapViewDto = (v: CreatePilotProductRequest['views'][number]) => ({
+  viewType: v.viewType,
+  imageUrl: v.imageUrl,
+})
 
 export const toUnvalidatedProductData = (
   dto: CreatePilotProductRequest
@@ -23,15 +44,19 @@ export const toUnvalidatedProductData = (
   category: dto.category,
   description: dto.description,
   priceRange: dto.priceRange,
-  variants: dto.variants.map((v) => ({
-    size: v.size,
-    customDimensions: v.customDimensions,
-    price: v.price,
-  })),
-  views: dto.views.map((v) => ({
-    viewType: v.viewType,
-    imageUrl: v.imageUrl,
-  })),
+  variants: dto.variants.map(mapVariantDto),
+  views: dto.views.map(mapViewDto),
+  status: dto.status,
+})
+
+export const toUnvalidatedUpdateData = (dto: UpdatePilotProductRequest): UnvalidatedUpdateData => ({
+  label: dto.label,
+  type: dto.type,
+  category: dto.category,
+  description: dto.description,
+  priceRange: dto.priceRange,
+  variants: dto.variants?.map(mapVariantDto),
+  views: dto.views?.map(mapViewDto),
   status: dto.status,
 })
 

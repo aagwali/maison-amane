@@ -8,13 +8,23 @@ import {
   MakeCatalogProduct,
 } from '../../../domain/catalog'
 import { CatalogProductRepository } from '../../../ports/driven'
+import type {
+  PilotProductPublished,
+  PilotProductUpdated,
+  PilotProduct,
+} from '../../../domain/pilot'
 
-import type { PilotProductPublished, PilotProduct } from "../../../domain/pilot"
+// ============================================
+// PROJECTION EVENT TYPE
+// Both events have the same structure for projection
+// ============================================
+
+export type ProjectionEvent = PilotProductPublished | PilotProductUpdated
 // ============================================
 // PROJECTION ERROR
 // ============================================
 
-export class ProjectionError extends Data.TaggedError("ProjectionError")<{
+export class ProjectionError extends Data.TaggedError('ProjectionError')<{
   readonly cause: unknown
 }> {}
 
@@ -22,10 +32,7 @@ export class ProjectionError extends Data.TaggedError("ProjectionError")<{
 // MAPPER: PilotProduct → CatalogProduct
 // ============================================
 
-const mapToCatalogProduct = (
-  product: PilotProduct,
-  publishedAt: Date,
-): CatalogProduct =>
+const mapToCatalogProduct = (product: PilotProduct, publishedAt: Date): CatalogProduct =>
   MakeCatalogProduct({
     id: product.id,
     label: product.label,
@@ -41,10 +48,10 @@ const mapToCatalogProduct = (
     publishedAt,
   })
 
-const mapVariant = (variant: PilotProduct["variants"][number]): CatalogVariant => {
-  if (variant._tag === "CustomVariant") {
+const mapVariant = (variant: PilotProduct['variants'][number]): CatalogVariant => {
+  if (variant._tag === 'CustomVariant') {
     return {
-      _tag: "CustomVariant",
+      _tag: 'CustomVariant',
       dimensions: {
         width: variant.customDimensions.width,
         length: variant.customDimensions.length,
@@ -53,22 +60,22 @@ const mapVariant = (variant: PilotProduct["variants"][number]): CatalogVariant =
     }
   }
   return {
-    _tag: "StandardVariant",
+    _tag: 'StandardVariant',
     size: variant.size,
   }
 }
 
 // ============================================
-// PROJECTOR: Handle PilotProductPublished
+// PROJECTOR: Handle PilotProductPublished or PilotProductUpdated
 // ============================================
 
 export const projectToCatalog = (
-  event: PilotProductPublished,
+  event: ProjectionEvent
 ): Effect.Effect<CatalogProduct, ProjectionError, CatalogProductRepository> =>
   Effect.gen(function* () {
     const catalogProduct = mapToCatalogProduct(event.product, event.timestamp)
     const repo = yield* CatalogProductRepository
-    return yield* repo.upsert(catalogProduct).pipe(
-      Effect.mapError((cause) => new ProjectionError({ cause }))
-    )
+    return yield* repo
+      .upsert(catalogProduct)
+      .pipe(Effect.mapError((cause) => new ProjectionError({ cause })))
   })

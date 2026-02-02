@@ -41,6 +41,7 @@ export const EXCHANGES = {
 
 export const ROUTING_KEYS = {
   PRODUCT_PUBLISHED: 'product.published',
+  PRODUCT_UPDATED: 'product.updated',
   PRODUCT_SYNCED: 'product.synced',
   CATALOG_PROJECTED: 'catalog.projected',
 } as const
@@ -109,11 +110,16 @@ export const declareCatalogProjectionInfra: Effect.Effect<void, RabbitMQError, R
           durable: true,
         })
 
-        // Bind DLQ to DLX
+        // Bind DLQ to DLX for both published and updated events
         await channel.bindQueue(
           QUEUES.CATALOG_PROJECTION_DLQ,
           EXCHANGES.PILOT_EVENTS_DLX,
           ROUTING_KEYS.PRODUCT_PUBLISHED
+        )
+        await channel.bindQueue(
+          QUEUES.CATALOG_PROJECTION_DLQ,
+          EXCHANGES.PILOT_EVENTS_DLX,
+          ROUTING_KEYS.PRODUCT_UPDATED
         )
 
         // 2. Retry Queue
@@ -135,11 +141,16 @@ export const declareCatalogProjectionInfra: Effect.Effect<void, RabbitMQError, R
           },
         })
 
-        // Bind main queue to main exchange
+        // Bind main queue to main exchange for both published and updated events
         await channel.bindQueue(
           QUEUES.CATALOG_PROJECTION,
           EXCHANGES.PILOT_EVENTS,
           ROUTING_KEYS.PRODUCT_PUBLISHED
+        )
+        await channel.bindQueue(
+          QUEUES.CATALOG_PROJECTION,
+          EXCHANGES.PILOT_EVENTS,
+          ROUTING_KEYS.PRODUCT_UPDATED
         )
       },
       catch: (error) =>
@@ -175,11 +186,16 @@ export const declareShopifySyncInfra: Effect.Effect<void, RabbitMQError, RabbitM
           durable: true,
         })
 
-        // Bind DLQ to DLX
+        // Bind DLQ to DLX for both published and updated events
         await channel.bindQueue(
           QUEUES.SHOPIFY_SYNC_DLQ,
           EXCHANGES.PILOT_EVENTS_DLX,
           ROUTING_KEYS.PRODUCT_PUBLISHED
+        )
+        await channel.bindQueue(
+          QUEUES.SHOPIFY_SYNC_DLQ,
+          EXCHANGES.PILOT_EVENTS_DLX,
+          ROUTING_KEYS.PRODUCT_UPDATED
         )
 
         // 2. Retry Queue
@@ -201,11 +217,16 @@ export const declareShopifySyncInfra: Effect.Effect<void, RabbitMQError, RabbitM
           },
         })
 
-        // Bind main queue to main exchange
+        // Bind main queue to main exchange for both published and updated events
         await channel.bindQueue(
           QUEUES.SHOPIFY_SYNC,
           EXCHANGES.PILOT_EVENTS,
           ROUTING_KEYS.PRODUCT_PUBLISHED
+        )
+        await channel.bindQueue(
+          QUEUES.SHOPIFY_SYNC,
+          EXCHANGES.PILOT_EVENTS,
+          ROUTING_KEYS.PRODUCT_UPDATED
         )
       },
       catch: (error) =>

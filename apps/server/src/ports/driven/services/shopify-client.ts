@@ -2,13 +2,17 @@
 
 import { Context, Data, Effect } from 'effect'
 
-import type { ShopifyProductSetInput, ShopifyProductSetResponse } from "../../../application/shopify/dtos"
+import type { ShopifyProductId } from '../../../domain/pilot'
+import type {
+  ShopifyProductSetInput,
+  ShopifyProductSetResponse,
+} from '../../../application/shopify/dtos'
 
 // ============================================
 // SHOPIFY CLIENT ERROR
 // ============================================
 
-export class ShopifyClientError extends Data.TaggedError("ShopifyClientError")<{
+export class ShopifyClientError extends Data.TaggedError('ShopifyClientError')<{
   readonly operation: string
   readonly cause: unknown
 }> {}
@@ -21,9 +25,11 @@ export interface ShopifyClientService {
   readonly productSet: (
     input: ShopifyProductSetInput
   ) => Effect.Effect<ShopifyProductSetResponse, ShopifyClientError>
+
+  readonly productArchive: (productId: ShopifyProductId) => Effect.Effect<void, ShopifyClientError>
 }
 
-export class ShopifyClient extends Context.Tag("ShopifyClient")<
+export class ShopifyClient extends Context.Tag('ShopifyClient')<
   ShopifyClient,
   ShopifyClientService
 >() {}

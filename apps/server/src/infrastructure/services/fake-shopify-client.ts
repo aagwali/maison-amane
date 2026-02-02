@@ -6,19 +6,20 @@
 import { Effect, Layer } from 'effect'
 
 import { ShopifyClient } from '../../ports/driven'
-
-import type { ShopifyProductSetInput, ShopifyProductSetResponse } from "../../application/shopify/dtos"
+import type { ShopifyProductId } from '../../domain/pilot'
+import type {
+  ShopifyProductSetInput,
+  ShopifyProductSetResponse,
+} from '../../application/shopify/dtos'
 
 // ============================================
 // FAKE SHOPIFY CLIENT
 // ============================================
 
 const fakeShopifyClient = () => ({
-  productSet: (
-    input: ShopifyProductSetInput
-  ): Effect.Effect<ShopifyProductSetResponse> =>
+  productSet: (input: ShopifyProductSetInput): Effect.Effect<ShopifyProductSetResponse> =>
     Effect.gen(function* () {
-      yield* Effect.logInfo("Fake Shopify client: productSet called").pipe(
+      yield* Effect.logInfo('Fake Shopify client: productSet called').pipe(
         Effect.annotateLogs({
           title: input.title,
           handle: input.handle,
@@ -27,12 +28,12 @@ const fakeShopifyClient = () => ({
       )
 
       // Simulate API delay
-      yield* Effect.sleep("100 millis")
+      yield* Effect.sleep('100 millis')
 
       // Generate fake Shopify product ID (format: gid://shopify/Product/123456789)
       const fakeId = `gid://shopify/Product/${Date.now()}`
 
-      yield* Effect.logInfo("Fake Shopify client: product created").pipe(
+      yield* Effect.logInfo('Fake Shopify client: product created').pipe(
         Effect.annotateLogs({
           shopifyProductId: fakeId,
         })
@@ -43,9 +44,24 @@ const fakeShopifyClient = () => ({
         userErrors: [],
       }
     }),
+
+  productArchive: (productId: ShopifyProductId): Effect.Effect<void> =>
+    Effect.gen(function* () {
+      yield* Effect.logInfo('Fake Shopify client: productArchive called').pipe(
+        Effect.annotateLogs({
+          shopifyProductId: productId,
+        })
+      )
+
+      // Simulate API delay
+      yield* Effect.sleep('100 millis')
+
+      yield* Effect.logInfo('Fake Shopify client: product archived').pipe(
+        Effect.annotateLogs({
+          shopifyProductId: productId,
+        })
+      )
+    }),
 })
 
-export const FakeShopifyClientLive = Layer.succeed(
-  ShopifyClient,
-  fakeShopifyClient()
-)
+export const FakeShopifyClientLive = Layer.succeed(ShopifyClient, fakeShopifyClient())

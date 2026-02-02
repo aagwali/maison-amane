@@ -14,6 +14,8 @@ const getRoutingKey = (event: DomainEvent): string => {
   switch (event._tag) {
     case 'PilotProductPublished':
       return ROUTING_KEYS.PRODUCT_PUBLISHED
+    case 'PilotProductUpdated':
+      return ROUTING_KEYS.PRODUCT_UPDATED
     case 'PilotProductSynced':
       return ROUTING_KEYS.PRODUCT_SYNCED
     case 'CatalogProductProjected':

@@ -13,10 +13,16 @@ import {
   ValidationErrorCodes,
 } from '@maison-amane/api'
 
-import { formatValidationError } from './error.mapper'
 
-import type { ValidationError, PilotProductCreationError } from '../../../domain/pilot'
+import type {
+  ValidationError,
+  PilotProductCreationError,
+  PilotProductUpdateError,
+  ProductNotFoundError,
+} from '../../../domain/pilot'
 import type { PersistenceError } from '../../../ports/driven'
+
+import { formatValidationError } from './error.mapper'
 // ============================================
 // ERROR CONTEXT
 // Information needed to build ProblemDetail
@@ -31,11 +37,16 @@ export interface ErrorContext {
 // TYPE GUARDS
 // ============================================
 
-const isValidationError = (error: PilotProductCreationError): error is ValidationError =>
-  '_tag' in error && error._tag === 'ValidationError'
+const isValidationError = (
+  error: PilotProductCreationError | PilotProductUpdateError
+): error is ValidationError => '_tag' in error && error._tag === 'ValidationError'
 
-const isPersistenceError = (error: PilotProductCreationError): error is PersistenceError =>
-  '_tag' in error && error._tag === 'PersistenceError'
+const isPersistenceError = (
+  error: PilotProductCreationError | PilotProductUpdateError
+): error is PersistenceError => '_tag' in error && error._tag === 'PersistenceError'
+
+const isProductNotFoundError = (error: PilotProductUpdateError): error is ProductNotFoundError =>
+  '_tag' in error && error._tag === 'ProductNotFoundError'
 
 // ============================================
 // PROBLEM DETAIL FACTORIES
@@ -102,9 +113,7 @@ export const toNotFoundProblemDetail = (
   })
 }
 
-export const toInternalProblemDetail = (
-  ctx: ErrorContext
-): ApiInternalError => {
+export const toInternalProblemDetail = (ctx: ErrorContext): ApiInternalError => {
   const code = SystemErrorCodes.INTERNAL_ERROR
 
   return new ApiInternalError({
@@ -130,6 +139,26 @@ export const toProblemDetail = (
 ): ApiValidationError | ApiPersistenceError | ApiInternalError => {
   if (isValidationError(error)) {
     return toValidationProblemDetail(error, ctx)
+  }
+
+  if (isPersistenceError(error)) {
+    return toPersistenceProblemDetail(error, ctx)
+  }
+
+  // Fallback for unexpected errors
+  return toInternalProblemDetail(ctx)
+}
+
+export const toUpdateProblemDetail = (
+  error: PilotProductUpdateError,
+  ctx: ErrorContext
+): ApiValidationError | ApiPersistenceError | ApiNotFoundError | ApiInternalError => {
+  if (isValidationError(error)) {
+    return toValidationProblemDetail(error, ctx)
+  }
+
+  if (isProductNotFoundError(error)) {
+    return toNotFoundProblemDetail('PilotProduct', error.productId, ctx)
   }
 
   if (isPersistenceError(error)) {

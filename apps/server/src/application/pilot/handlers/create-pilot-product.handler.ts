@@ -3,29 +3,18 @@
 import { Effect } from 'effect'
 
 import {
-  MakeCustomVariant,
   MakeNotSynced,
   MakePilotProduct,
   MakePilotProductPublished,
-  MakeStandardVariant,
   type PilotProductCreationError,
   ProductStatus,
-  Size,
 } from '../../../domain/pilot'
-import {
-  Clock,
-  EventPublisher,
-  IdGenerator,
-  PilotProductRepository,
-} from '../../../ports/driven'
-import {
-  type ValidatedProductData,
-  type ValidatedVariant,
-  validateProductData,
-} from '../validation'
-
-import type { PilotProduct, ProductVariant } from "../../../domain/pilot"
-import type { PilotProductCreationCommand } from "../commands"
+import { Clock, EventPublisher, IdGenerator, PilotProductRepository } from '../../../ports/driven'
+import { type ValidatedProductData, validateProductData } from '../validation'
+import { createVariants } from '../mappers/variant.mapper'
+import { publishEventWithRetry } from '../../shared/event-helpers'
+import type { PilotProduct } from '../../../domain/pilot'
+import type { PilotProductCreationCommand } from '../commands'
 // ============================================
 // HANDLER: CREATE PILOT PRODUCT
 // ============================================
@@ -83,26 +72,6 @@ const createAggregate = (
     })
   })
 
-const createVariant = (v: ValidatedVariant): ProductVariant => {
-  if (v._tag === "CustomVariant") {
-    return MakeCustomVariant({
-      size: Size.CUSTOM,
-      customDimensions: v.customDimensions,
-      price: v.price,
-    })
-  }
-  return MakeStandardVariant({
-    size: v.size,
-  })
-}
-
-const createVariants = (
-  validatedVariants: readonly [ValidatedVariant, ...ValidatedVariant[]]
-): readonly [ProductVariant, ...ProductVariant[]] => {
-  const [first, ...rest] = validatedVariants
-  return [createVariant(first), ...rest.map(createVariant)] as const
-}
-
 // ============================================
 // EVENT EMISSION
 // ============================================
@@ -112,7 +81,6 @@ const emitEvent = (
   command: PilotProductCreationCommand
 ): Effect.Effect<void, never, EventPublisher | Clock> =>
   Effect.gen(function* () {
-    const publisher = yield* EventPublisher
     const clock = yield* Clock
     const now = yield* clock.now()
 
@@ -124,12 +92,5 @@ const emitEvent = (
       timestamp: now,
     })
 
-    // Log error but don't fail the command - event will be retried by message broker
-    yield* publisher.publish(event).pipe(
-      Effect.catchAll((error) =>
-        Effect.logError("Failed to publish event, will be retried").pipe(
-          Effect.annotateLogs({ error: String(error.cause) })
-        )
-      )
-    )
+    yield* publishEventWithRetry(event)
   })

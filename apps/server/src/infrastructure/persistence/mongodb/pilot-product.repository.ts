@@ -1,6 +1,5 @@
 // src/infrastructure/persistence/mongodb/pilot-product.repository.ts
 
-import { Effect, Layer } from 'effect'
 import type { Collection, Db } from 'mongodb'
 
 import {
@@ -9,8 +8,8 @@ import {
 } from '../../../ports/driven'
 
 import { fromDocument, type PilotProductDocument, toDocument } from './mappers'
-import { MongoDatabase } from './mongo-database'
 import { findDocumentById, insertDocument, replaceDocument } from './base-repository'
+import { createRepositoryLayer } from './repository-layer-factory'
 
 // ============================================
 // MONGODB PILOT PRODUCT REPOSITORY
@@ -38,7 +37,7 @@ export const createMongodbPilotProductRepository = (db: Db): PilotProductReposit
 }
 
 // Layer that requires MongoDatabase and provides PilotProductRepository
-export const MongodbPilotProductRepositoryLive = Layer.effect(
+export const MongodbPilotProductRepositoryLive = createRepositoryLayer(
   PilotProductRepositoryTag,
-  Effect.map(MongoDatabase, (db) => createMongodbPilotProductRepository(db))
+  createMongodbPilotProductRepository
 )

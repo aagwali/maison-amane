@@ -46,3 +46,20 @@ export const CreatePilotProductRequest = S.Struct({
 })
 
 export type CreatePilotProductRequest = S.Schema.Type<typeof CreatePilotProductRequest>
+
+// ============================================
+// UPDATE PILOT PRODUCT REQUEST DTO
+// ============================================
+
+export const UpdatePilotProductRequest = S.Struct({
+  label: S.optional(S.String),
+  type: S.optional(S.String),
+  category: S.optional(S.String),
+  description: S.optional(S.String),
+  priceRange: S.optional(S.String),
+  variants: S.optional(S.Array(VariantRequestDto)),
+  views: S.optional(S.Array(ViewRequestDto)),
+  status: S.optional(S.String),
+})
+
+export type UpdatePilotProductRequest = S.Schema.Type<typeof UpdatePilotProductRequest>
