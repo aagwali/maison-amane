@@ -2,46 +2,19 @@
 
 import { Data } from 'effect'
 import * as S from 'effect/Schema'
+import {
+  UpdatePilotProductRequest,
+  type UpdatePilotProductRequest as UpdatePilotProductRequestType,
+} from '@maison-amane/api'
 
 import { CorrelationIdSchema, UserIdSchema } from '../../../domain/shared'
 import { ProductIdSchema } from '../../../domain/pilot/value-objects'
 
 // ============================================
-// UNVALIDATED SCHEMAS (from UI/API boundary)
+// UNVALIDATED UPDATE DATA (from API boundary)
 // ============================================
 
-const UnvalidatedUpdateDataSchema = S.Struct({
-  label: S.optional(S.String),
-  type: S.optional(S.String),
-  category: S.optional(S.String),
-  description: S.optional(S.String),
-  priceRange: S.optional(S.String),
-  variants: S.optional(
-    S.Array(
-      S.Struct({
-        size: S.String,
-        customDimensions: S.optional(
-          S.Struct({
-            width: S.Number,
-            length: S.Number,
-          })
-        ),
-        price: S.optional(S.Number),
-      })
-    )
-  ),
-  views: S.optional(
-    S.Array(
-      S.Struct({
-        viewType: S.String,
-        imageUrl: S.String,
-      })
-    )
-  ),
-  status: S.optional(S.String),
-})
-
-export type UnvalidatedUpdateData = typeof UnvalidatedUpdateDataSchema.Type
+export type UnvalidatedUpdateData = UpdatePilotProductRequestType
 
 // ============================================
 // UPDATE PILOT PRODUCT COMMAND
@@ -49,7 +22,7 @@ export type UnvalidatedUpdateData = typeof UnvalidatedUpdateDataSchema.Type
 
 const PilotProductUpdateCommandSchema = S.TaggedStruct('UpdatePilotProductCommand', {
   productId: ProductIdSchema,
-  data: UnvalidatedUpdateDataSchema,
+  data: UpdatePilotProductRequest,
   correlationId: CorrelationIdSchema,
   userId: UserIdSchema,
   timestamp: S.Date,

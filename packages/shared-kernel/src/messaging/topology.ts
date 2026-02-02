@@ -42,8 +42,6 @@ export const EXCHANGES = {
 export const ROUTING_KEYS = {
   PRODUCT_PUBLISHED: 'product.published',
   PRODUCT_UPDATED: 'product.updated',
-  PRODUCT_SYNCED: 'product.synced',
-  CATALOG_PROJECTED: 'catalog.projected',
 } as const
 
 // ============================================

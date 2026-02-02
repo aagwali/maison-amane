@@ -1,6 +1,5 @@
 import type * as Preset from '@docusaurus/preset-classic'
 import type { Config } from '@docusaurus/types'
-
 import { themes as prismThemes } from 'prism-react-renderer'
 
 const config: Config = {
@@ -12,13 +11,15 @@ const config: Config = {
   organizationName: 'maison-amane',
   projectName: 'docs',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
   i18n: {
     defaultLocale: 'fr',
     locales: ['fr'],
   },
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
   },
   themes: ['@docusaurus/theme-mermaid'],
   presets: [

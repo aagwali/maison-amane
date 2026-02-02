@@ -2,18 +2,25 @@
 
 import { Context, Effect, Option } from 'effect'
 
-import type { CatalogProduct } from "../../../domain/catalog"
-import type { ProductId } from "../../../domain/pilot"
-import type { PersistenceError } from "../errors"
+import type { CatalogProduct } from '../../../domain/catalog'
+import type { ProductId } from '../../../domain/pilot'
+import type { PersistenceError } from '../errors'
 
 // ============================================
 // CATALOG PRODUCT REPOSITORY (Read Model)
 // ============================================
+//
+// This interface differs from PilotProductRepository because:
+// - CatalogProduct is a READ MODEL (CQRS pattern)
+// - Uses `upsert` instead of `save`/`update` for idempotent projections
+// - Includes `findAll` for listing (UI-oriented queries)
+// - No separate create/update distinction needed for projections
+//
+// See PilotProductRepository for the WRITE MODEL interface.
+// ============================================
 
 export interface CatalogProductRepositoryService {
-  readonly upsert: (
-    product: CatalogProduct
-  ) => Effect.Effect<CatalogProduct, PersistenceError>
+  readonly upsert: (product: CatalogProduct) => Effect.Effect<CatalogProduct, PersistenceError>
 
   readonly findById: (
     id: ProductId
@@ -22,7 +29,7 @@ export interface CatalogProductRepositoryService {
   readonly findAll: () => Effect.Effect<readonly CatalogProduct[], PersistenceError>
 }
 
-export class CatalogProductRepository extends Context.Tag("CatalogProductRepository")<
+export class CatalogProductRepository extends Context.Tag('CatalogProductRepository')<
   CatalogProductRepository,
   CatalogProductRepositoryService
 >() {}

@@ -31,11 +31,7 @@
 import { Data } from 'effect'
 import * as S from 'effect/Schema'
 
-import {
-  type CustomVariant,
-  ProductVariantSchema,
-  type StandardVariant,
-} from './entities'
+import { type CustomVariant, ProductVariantSchema, type StandardVariant } from './value-objects'
 import {
   PriceRangeSchema,
   ProductCategorySchema,
@@ -54,13 +50,11 @@ import {
 // VARIANT CONSTRUCTORS
 // ============================================
 
-export const MakeStandardVariant = (
-  params: Omit<StandardVariant, "_tag">
-): StandardVariant => Data.case<StandardVariant>()({ _tag: "StandardVariant", ...params })
+export const MakeStandardVariant = (params: Omit<StandardVariant, '_tag'>): StandardVariant =>
+  Data.case<StandardVariant>()({ _tag: 'StandardVariant', ...params })
 
-export const MakeCustomVariant = (
-  params: Omit<CustomVariant, "_tag">
-): CustomVariant => Data.case<CustomVariant>()({ _tag: "CustomVariant", ...params })
+export const MakeCustomVariant = (params: Omit<CustomVariant, '_tag'>): CustomVariant =>
+  Data.case<CustomVariant>()({ _tag: 'CustomVariant', ...params })
 
 // ============================================
 // PILOT PRODUCT (Aggregate Root)
@@ -68,7 +62,7 @@ export const MakeCustomVariant = (
 
 const VariantsNonEmptySchema = S.NonEmptyArray(ProductVariantSchema)
 
-const PilotProductSchema = S.TaggedStruct("PilotProduct", {
+export const PilotProductSchema = S.TaggedStruct('PilotProduct', {
   id: ProductIdSchema,
   label: ProductLabelSchema,
   type: ProductTypeSchema,
@@ -85,6 +79,5 @@ const PilotProductSchema = S.TaggedStruct("PilotProduct", {
 
 export type PilotProduct = typeof PilotProductSchema.Type
 
-export const MakePilotProduct = (
-  params: Omit<PilotProduct, "_tag">
-): PilotProduct => Data.case<PilotProduct>()({ _tag: "PilotProduct", ...params })
+export const MakePilotProduct = (params: Omit<PilotProduct, '_tag'>): PilotProduct =>
+  Data.case<PilotProduct>()({ _tag: 'PilotProduct', ...params })

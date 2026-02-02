@@ -1,5 +1,4 @@
 // src/application/catalog/index.ts
 
-export * from "./projectors"
-export * from "./queries"
-export * from "./handlers"
+export * from './projectors'
+export * from './handlers'

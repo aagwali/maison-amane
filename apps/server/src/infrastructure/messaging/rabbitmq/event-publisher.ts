@@ -16,10 +16,6 @@ const getRoutingKey = (event: DomainEvent): string => {
       return ROUTING_KEYS.PRODUCT_PUBLISHED
     case 'PilotProductUpdated':
       return ROUTING_KEYS.PRODUCT_UPDATED
-    case 'PilotProductSynced':
-      return ROUTING_KEYS.PRODUCT_SYNCED
-    case 'CatalogProductProjected':
-      return ROUTING_KEYS.CATALOG_PROJECTED
   }
 }
 

@@ -57,7 +57,7 @@ export {
 export { SyncStatusMachine, structureViews, flattenViews, MIN_VIEWS } from './services'
 
 // ============================================
-// VARIANTS (value objects, re-exported from entities for compatibility)
+// VARIANTS (value objects)
 // ============================================
 export {
   StandardVariantSchema,
@@ -66,7 +66,7 @@ export {
   type CustomVariant,
   ProductVariantSchema,
   type ProductVariant,
-} from './entities'
+} from './value-objects'
 
 // ============================================
 // ENUMS
@@ -109,10 +109,8 @@ export {
 export {
   MakePilotProductPublished,
   MakePilotProductUpdated,
-  MakePilotProductSynced,
   type PilotProductPublished,
   type PilotProductUpdated,
-  type PilotProductSynced,
   type PilotDomainEvent,
 } from './events'
 

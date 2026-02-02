@@ -6,7 +6,6 @@ import type * as amqp from 'amqplib'
 
 import { RabbitMQConfig } from '../../../composition/config'
 
-
 // ============================================
 // EXCHANGE & QUEUE NAMES
 // ============================================
@@ -26,7 +25,6 @@ export const buildQueueNames = (consumerName: string) => ({
 export const RoutingKeys = {
   PILOT_PRODUCT_PUBLISHED: 'product.published',
   PILOT_PRODUCT_SYNCED: 'product.synced',
-  CATALOG_PRODUCT_PROJECTED: 'catalog.projected',
   ALL_PILOT_EVENTS: 'product.*',
   ALL_CATALOG_EVENTS: 'catalog.*',
   ALL_EVENTS: '#',

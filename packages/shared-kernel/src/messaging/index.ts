@@ -16,28 +16,3 @@ export {
   declareAllTopology,
   type RabbitMQConnectionValue,
 } from './topology'
-
-// ============================================
-// PILOT EVENTS
-// ============================================
-
-export {
-  MakePilotProductPublished,
-  MakePilotProductSynced,
-  PilotProductPublishedSchema,
-  PilotProductSyncedSchema,
-  type PilotProductPublished,
-  type PilotProductSynced,
-  type PilotDomainEvent,
-} from './pilot-events'
-
-// ============================================
-// CATALOG EVENTS
-// ============================================
-
-export {
-  MakeCatalogProductProjected,
-  CatalogProductProjectedSchema,
-  type CatalogProductProjected,
-  type CatalogDomainEvent,
-} from './catalog-events'

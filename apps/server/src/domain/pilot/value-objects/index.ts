@@ -10,7 +10,7 @@ export {
   ShopifyProductIdSchema,
   MakeShopifyProductId,
   type ShopifyProductId,
-} from "./ids"
+} from './ids'
 
 // ============================================
 // SCALAR TYPES
@@ -31,25 +31,17 @@ export {
   ImageUrlSchema,
   MakeImageUrl,
   type ImageUrl,
-} from "./scalar-types"
+} from './scalar-types'
 
 // ============================================
 // DIMENSIONS
 // ============================================
-export {
-  CustomDimensionSchema,
-  type CustomDimension,
-} from "./dimensions"
+export { CustomDimensionSchema, type CustomDimension } from './dimensions'
 
 // ============================================
 // VIEWS
 // ============================================
-export {
-  ProductViewSchema,
-  type ProductView,
-  ProductViewsSchema,
-  type ProductViews,
-} from "./views"
+export { ProductViewSchema, type ProductView, ProductViewsSchema, type ProductViews } from './views'
 
 // ============================================
 // VARIANTS (base schemas without id, for validation)
@@ -61,7 +53,14 @@ export {
   type StandardVariantBase,
   type CustomVariantBase,
   type VariantBase,
-} from "./variants"
+  // Aliases for aggregate usage
+  ProductVariantSchema,
+  StandardVariantSchema,
+  CustomVariantSchema,
+  type ProductVariant,
+  type StandardVariant,
+  type CustomVariant,
+} from './variants'
 
 // ============================================
 // SYNC STATUS
@@ -77,4 +76,4 @@ export {
   type SyncFailed,
   SyncStatusSchema,
   type SyncStatus,
-} from "./sync-status"
+} from './sync-status'

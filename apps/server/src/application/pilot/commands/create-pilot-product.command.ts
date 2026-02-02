@@ -2,56 +2,33 @@
 
 import { Data } from 'effect'
 import * as S from 'effect/Schema'
+import {
+  CreatePilotProductRequest,
+  type CreatePilotProductRequest as CreatePilotProductRequestType,
+} from '@maison-amane/api'
 
 import { CorrelationIdSchema, UserIdSchema } from '../../../domain/shared'
 
 // ============================================
-// UNVALIDATED SCHEMAS (from UI/API boundary)
+// UNVALIDATED PRODUCT DATA (from API boundary)
 // ============================================
 
-const UnvalidatedProductDataSchema = S.Struct({
-  label: S.String,
-  type: S.String,
-  category: S.String,
-  description: S.String,
-  priceRange: S.String,
-  variants: S.Array(S.Struct({
-    size: S.String,
-    customDimensions: S.optional(
-      S.Struct({
-        width: S.Number,
-        length: S.Number,
-      }),
-    ),
-    price: S.optional(S.Number),
-  })),
-  views: S.Array(S.Struct({
-    viewType: S.String,
-    imageUrl: S.String,
-  })),
-  status: S.String,
-})
-
-export type UnvalidatedProductData = typeof UnvalidatedProductDataSchema.Type
+export type UnvalidatedProductData = CreatePilotProductRequestType
 
 // ============================================
 // CREATE PILOT PRODUCT COMMAND
 // ============================================
 
-const PilotProductCreationCommandSchema = S.TaggedStruct(
-  "CreatePilotProductCommand",
-  {
-    data: UnvalidatedProductDataSchema,
-    correlationId: CorrelationIdSchema,
-    userId: UserIdSchema,
-    timestamp: S.Date,
-  },
-)
+const PilotProductCreationCommandSchema = S.TaggedStruct('CreatePilotProductCommand', {
+  data: CreatePilotProductRequest,
+  correlationId: CorrelationIdSchema,
+  userId: UserIdSchema,
+  timestamp: S.Date,
+})
 
-export type PilotProductCreationCommand =
-  typeof PilotProductCreationCommandSchema.Type
+export type PilotProductCreationCommand = typeof PilotProductCreationCommandSchema.Type
 
 export const MakePilotProductCreationCommand = (
-  params: Omit<PilotProductCreationCommand, "_tag">
+  params: Omit<PilotProductCreationCommand, '_tag'>
 ): PilotProductCreationCommand =>
-   Data.case<PilotProductCreationCommand>()({ _tag: "CreatePilotProductCommand", ...params })
+  Data.case<PilotProductCreationCommand>()({ _tag: 'CreatePilotProductCommand', ...params })

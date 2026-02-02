@@ -6,14 +6,11 @@ import * as S from 'effect/Schema'
 import { CorrelationIdSchema, UserIdSchema } from '../shared'
 
 import { ProductIdSchema } from './value-objects'
-import type { PilotProduct } from './aggregate'
+import { PilotProductSchema } from './aggregate'
 
 // ============================================
 // PILOT PRODUCT PUBLISHED
 // ============================================
-
-// Note: PilotProduct is a complex type, we use S.Any for schema
-const PilotProductSchema = S.Any as S.Schema<PilotProduct>
 
 const PilotProductPublishedSchema = S.TaggedStruct('PilotProductPublished', {
   productId: ProductIdSchema,
@@ -50,25 +47,7 @@ export const MakePilotProductUpdated = (
   Data.case<PilotProductUpdated>()({ _tag: 'PilotProductUpdated', ...params })
 
 // ============================================
-// PILOT PRODUCT SYNCED
-// ============================================
-
-const PilotProductSyncedSchema = S.TaggedStruct('PilotProductSynced', {
-  productId: ProductIdSchema,
-  shopifyProductId: S.String,
-  correlationId: CorrelationIdSchema,
-  userId: UserIdSchema,
-  timestamp: S.Date,
-})
-
-export type PilotProductSynced = typeof PilotProductSyncedSchema.Type
-
-export const MakePilotProductSynced = (
-  params: Omit<PilotProductSynced, '_tag'>
-): PilotProductSynced => Data.case<PilotProductSynced>()({ _tag: 'PilotProductSynced', ...params })
-
-// ============================================
 // DOMAIN EVENTS UNION
 // ============================================
 
-export type PilotDomainEvent = PilotProductPublished | PilotProductUpdated | PilotProductSynced
+export type PilotDomainEvent = PilotProductPublished | PilotProductUpdated

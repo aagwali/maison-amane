@@ -1,6 +1,5 @@
 // src/infrastructure/persistence/mongodb/catalog-product.repository.ts
 
-import { Layer } from 'effect'
 import type { Collection, Db } from 'mongodb'
 
 import { CatalogProductRepository as CatalogProductRepositoryTag } from '../../../ports/driven'
@@ -32,10 +31,6 @@ export const createMongodbCatalogProductRepository = (db: Db): CatalogProductRep
     findAll: () => findAllDocuments(collection, catalogFromDocument),
   }
 }
-
-// Layer factory (requires db instance at runtime)
-export const provideMongodbCatalogProductRepository = (db: Db) =>
-  Layer.succeed(CatalogProductRepositoryTag, createMongodbCatalogProductRepository(db))
 
 // Live layer using MongoDatabase service
 export const MongodbCatalogProductRepositoryLive = createRepositoryLayer(
