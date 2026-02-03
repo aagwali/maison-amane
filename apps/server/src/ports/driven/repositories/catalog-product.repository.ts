@@ -1,9 +1,9 @@
 // src/ports/driven/repositories/catalog-product.repository.ts
 
 import { Context, Effect, Option } from 'effect'
+import type { ProductId } from '@maison-amane/shared-kernel'
 
 import type { CatalogProduct } from '../../../domain/catalog'
-import type { ProductId } from '../../../domain/pilot'
 import type { PersistenceError } from '../errors'
 
 // ============================================

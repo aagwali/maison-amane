@@ -78,4 +78,4 @@
 
 // Export policies here when implemented
 // export { canSyncProduct, SyncNotAllowed } from "./sync.policy"
-// export { canPublish, PublicationNotAllowed } from "./publication.policy"
+export { canPublish, PublicationNotAllowed } from './publication.policy'

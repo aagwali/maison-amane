@@ -3,25 +3,15 @@
 import * as S from 'effect/Schema'
 
 // ============================================
-// PRODUCT ID
+// PRODUCT ID (re-exported from shared-kernel)
 // ============================================
 
-export const ProductIdSchema = S.String.pipe(S.brand("ProductId"))
-export type ProductId = typeof ProductIdSchema.Type
-export const MakeProductId = S.decodeUnknownSync(ProductIdSchema)
+export { ProductIdSchema, MakeProductId, type ProductId } from '@maison-amane/shared-kernel'
 
 // ============================================
-// VARIANT ID
+// SHOPIFY PRODUCT ID (Pilot-specific)
 // ============================================
 
-export const VariantIdSchema = S.String.pipe(S.brand("VariantId"))
-export type VariantId = typeof VariantIdSchema.Type
-export const MakeVariantId = S.decodeUnknownSync(VariantIdSchema)
-
-// ============================================
-// SHOPIFY PRODUCT ID
-// ============================================
-
-export const ShopifyProductIdSchema = S.String.pipe(S.brand("ShopifyProductId"))
+export const ShopifyProductIdSchema = S.String.pipe(S.brand('ShopifyProductId'))
 export type ShopifyProductId = typeof ShopifyProductIdSchema.Type
 export const MakeShopifyProductId = S.decodeUnknownSync(ShopifyProductIdSchema)

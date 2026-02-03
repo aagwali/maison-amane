@@ -65,12 +65,11 @@ const logLevelMap = {
 export const createLoggerLayer = (
   isDevelopment: boolean,
   logLevel: 'debug' | 'info' | 'warn' | 'error',
-  prettyLogger: unknown,
-  jsonLogger: unknown
+  prettyLogger: Logger.Logger<unknown, unknown>,
+  jsonLogger: Logger.Logger<unknown, unknown>
 ): Layer.Layer<never> => {
   const minLevel = Logger.minimumLogLevel(logLevelMap[logLevel])
+  const logger = isDevelopment ? prettyLogger : jsonLogger
 
-  return isDevelopment
-    ? Layer.mergeAll(Logger.replace(Logger.defaultLogger, prettyLogger as never), minLevel)
-    : Layer.mergeAll(Logger.replace(Logger.defaultLogger, jsonLogger as never), minLevel)
+  return Layer.mergeAll(Logger.replace(Logger.defaultLogger, logger), minLevel)
 }

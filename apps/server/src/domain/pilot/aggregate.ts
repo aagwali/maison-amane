@@ -81,3 +81,43 @@ export type PilotProduct = typeof PilotProductSchema.Type
 
 export const MakePilotProduct = (params: Omit<PilotProduct, '_tag'>): PilotProduct =>
   Data.case<PilotProduct>()({ _tag: 'PilotProduct', ...params })
+
+// ============================================
+// AGGREGATE METHODS
+// ============================================
+
+/**
+ * Creates a new PilotProduct with updated syncStatus.
+ * This is the proper way to update aggregate state - through a method
+ * that returns a new instance rather than mutating externally.
+ */
+export const withSyncStatus = (
+  product: PilotProduct,
+  syncStatus: PilotProduct['syncStatus'],
+  updatedAt: Date
+): PilotProduct =>
+  MakePilotProduct({
+    ...product,
+    syncStatus,
+    updatedAt,
+  })
+
+/**
+ * Creates a new PilotProduct with updated fields.
+ * Only the provided fields are updated; others remain unchanged.
+ */
+export const withUpdatedFields = (
+  product: PilotProduct,
+  updates: Partial<
+    Pick<
+      PilotProduct,
+      'label' | 'type' | 'category' | 'description' | 'priceRange' | 'variants' | 'views' | 'status'
+    >
+  >,
+  updatedAt: Date
+): PilotProduct =>
+  MakePilotProduct({
+    ...product,
+    ...updates,
+    updatedAt,
+  })

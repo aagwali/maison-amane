@@ -1,39 +1,41 @@
 // src/domain/catalog/projections/catalog-product.ts
+//
+// DDD: Catalog bounded context owns its projection types.
+// Only ProductId is shared (cross-context identifier from shared-kernel).
 
 import { Data } from 'effect'
 import * as S from 'effect/Schema'
+import { ProductIdSchema } from '@maison-amane/shared-kernel'
 
 import {
-  ImageUrlSchema,
-  PositiveCmSchema,
-  PriceRangeSchema,
-  PriceSchema,
-  ProductCategorySchema,
-  ProductDescriptionSchema,
-  ProductIdSchema,
-  ProductLabelSchema,
-} from '../../pilot'
+  CatalogDescriptionSchema,
+  CatalogDimensionSchema,
+  CatalogImageUrlSchema,
+  CatalogLabelSchema,
+  CatalogPriceRangeSchema,
+  CatalogPriceSchema,
+  CatalogCategorySchema,
+  Size,
+} from '../value-objects'
 
 // ============================================
 // CATALOG VARIANT (simplified for UI)
 // ============================================
 
-const CatalogStandardVariantSchema = S.TaggedStruct("StandardVariant", {
-  size: S.Literal("REGULAR", "LARGE"),
+const CatalogStandardVariantSchema = S.TaggedStruct('StandardVariant', {
+  size: S.Literal(Size.REGULAR, Size.LARGE),
 })
 
-const CatalogCustomVariantSchema = S.TaggedStruct("CustomVariant", {
+const CatalogCustomVariantSchema = S.TaggedStruct('CustomVariant', {
+  size: S.Literal(Size.CUSTOM),
   dimensions: S.Struct({
-    width: PositiveCmSchema,
-    length: PositiveCmSchema,
+    width: CatalogDimensionSchema,
+    length: CatalogDimensionSchema,
   }),
-  price: PriceSchema,
+  price: CatalogPriceSchema,
 })
 
-const CatalogVariantSchema = S.Union(
-  CatalogStandardVariantSchema,
-  CatalogCustomVariantSchema,
-)
+const CatalogVariantSchema = S.Union(CatalogStandardVariantSchema, CatalogCustomVariantSchema)
 
 export type CatalogStandardVariant = typeof CatalogStandardVariantSchema.Type
 export type CatalogCustomVariant = typeof CatalogCustomVariantSchema.Type
@@ -43,17 +45,17 @@ export type CatalogVariant = typeof CatalogVariantSchema.Type
 // CATALOG PRODUCT (Read Model for UI)
 // ============================================
 
-const CatalogProductSchema = S.TaggedStruct("CatalogProduct", {
+const CatalogProductSchema = S.TaggedStruct('CatalogProduct', {
   id: ProductIdSchema,
-  label: ProductLabelSchema,
-  description: ProductDescriptionSchema,
-  category: ProductCategorySchema,
-  priceRange: PriceRangeSchema,
+  label: CatalogLabelSchema,
+  description: CatalogDescriptionSchema,
+  category: CatalogCategorySchema,
+  priceRange: CatalogPriceRangeSchema,
   variants: S.Array(CatalogVariantSchema),
   images: S.Struct({
-    front: ImageUrlSchema,
-    detail: ImageUrlSchema,
-    gallery: S.Array(ImageUrlSchema),
+    front: CatalogImageUrlSchema,
+    detail: CatalogImageUrlSchema,
+    gallery: S.Array(CatalogImageUrlSchema),
   }),
   shopifyUrl: S.optional(S.String),
   publishedAt: S.Date,
@@ -61,6 +63,5 @@ const CatalogProductSchema = S.TaggedStruct("CatalogProduct", {
 
 export type CatalogProduct = typeof CatalogProductSchema.Type
 
-export const MakeCatalogProduct = (
-  params: Omit<CatalogProduct, "_tag">
-): CatalogProduct => Data.case<CatalogProduct>()({ _tag: "CatalogProduct", ...params })
+export const MakeCatalogProduct = (params: Omit<CatalogProduct, '_tag'>): CatalogProduct =>
+  Data.case<CatalogProduct>()({ _tag: 'CatalogProduct', ...params })

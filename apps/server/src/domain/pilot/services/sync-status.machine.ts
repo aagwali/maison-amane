@@ -22,37 +22,34 @@ export const SyncStatusMachine = {
 
   // Transitions
   markSynced: (
-    _current: NotSynced | SyncFailed,
+    _current: NotSynced | SyncFailed | Synced,
     shopifyProductId: ShopifyProductId,
     syncedAt: Date
   ): Synced => MakeSynced({ shopifyProductId, syncedAt }),
 
   markFailed: (
-    current: NotSynced | SyncFailed,
+    current: NotSynced | SyncFailed | Synced,
     error: SyncError,
     failedAt: Date
   ): SyncFailed =>
     MakeSyncFailed({
       error,
       failedAt,
-      attempts: current._tag === "SyncFailed" ? current.attempts + 1 : 1,
+      attempts: current._tag === 'SyncFailed' ? current.attempts + 1 : 1,
     }),
 
   reset: (_current: Synced | SyncFailed): NotSynced => MakeNotSynced(),
 
   // Guards
   canSync: (status: SyncStatus): status is NotSynced | SyncFailed =>
-    status._tag === "NotSynced" || status._tag === "SyncFailed",
+    status._tag === 'NotSynced' || status._tag === 'SyncFailed',
 
   canReset: (status: SyncStatus): status is Synced | SyncFailed =>
-    status._tag === "Synced" || status._tag === "SyncFailed",
+    status._tag === 'Synced' || status._tag === 'SyncFailed',
 
-  isSynced: (status: SyncStatus): status is Synced =>
-    status._tag === "Synced",
+  isSynced: (status: SyncStatus): status is Synced => status._tag === 'Synced',
 
-  isFailed: (status: SyncStatus): status is SyncFailed =>
-    status._tag === "SyncFailed",
+  isFailed: (status: SyncStatus): status is SyncFailed => status._tag === 'SyncFailed',
 
-  isNotSynced: (status: SyncStatus): status is NotSynced =>
-    status._tag === "NotSynced",
+  isNotSynced: (status: SyncStatus): status is NotSynced => status._tag === 'NotSynced',
 }

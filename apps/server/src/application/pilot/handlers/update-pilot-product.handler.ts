@@ -67,22 +67,19 @@ const applyUpdates = (
     const clock = yield* Clock
     const now = yield* clock.now()
 
-    const variants = Option.isSome(validated.variants)
-      ? createVariants(validated.variants.value)
-      : product.variants
-
     return MakePilotProduct({
-      id: product.id,
+      ...product,
       label: Option.getOrElse(validated.label, () => product.label),
       type: Option.getOrElse(validated.type, () => product.type),
       category: Option.getOrElse(validated.category, () => product.category),
       description: Option.getOrElse(validated.description, () => product.description),
       priceRange: Option.getOrElse(validated.priceRange, () => product.priceRange),
-      variants,
+      variants: Option.match(validated.variants, {
+        onNone: () => product.variants,
+        onSome: (v) => createVariants(v),
+      }),
       views: Option.getOrElse(validated.views, () => product.views),
       status: Option.getOrElse(validated.status, () => product.status),
-      syncStatus: product.syncStatus,
-      createdAt: product.createdAt,
       updatedAt: now,
     })
   })

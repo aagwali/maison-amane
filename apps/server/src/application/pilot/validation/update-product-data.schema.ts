@@ -4,55 +4,22 @@ import { Effect, Option } from 'effect'
 import * as S from 'effect/Schema'
 
 import {
-  flattenViews,
-  MIN_VIEWS,
   PriceRangeSchema,
   ProductCategorySchema,
   ProductDescriptionSchema,
   ProductLabelSchema,
   ProductStatusSchema,
   ProductTypeSchema,
-  type ProductView,
-  ProductViewSchema,
   ProductViewsSchema,
-  structureViews,
   ValidationError,
-  ViewType,
 } from '../../../domain/pilot'
 import type { UnvalidatedUpdateData } from '../commands'
 
 import { type ValidatedVariant, ValidatedVariantSchema } from './variant-input.schema'
+import { ProductViewsTransformSchema } from './views.schema'
 
 // Re-export for convenience
 export type { ValidatedVariant }
-
-// ============================================
-// PRODUCT VIEWS SCHEMA (with business validation)
-// ============================================
-
-const ProductViewsInputSchema = S.Array(ProductViewSchema).pipe(
-  S.filter((views): views is readonly ProductView[] => views.length >= MIN_VIEWS, {
-    message: () => `Minimum ${MIN_VIEWS} views required`,
-  }),
-  S.filter(
-    (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.FRONT),
-    { message: () => 'FRONT view is required' }
-  ),
-  S.filter(
-    (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.DETAIL),
-    { message: () => 'DETAIL view is required' }
-  )
-)
-
-const ProductViewsTransformSchema = S.transform(
-  ProductViewsInputSchema,
-  S.typeSchema(ProductViewsSchema),
-  {
-    strict: true,
-    decode: structureViews,
-    encode: flattenViews,
-  }
-)
 
 // ============================================
 // VALIDATED UPDATE DATA (all fields optional)

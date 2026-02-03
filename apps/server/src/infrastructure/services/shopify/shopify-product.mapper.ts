@@ -1,16 +1,18 @@
-// src/application/shopify/mappers/shopify-product.mapper.ts
+// src/infrastructure/services/shopify/shopify-product.mapper.ts
 //
-// Maps PilotProduct to Shopify ProductSetInput
+// Anti-corruption layer: Maps domain PilotProduct to Shopify API format.
+// This mapper lives in infrastructure because it translates domain language
+// to an external system's language.
 
 import {
   getDimensionsForSize,
-  PriceRange,
-  Size,
+  getPriceForVariant,
+  type PilotProduct,
   type PredefinedSize,
   type ProductCategory,
+  type ProductVariant,
 } from '../../../domain/pilot'
 
-import type { PilotProduct, ProductVariant } from "../../../domain/pilot"
 import type {
   ShopifyFileInput,
   ShopifyOptionValue,
@@ -18,54 +20,14 @@ import type {
   ShopifyProductSetInput,
   ShopifyProductStatus,
   ShopifyVariantInput,
-} from "../dtos"
-
-// ============================================
-// PRICE MAPPING
-// ============================================
-
-// NOTE: These are placeholder prices based on priceRange.
-// TODO: Replace with actual pricing logic (size-based calculation)
-const PRICE_BY_RANGE: Record<PriceRange, Record<Size, number>> = {
-  [PriceRange.DISCOUNT]: {
-    [Size.REGULAR]: 400,
-    [Size.LARGE]: 600,
-    [Size.CUSTOM]: 500, // Default for custom, overridden by actual price
-  },
-  [PriceRange.STANDARD]: {
-    [Size.REGULAR]: 600,
-    [Size.LARGE]: 900,
-    [Size.CUSTOM]: 800,
-  },
-  [PriceRange.PREMIUM]: {
-    [Size.REGULAR]: 900,
-    [Size.LARGE]: 1400,
-    [Size.CUSTOM]: 1200,
-  },
-}
-
-const getVariantPrice = (
-  variant: ProductVariant,
-  priceRange: PriceRange
-): string => {
-  if (variant._tag === "CustomVariant") {
-    // Custom variants have their own price
-    return variant.price.toFixed(2)
-  }
-  // Standard variants use priceRange + size lookup
-  const price = PRICE_BY_RANGE[priceRange][variant.size]
-  return price.toFixed(2)
-}
+} from './shopify-api.types'
 
 // ============================================
 // SIZE/DIMENSION MAPPING
 // ============================================
 
-const getVariantSizeLabel = (
-  variant: ProductVariant,
-  category: ProductCategory
-): string => {
-  if (variant._tag === "CustomVariant") {
+const getVariantSizeLabel = (variant: ProductVariant, category: ProductCategory): string => {
+  if (variant._tag === 'CustomVariant') {
     const { width, length } = variant.customDimensions
     return `${width}x${length}`
   }
@@ -86,21 +48,19 @@ const getVariantSizeLabel = (
 const slugify = (text: string): string =>
   text
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 
 // ============================================
 // MAPPER: PilotProduct → ShopifyProductSetInput
 // ============================================
 
-export const mapToShopifyProduct = (
-  product: PilotProduct
-): ShopifyProductSetInput => {
+export const mapToShopifyProduct = (product: PilotProduct): ShopifyProductSetInput => {
   const handle = slugify(product.label)
   const productType = `${product.type} - ${product.category}`
-  const status: ShopifyProductStatus = "ACTIVE"
+  const status: ShopifyProductStatus = 'ACTIVE'
 
   // Collect all unique size labels for product options
   const sizeLabels = product.variants.map((v) => getVariantSizeLabel(v, product.category))
@@ -108,7 +68,7 @@ export const mapToShopifyProduct = (
 
   const productOptions: ShopifyProductOption[] = [
     {
-      name: "Dimensions",
+      name: 'Dimensions',
       values: uniqueSizeLabels.map((name) => ({ name })),
     },
   ]
@@ -116,22 +76,20 @@ export const mapToShopifyProduct = (
   // Map variants
   const variants: ShopifyVariantInput[] = product.variants.map((variant) => {
     const sizeLabel = getVariantSizeLabel(variant, product.category)
-    const price = getVariantPrice(variant, product.priceRange)
+    const price = getPriceForVariant(variant, product.priceRange).toFixed(2)
 
-    const optionValues: ShopifyOptionValue[] = [
-      { optionName: "Dimensions", name: sizeLabel },
-    ]
+    const optionValues: ShopifyOptionValue[] = [{ optionName: 'Dimensions', name: sizeLabel }]
 
     return { optionValues, price }
   })
 
   // Map images (all views)
   const files: ShopifyFileInput[] = [
-    { originalSource: product.views.front.imageUrl, contentType: "IMAGE" },
-    { originalSource: product.views.detail.imageUrl, contentType: "IMAGE" },
+    { originalSource: product.views.front.imageUrl, contentType: 'IMAGE' },
+    { originalSource: product.views.detail.imageUrl, contentType: 'IMAGE' },
     ...product.views.additional.map((view) => ({
       originalSource: view.imageUrl,
-      contentType: "IMAGE" as const,
+      contentType: 'IMAGE' as const,
     })),
   ]
 
@@ -140,7 +98,7 @@ export const mapToShopifyProduct = (
     descriptionHtml: product.description,
     handle,
     productType,
-    vendor: "Maison Amane",
+    vendor: 'Maison Amane',
     status,
     tags: [product.priceRange, product.category],
     productOptions,

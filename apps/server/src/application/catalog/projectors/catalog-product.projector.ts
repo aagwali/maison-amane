@@ -1,4 +1,7 @@
 // src/application/catalog/projectors/catalog-product.projector.ts
+//
+// DDD: Anti-corruption layer - maps Pilot types to Catalog types.
+// The projector translates between bounded contexts.
 
 import { Data, Effect } from 'effect'
 
@@ -6,6 +9,13 @@ import {
   type CatalogProduct,
   type CatalogVariant,
   MakeCatalogProduct,
+  MakeCatalogLabel,
+  MakeCatalogDescription,
+  MakeCatalogCategory,
+  MakeCatalogPriceRange,
+  MakeCatalogImageUrl,
+  MakeCatalogDimension,
+  MakeCatalogPrice,
 } from '../../../domain/catalog'
 import { CatalogProductRepository } from '../../../ports/driven'
 import type {
@@ -30,20 +40,21 @@ export class ProjectionError extends Data.TaggedError('ProjectionError')<{
 
 // ============================================
 // MAPPER: PilotProduct → CatalogProduct
+// Anti-corruption layer: validates and translates Pilot types to Catalog types.
 // ============================================
 
 const mapToCatalogProduct = (product: PilotProduct, publishedAt: Date): CatalogProduct =>
   MakeCatalogProduct({
     id: product.id,
-    label: product.label,
-    description: product.description,
-    category: product.category,
-    priceRange: product.priceRange,
+    label: MakeCatalogLabel(product.label),
+    description: MakeCatalogDescription(product.description),
+    category: MakeCatalogCategory(product.category),
+    priceRange: MakeCatalogPriceRange(product.priceRange),
     variants: product.variants.map(mapVariant),
     images: {
-      front: product.views.front.imageUrl,
-      detail: product.views.detail.imageUrl,
-      gallery: product.views.additional.map((v) => v.imageUrl),
+      front: MakeCatalogImageUrl(product.views.front.imageUrl),
+      detail: MakeCatalogImageUrl(product.views.detail.imageUrl),
+      gallery: product.views.additional.map((v) => MakeCatalogImageUrl(v.imageUrl)),
     },
     publishedAt,
   })
@@ -52,11 +63,12 @@ const mapVariant = (variant: PilotProduct['variants'][number]): CatalogVariant =
   if (variant._tag === 'CustomVariant') {
     return {
       _tag: 'CustomVariant',
+      size: variant.size,
       dimensions: {
-        width: variant.customDimensions.width,
-        length: variant.customDimensions.length,
+        width: MakeCatalogDimension(variant.customDimensions.width),
+        length: MakeCatalogDimension(variant.customDimensions.length),
       },
-      price: variant.price,
+      price: MakeCatalogPrice(variant.price),
     }
   }
   return {

@@ -32,8 +32,13 @@ export class RabbitMQError extends Data.TaggedError('RabbitMQError')<{
 
 export const EXCHANGES = {
   PILOT_EVENTS: 'pilot.events',
-  PILOT_EVENTS_DLX: 'pilot.events.dlx',
 } as const
+
+/**
+ * Dérive automatiquement le nom du Dead Letter Exchange
+ * Convention: {exchange}.dlx
+ */
+export const toDlxExchange = (exchange: string): string => `${exchange}.dlx`
 
 // ============================================
 // ROUTING KEYS
@@ -45,218 +50,134 @@ export const ROUTING_KEYS = {
 } as const
 
 // ============================================
-// QUEUES
+// DECLARE EXCHANGE (helper générique)
 // ============================================
 
-export const QUEUES = {
-  CATALOG_PROJECTION: 'catalog-projection.queue',
-  CATALOG_PROJECTION_DLQ: 'catalog-projection.dlq',
-  CATALOG_PROJECTION_RETRY: 'catalog-projection.retry',
-  SHOPIFY_SYNC: 'shopify-sync.queue',
-  SHOPIFY_SYNC_DLQ: 'shopify-sync.dlq',
-  SHOPIFY_SYNC_RETRY: 'shopify-sync.retry',
-} as const
-
-// ============================================
-// DECLARE EXCHANGES (shared topology)
-// Déclare uniquement les exchanges (appelé une fois au démarrage)
-// ============================================
-
-export const declareExchanges: Effect.Effect<void, RabbitMQError, RabbitMQConnection> = Effect.gen(
-  function* () {
+/**
+ * Déclare un exchange et son DLX associé
+ * Idempotent : peut être appelé plusieurs fois sans erreur
+ */
+export const declareExchange = (
+  exchange: string
+): Effect.Effect<void, RabbitMQError, RabbitMQConnection> =>
+  Effect.gen(function* () {
     const { channel } = yield* RabbitMQConnection
+    const dlx = toDlxExchange(exchange)
 
     yield* Effect.tryPromise({
       try: async () => {
         // Dead Letter Exchange
-        await channel.assertExchange(EXCHANGES.PILOT_EVENTS_DLX, 'topic', {
+        await channel.assertExchange(dlx, 'topic', {
           durable: true,
         })
 
         // Main Exchange
-        await channel.assertExchange(EXCHANGES.PILOT_EVENTS, 'topic', {
+        await channel.assertExchange(exchange, 'topic', {
           durable: true,
         })
       },
       catch: (error) =>
         new RabbitMQError({
           cause: error,
-          operation: 'declareExchanges',
+          operation: 'declareExchange',
         }),
     })
 
-    yield* Effect.logInfo('RabbitMQ exchanges declared').pipe(
+    yield* Effect.logInfo('RabbitMQ exchange declared').pipe(
       Effect.annotateLogs({
-        exchanges: Object.values(EXCHANGES).join(', '),
-      })
-    )
-  }
-)
-
-// ============================================
-// DECLARE CATALOG PROJECTION INFRASTRUCTURE
-// ============================================
-
-export const declareCatalogProjectionInfra: Effect.Effect<void, RabbitMQError, RabbitMQConnection> =
-  Effect.gen(function* () {
-    const { channel } = yield* RabbitMQConnection
-
-    yield* Effect.tryPromise({
-      try: async () => {
-        // 1. DLQ (Dead Letter Queue)
-        await channel.assertQueue(QUEUES.CATALOG_PROJECTION_DLQ, {
-          durable: true,
-        })
-
-        // Bind DLQ to DLX for both published and updated events
-        await channel.bindQueue(
-          QUEUES.CATALOG_PROJECTION_DLQ,
-          EXCHANGES.PILOT_EVENTS_DLX,
-          ROUTING_KEYS.PRODUCT_PUBLISHED
-        )
-        await channel.bindQueue(
-          QUEUES.CATALOG_PROJECTION_DLQ,
-          EXCHANGES.PILOT_EVENTS_DLX,
-          ROUTING_KEYS.PRODUCT_UPDATED
-        )
-
-        // 2. Retry Queue
-        await channel.assertQueue(QUEUES.CATALOG_PROJECTION_RETRY, {
-          durable: true,
-          arguments: {
-            'x-dead-letter-exchange': EXCHANGES.PILOT_EVENTS,
-            'x-dead-letter-routing-key': ROUTING_KEYS.PRODUCT_PUBLISHED,
-            'x-message-ttl': 5000, // 5 seconds default
-          },
-        })
-
-        // 3. Main Queue
-        await channel.assertQueue(QUEUES.CATALOG_PROJECTION, {
-          durable: true,
-          arguments: {
-            'x-dead-letter-exchange': EXCHANGES.PILOT_EVENTS_DLX,
-            'x-dead-letter-routing-key': ROUTING_KEYS.PRODUCT_PUBLISHED,
-          },
-        })
-
-        // Bind main queue to main exchange for both published and updated events
-        await channel.bindQueue(
-          QUEUES.CATALOG_PROJECTION,
-          EXCHANGES.PILOT_EVENTS,
-          ROUTING_KEYS.PRODUCT_PUBLISHED
-        )
-        await channel.bindQueue(
-          QUEUES.CATALOG_PROJECTION,
-          EXCHANGES.PILOT_EVENTS,
-          ROUTING_KEYS.PRODUCT_UPDATED
-        )
-      },
-      catch: (error) =>
-        new RabbitMQError({
-          cause: error,
-          operation: 'declareCatalogProjectionInfra',
-        }),
-    })
-
-    yield* Effect.logInfo('Catalog projection infrastructure declared').pipe(
-      Effect.annotateLogs({
-        queues: [
-          QUEUES.CATALOG_PROJECTION,
-          QUEUES.CATALOG_PROJECTION_RETRY,
-          QUEUES.CATALOG_PROJECTION_DLQ,
-        ].join(', '),
+        exchange,
+        dlx,
       })
     )
   })
 
 // ============================================
-// DECLARE SHOPIFY SYNC INFRASTRUCTURE
+// CONSUMER INFRASTRUCTURE FACTORY
 // ============================================
 
-export const declareShopifySyncInfra: Effect.Effect<void, RabbitMQError, RabbitMQConnection> =
+/**
+ * Configuration pour la déclaration de l'infrastructure d'un consumer
+ */
+export interface ConsumerInfraConfig {
+  readonly queuePrefix: string
+  readonly exchange: string // Main exchange (DLX sera automatiquement {exchange}.dlx)
+  readonly routingKeys: readonly string[]
+  readonly retryTtl?: number
+}
+
+/**
+ * Factory pour déclarer l'infrastructure complète d'un consumer (DLQ, Retry, Main Queue)
+ *
+ * Best Practice:
+ * - Ne spécifie pas x-dead-letter-routing-key pour préserver automatiquement
+ *   la routing key originale lors du dead-lettering
+ * - Le DLX est automatiquement dérivé selon la convention {exchange}.dlx
+ */
+export const declareConsumerInfrastructure = (
+  config: ConsumerInfraConfig
+): Effect.Effect<void, RabbitMQError, RabbitMQConnection> =>
   Effect.gen(function* () {
     const { channel } = yield* RabbitMQConnection
+    const { queuePrefix, exchange, routingKeys, retryTtl = 5000 } = config
+
+    const mainExchange = exchange
+    const dlxExchange = toDlxExchange(exchange)
+
+    // Déclare l'exchange et son DLX (idempotent)
+    yield* declareExchange(exchange)
+
+    const dlqName = `${queuePrefix}.dlq`
+    const retryName = `${queuePrefix}.retry`
+    const mainName = `${queuePrefix}.queue`
 
     yield* Effect.tryPromise({
       try: async () => {
         // 1. DLQ (Dead Letter Queue)
-        await channel.assertQueue(QUEUES.SHOPIFY_SYNC_DLQ, {
+        await channel.assertQueue(dlqName, {
           durable: true,
         })
 
-        // Bind DLQ to DLX for both published and updated events
-        await channel.bindQueue(
-          QUEUES.SHOPIFY_SYNC_DLQ,
-          EXCHANGES.PILOT_EVENTS_DLX,
-          ROUTING_KEYS.PRODUCT_PUBLISHED
-        )
-        await channel.bindQueue(
-          QUEUES.SHOPIFY_SYNC_DLQ,
-          EXCHANGES.PILOT_EVENTS_DLX,
-          ROUTING_KEYS.PRODUCT_UPDATED
-        )
+        // Bind DLQ to DLX for all routing keys
+        for (const routingKey of routingKeys) {
+          await channel.bindQueue(dlqName, dlxExchange, routingKey)
+        }
 
         // 2. Retry Queue
-        await channel.assertQueue(QUEUES.SHOPIFY_SYNC_RETRY, {
+        // Note: Pas de x-dead-letter-routing-key → RabbitMQ préserve l'originale
+        await channel.assertQueue(retryName, {
           durable: true,
           arguments: {
-            'x-dead-letter-exchange': EXCHANGES.PILOT_EVENTS,
-            'x-dead-letter-routing-key': ROUTING_KEYS.PRODUCT_PUBLISHED,
-            'x-message-ttl': 5000, // 5 seconds default
+            'x-dead-letter-exchange': mainExchange,
+            'x-message-ttl': retryTtl,
           },
         })
 
         // 3. Main Queue
-        await channel.assertQueue(QUEUES.SHOPIFY_SYNC, {
+        // Note: Pas de x-dead-letter-routing-key → RabbitMQ préserve l'originale
+        await channel.assertQueue(mainName, {
           durable: true,
           arguments: {
-            'x-dead-letter-exchange': EXCHANGES.PILOT_EVENTS_DLX,
-            'x-dead-letter-routing-key': ROUTING_KEYS.PRODUCT_PUBLISHED,
+            'x-dead-letter-exchange': dlxExchange,
           },
         })
 
-        // Bind main queue to main exchange for both published and updated events
-        await channel.bindQueue(
-          QUEUES.SHOPIFY_SYNC,
-          EXCHANGES.PILOT_EVENTS,
-          ROUTING_KEYS.PRODUCT_PUBLISHED
-        )
-        await channel.bindQueue(
-          QUEUES.SHOPIFY_SYNC,
-          EXCHANGES.PILOT_EVENTS,
-          ROUTING_KEYS.PRODUCT_UPDATED
-        )
+        // Bind main queue to main exchange for all routing keys
+        for (const routingKey of routingKeys) {
+          await channel.bindQueue(mainName, mainExchange, routingKey)
+        }
       },
       catch: (error) =>
         new RabbitMQError({
           cause: error,
-          operation: 'declareShopifySyncInfra',
+          operation: `declareConsumerInfra:${queuePrefix}`,
         }),
     })
 
-    yield* Effect.logInfo('Shopify sync infrastructure declared').pipe(
+    yield* Effect.logInfo(`${queuePrefix} infrastructure declared`).pipe(
       Effect.annotateLogs({
-        queues: [QUEUES.SHOPIFY_SYNC, QUEUES.SHOPIFY_SYNC_RETRY, QUEUES.SHOPIFY_SYNC_DLQ].join(
-          ', '
-        ),
+        queues: [mainName, retryName, dlqName].join(', '),
+        exchange: mainExchange,
+        dlx: dlxExchange,
       })
     )
-  })
-
-// ============================================
-// DECLARE ALL TOPOLOGY
-// Déclare les exchanges + toutes les queues
-// Utile pour init complète ou tests
-// ============================================
-
-export const declareAllTopology: Effect.Effect<void, RabbitMQError, RabbitMQConnection> =
-  Effect.gen(function* () {
-    // 1. Déclarer les exchanges
-    yield* declareExchanges
-
-    // 2. Déclarer toutes les infras consumers
-    yield* declareCatalogProjectionInfra
-    yield* declareShopifySyncInfra
-
-    yield* Effect.logInfo('All RabbitMQ topology declared')
   })

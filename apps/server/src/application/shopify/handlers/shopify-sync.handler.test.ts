@@ -24,13 +24,14 @@ import {
 } from '../../../domain/pilot'
 import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
 import {
+  Clock,
   PilotProductRepository,
   ShopifyClient,
+  ShopifyClientError,
   type ShopifyClientService,
 } from '../../../ports/driven'
 import { InMemoryPilotProductRepositoryLive } from '../../../infrastructure/persistence/in-memory'
 import { TEST_DATE } from '../../../test-utils'
-import type { ShopifyProductSetResponse } from '../dtos'
 
 import { shopifySyncHandler, type ShopifySyncEvent } from './shopify-sync.handler'
 
@@ -41,35 +42,50 @@ import { shopifySyncHandler, type ShopifySyncEvent } from './shopify-sync.handle
 interface SpyShopifyClient extends ShopifyClientService {
   readonly calls: { method: string; args: unknown[] }[]
   readonly clear: () => void
-  readonly setResponse: (response: ShopifyProductSetResponse) => void
+  readonly setShouldFail: (fail: boolean) => void
 }
 
 const createSpyShopifyClient = (): SpyShopifyClient => {
   const calls: { method: string; args: unknown[] }[] = []
-  let mockResponse: ShopifyProductSetResponse = {
-    product: { id: 'gid://shopify/Product/123456789' },
-    userErrors: [],
-  }
+  let shouldFail = false
 
   return {
     calls,
     clear: () => {
       calls.length = 0
     },
-    setResponse: (response) => {
-      mockResponse = response
+    setShouldFail: (fail: boolean) => {
+      shouldFail = fail
     },
-    productSet: (input) =>
-      Effect.sync(() => {
-        calls.push({ method: 'productSet', args: [input] })
-        return mockResponse
+    syncProduct: (product) =>
+      Effect.gen(function* () {
+        calls.push({ method: 'syncProduct', args: [product] })
+        if (shouldFail) {
+          return yield* Effect.fail(
+            new ShopifyClientError({ operation: 'syncProduct', cause: 'Test error' })
+          )
+        }
+        return 'gid://shopify/Product/123456789' as ShopifyProductId
       }),
-    productArchive: (productId) =>
-      Effect.sync(() => {
-        calls.push({ method: 'productArchive', args: [productId] })
+    archiveProduct: (shopifyProductId) =>
+      Effect.gen(function* () {
+        calls.push({ method: 'archiveProduct', args: [shopifyProductId] })
+        if (shouldFail) {
+          return yield* Effect.fail(
+            new ShopifyClientError({ operation: 'archiveProduct', cause: 'Test error' })
+          )
+        }
       }),
   }
 }
+
+// ============================================
+// TEST CLOCK
+// ============================================
+
+const createTestClock = () => ({
+  now: () => Effect.succeed(TEST_DATE),
+})
 
 // ============================================
 // TEST FIXTURES
@@ -125,7 +141,7 @@ const buildUpdatedEvent = (product: PilotProduct = createPilotProduct()): Shopif
 // ============================================
 
 interface TestContext {
-  layer: Layer.Layer<PilotProductRepository | ShopifyClient>
+  layer: Layer.Layer<PilotProductRepository | ShopifyClient | Clock>
   shopifySpy: SpyShopifyClient
   seedProduct: (product: PilotProduct) => Effect.Effect<void, never, PilotProductRepository>
 }
@@ -135,7 +151,8 @@ const provideShopifySyncTestLayer = (): TestContext => {
 
   const layer = Layer.mergeAll(
     InMemoryPilotProductRepositoryLive,
-    Layer.succeed(ShopifyClient, shopifySpy)
+    Layer.succeed(ShopifyClient, shopifySpy),
+    Layer.succeed(Clock, createTestClock())
   )
 
   const seedProduct = (product: PilotProduct) =>
@@ -170,7 +187,7 @@ describe('shopifySyncHandler', () => {
   })
 
   describe('PUBLISHED status', () => {
-    it('calls Shopify productSet for PUBLISHED products', async () => {
+    it('calls Shopify syncProduct for PUBLISHED products', async () => {
       const product = createPilotProduct({ status: ProductStatus.PUBLISHED })
 
       // Seed the product first (needed for syncStatus update)
@@ -183,10 +200,10 @@ describe('shopifySyncHandler', () => {
       expect(testCtx.shopifySpy.calls).toHaveLength(1)
       const firstCall = testCtx.shopifySpy.calls[0]
       expect(firstCall).toBeDefined()
-      expect(firstCall?.method).toBe('productSet')
+      expect(firstCall?.method).toBe('syncProduct')
     })
 
-    it('maps product data to Shopify format', async () => {
+    it('passes product to Shopify client', async () => {
       const product = createPilotProduct({
         status: ProductStatus.PUBLISHED,
         label: 'Test Product' as any,
@@ -201,9 +218,9 @@ describe('shopifySyncHandler', () => {
       const call = testCtx.shopifySpy.calls[0]
       expect(call).toBeDefined()
       if (call) {
-        const shopifyInput = call.args[0] as { title: string; handle: string }
-        expect(shopifyInput.title).toBe('Test Product')
-        expect(shopifyInput.handle).toBeDefined()
+        const passedProduct = call.args[0] as PilotProduct
+        expect(passedProduct.label).toBe('Test Product')
+        expect(passedProduct.id).toBe(product.id)
       }
     })
 
@@ -233,16 +250,13 @@ describe('shopifySyncHandler', () => {
       }
     })
 
-    it('handles Shopify user errors', async () => {
+    it('handles Shopify client errors', async () => {
       const product = createPilotProduct({ status: ProductStatus.PUBLISHED })
 
       await Effect.runPromise(testCtx.seedProduct(product).pipe(Effect.provide(testCtx.layer)))
 
-      // Set error response
-      testCtx.shopifySpy.setResponse({
-        product: null,
-        userErrors: [{ field: ['title'], message: 'Title is required' }],
-      })
+      // Set error mode
+      testCtx.shopifySpy.setShouldFail(true)
 
       const event = buildPublishedEvent(product)
 
@@ -255,7 +269,7 @@ describe('shopifySyncHandler', () => {
   })
 
   describe('ARCHIVED status', () => {
-    it('calls productArchive for ARCHIVED products with Synced status', async () => {
+    it('calls archiveProduct for ARCHIVED products with Synced status', async () => {
       const product = createPilotProduct({
         status: ProductStatus.ARCHIVED,
         syncStatus: MakeSynced({
@@ -273,7 +287,7 @@ describe('shopifySyncHandler', () => {
       expect(testCtx.shopifySpy.calls).toHaveLength(1)
       const archiveCall = testCtx.shopifySpy.calls[0]
       expect(archiveCall).toBeDefined()
-      expect(archiveCall?.method).toBe('productArchive')
+      expect(archiveCall?.method).toBe('archiveProduct')
       expect(archiveCall?.args[0]).toBe('gid://shopify/Product/existing-123')
     })
 
@@ -304,7 +318,7 @@ describe('shopifySyncHandler', () => {
       expect(testCtx.shopifySpy.calls).toHaveLength(1)
       const updateCall = testCtx.shopifySpy.calls[0]
       expect(updateCall).toBeDefined()
-      expect(updateCall?.method).toBe('productSet')
+      expect(updateCall?.method).toBe('syncProduct')
     })
   })
 })

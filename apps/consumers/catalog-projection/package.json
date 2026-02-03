@@ -10,15 +10,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@effect/platform": "^0.77.1",
     "@effect/platform-node": "^0.73.1",
     "@maison-amane/server": "workspace:*",
     "@maison-amane/shared-kernel": "workspace:*",
-    "effect": "^3.13.1",
-    "amqplib": "^0.10.9"
+    "effect": "^3.13.1"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.10.8",
     "@types/node": "^22.5.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"

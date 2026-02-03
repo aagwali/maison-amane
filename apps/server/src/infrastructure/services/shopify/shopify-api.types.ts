@@ -1,6 +1,7 @@
-// src/application/shopify/dtos/shopify-product.dto.ts
+// src/infrastructure/services/shopify/shopify-api.types.ts
 //
-// Shopify GraphQL Admin API - productSet mutation input
+// Shopify GraphQL Admin API types.
+// These are infrastructure-level types that model Shopify's API contract.
 // Based on: https://shopify.dev/docs/api/admin-graphql/latest/mutations/productSet
 
 // ============================================
@@ -18,7 +19,7 @@ export interface ShopifyOptionValue {
 
 export interface ShopifyFileInput {
   readonly originalSource: string
-  readonly contentType?: "IMAGE"
+  readonly contentType?: 'IMAGE'
 }
 
 // ============================================
@@ -43,7 +44,7 @@ export interface ShopifyProductOption {
 // SHOPIFY PRODUCT SET INPUT
 // ============================================
 
-export type ShopifyProductStatus = "ACTIVE" | "DRAFT" | "ARCHIVED"
+export type ShopifyProductStatus = 'ACTIVE' | 'DRAFT' | 'ARCHIVED'
 
 export interface ShopifyProductSetInput {
   readonly title: string

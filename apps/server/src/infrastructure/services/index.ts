@@ -2,7 +2,7 @@
 
 export { UuidIdGeneratorLive } from './uuid-id-generator'
 export { SystemClockLive } from './system-clock'
-export { FakeShopifyClientLive } from './fake-shopify-client'
+export { FakeShopifyClientLive } from './shopify'
 export { JsonLogger } from './json-logger'
 export { PrettyLogger } from './pretty-logger'
 export {

@@ -1,17 +1,20 @@
 // src/infrastructure/persistence/mongodb/mappers/catalog-product.mapper.ts
+//
+// DDD: Infrastructure mapper for Catalog bounded context.
+// Uses Catalog-specific types, imports ProductId from shared-kernel.
 
+import { MakeProductId } from '@maison-amane/shared-kernel'
+
+import type { CatalogProduct, CatalogVariant } from '../../../../domain/catalog'
 import {
-  MakeImageUrl,
-  MakePositiveCm,
-  MakePrice,
-  MakeProductDescription,
-  MakeProductId,
-  MakeProductLabel,
-  type PriceRange,
-  type ProductCategory,
-} from '../../../../domain/pilot'
-
-import type { CatalogProduct, CatalogVariant } from "../../../../domain/catalog"
+  MakeCatalogLabel,
+  MakeCatalogDescription,
+  MakeCatalogImageUrl,
+  MakeCatalogDimension,
+  MakeCatalogPrice,
+  MakeCatalogCategory,
+  MakeCatalogPriceRange,
+} from '../../../../domain/catalog'
 
 // ============================================
 // MONGODB DOCUMENT TYPE
@@ -24,8 +27,8 @@ export interface CatalogProductDocument {
   category: string
   priceRange: string
   variants: Array<{
-    _tag: "StandardVariant" | "CustomVariant"
-    size?: "REGULAR" | "LARGE"
+    _tag: 'StandardVariant' | 'CustomVariant'
+    size: 'REGULAR' | 'LARGE' | 'CUSTOM'
     dimensions?: { width: number; length: number }
     price?: number
   }>
@@ -50,23 +53,24 @@ export const catalogToDocument = (product: CatalogProduct): CatalogProductDocume
   priceRange: product.priceRange,
   variants: product.variants.map((v) => ({
     _tag: v._tag,
-    ...(v._tag === "StandardVariant"
-      ? { size: v.size }
-      : {
+    size: v.size,
+    ...(v._tag === 'CustomVariant'
+      ? {
           dimensions: {
             width: v.dimensions.width,
-            length: v.dimensions.length
+            length: v.dimensions.length,
           },
-          price: v.price
-        })
+          price: v.price,
+        }
+      : {}),
   })),
   images: {
     front: product.images.front,
     detail: product.images.detail,
-    gallery: [...product.images.gallery]
+    gallery: [...product.images.gallery],
   },
   ...(product.shopifyUrl ? { shopifyUrl: product.shopifyUrl } : {}),
-  publishedAt: product.publishedAt
+  publishedAt: product.publishedAt,
 })
 
 // ============================================
@@ -74,39 +78,40 @@ export const catalogToDocument = (product: CatalogProduct): CatalogProductDocume
 // ============================================
 
 export const catalogFromDocument = (doc: CatalogProductDocument): CatalogProduct => ({
-  _tag: "CatalogProduct",
+  _tag: 'CatalogProduct',
   id: MakeProductId(doc._id),
-  label: MakeProductLabel(doc.label),
-  description: MakeProductDescription(doc.description),
-  category: doc.category as ProductCategory,
-  priceRange: doc.priceRange as PriceRange,
+  label: MakeCatalogLabel(doc.label),
+  description: MakeCatalogDescription(doc.description),
+  category: MakeCatalogCategory(doc.category),
+  priceRange: MakeCatalogPriceRange(doc.priceRange),
   variants: doc.variants.map(mapVariant),
   images: {
-    front: MakeImageUrl(doc.images.front),
-    detail: MakeImageUrl(doc.images.detail),
-    gallery: doc.images.gallery.map((url) => MakeImageUrl(url))
+    front: MakeCatalogImageUrl(doc.images.front),
+    detail: MakeCatalogImageUrl(doc.images.detail),
+    gallery: doc.images.gallery.map((url) => MakeCatalogImageUrl(url)),
   },
   ...(doc.shopifyUrl ? { shopifyUrl: doc.shopifyUrl } : {}),
-  publishedAt: doc.publishedAt
+  publishedAt: doc.publishedAt,
 })
 
 // ============================================
 // HELPER
 // ============================================
 
-const mapVariant = (v: CatalogProductDocument["variants"][number]): CatalogVariant => {
-  if (v._tag === "CustomVariant") {
+const mapVariant = (v: CatalogProductDocument['variants'][number]): CatalogVariant => {
+  if (v._tag === 'CustomVariant') {
     return {
-      _tag: "CustomVariant",
+      _tag: 'CustomVariant',
+      size: v.size as 'CUSTOM',
       dimensions: {
-        width: MakePositiveCm(v.dimensions!.width),
-        length: MakePositiveCm(v.dimensions!.length)
+        width: MakeCatalogDimension(v.dimensions!.width),
+        length: MakeCatalogDimension(v.dimensions!.length),
       },
-      price: MakePrice(v.price!)
+      price: MakeCatalogPrice(v.price!),
     }
   }
   return {
-    _tag: "StandardVariant",
-    size: v.size!
+    _tag: 'StandardVariant',
+    size: v.size as 'REGULAR' | 'LARGE',
   }
 }

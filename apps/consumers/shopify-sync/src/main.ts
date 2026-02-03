@@ -1,7 +1,7 @@
 // src/main.ts
 // Shopify Sync Consumer - syncs domain events to Shopify
 
-import { Config, Effect, Layer, Logger, LogLevel } from 'effect'
+import { Effect, Layer } from 'effect'
 import { NodeRuntime } from '@effect/platform-node'
 import {
   FakeShopifyClientLive,
@@ -13,8 +13,15 @@ import {
   RabbitMQConnectionLayer,
   shopifySyncHandler,
   startConsumer,
+  SystemClockLive,
 } from '@maison-amane/server'
-import { declareShopifySyncInfra, declareExchanges } from '@maison-amane/shared-kernel'
+import {
+  ConsumerConfig,
+  createLoggerLayer,
+  declareConsumerInfrastructure,
+  EXCHANGES,
+  ROUTING_KEYS,
+} from '@maison-amane/shared-kernel'
 
 // ============================================
 // CONSUMER IDENTITY
@@ -23,47 +30,13 @@ import { declareShopifySyncInfra, declareExchanges } from '@maison-amane/shared-
 const CONSUMER_NAME = 'shopify-sync'
 
 // ============================================
-// CONSUMER CONFIGURATION
-// ============================================
-
-const ConsumerConfig = Config.all({
-  nodeEnv: Config.literal(
-    'development',
-    'production',
-    'test'
-  )('NODE_ENV').pipe(Config.withDefault('development')),
-  logLevel: Config.literal(
-    'debug',
-    'info',
-    'warn',
-    'error'
-  )('LOG_LEVEL').pipe(Config.withDefault('info')),
-})
-
-// ============================================
-// LOG LEVEL MAPPING
-// ============================================
-
-const logLevelMap = {
-  debug: LogLevel.Debug,
-  info: LogLevel.Info,
-  warn: LogLevel.Warning,
-  error: LogLevel.Error,
-} as const
-
-// ============================================
 // MAIN PROGRAM
 // ============================================
 
 const program = Effect.gen(function* () {
   const { nodeEnv, logLevel } = yield* ConsumerConfig
 
-  const isDev = nodeEnv !== 'production'
-  const minLevel = Logger.minimumLogLevel(logLevelMap[logLevel])
-
-  const LoggerLive = isDev
-    ? Layer.mergeAll(Logger.replace(Logger.defaultLogger, PrettyLogger), minLevel)
-    : Layer.mergeAll(Logger.replace(Logger.defaultLogger, JsonLogger), minLevel)
+  const LoggerLive = createLoggerLayer(nodeEnv !== 'production', logLevel, PrettyLogger, JsonLogger)
 
   const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLayer, RabbitMQConfigLive)
 
@@ -80,13 +53,11 @@ const program = Effect.gen(function* () {
     Effect.gen(function* () {
       yield* Effect.logInfo(`Starting ${CONSUMER_NAME} consumer...`)
 
-      // Declare exchanges (shared topology)
-      yield* declareExchanges
-
-      // Declare shopify sync infrastructure (queues, bindings)
-      yield* declareShopifySyncInfra
-
-      yield* Effect.logInfo('RabbitMQ topology initialized')
+      yield* declareConsumerInfrastructure({
+        queuePrefix: 'shopify-sync',
+        exchange: EXCHANGES.PILOT_EVENTS,
+        routingKeys: [ROUTING_KEYS.PRODUCT_PUBLISHED, ROUTING_KEYS.PRODUCT_UPDATED],
+      })
 
       // Start shopify sync consumer
       yield* startConsumer(CONSUMER_NAME, shopifySyncHandler)
@@ -97,7 +68,13 @@ const program = Effect.gen(function* () {
 
       yield* Effect.never
     }),
-    Layer.mergeAll(RabbitMQLayer, LoggerLive, PilotProductRepositoryLayer, ShopifyClientLayer)
+    Layer.mergeAll(
+      RabbitMQLayer,
+      LoggerLive,
+      PilotProductRepositoryLayer,
+      ShopifyClientLayer,
+      SystemClockLive
+    )
   )
 })
 

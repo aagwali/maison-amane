@@ -3,9 +3,11 @@
 import { Effect } from 'effect'
 
 import { type ProjectionEvent, projectToCatalog } from '../projectors/catalog-product.projector'
-import { MessageHandlerError } from '../../../infrastructure/messaging/rabbitmq/consumer'
-import { CatalogProductRepository } from '../../../ports/driven'
-import type { MessageHandler } from '../../../infrastructure/messaging/rabbitmq/consumer'
+import {
+  CatalogProductRepository,
+  MessageHandlerError,
+  type MessageHandler,
+} from '../../../ports/driven'
 
 // ============================================
 // CATALOG PROJECTION HANDLER

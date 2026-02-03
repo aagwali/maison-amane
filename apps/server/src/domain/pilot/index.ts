@@ -91,7 +91,13 @@ export {
 // ============================================
 // REFERENCE DATA
 // ============================================
-export { DIMENSION_SETS, getDimensionsForSize, type Dimension } from './reference-data'
+export {
+  DIMENSION_SETS,
+  getDimensionsForSize,
+  PRICE_BY_RANGE,
+  getPriceForVariant,
+  type Dimension,
+} from './reference-data'
 
 // ============================================
 // AGGREGATE
@@ -100,6 +106,8 @@ export {
   MakeStandardVariant,
   MakePilotProduct,
   MakeCustomVariant,
+  withSyncStatus,
+  withUpdatedFields,
   type PilotProduct,
 } from './aggregate'
 
@@ -125,7 +133,7 @@ export {
 } from './errors'
 
 // ============================================
-// POLICIES (placeholder - see policies/index.ts for patterns)
+// POLICIES
 // ============================================
 // export { canSyncProduct, SyncNotAllowed } from "./policies"
-// export { canPublish, PublicationNotAllowed } from "./policies"
+export { canPublish, PublicationNotAllowed } from './policies'

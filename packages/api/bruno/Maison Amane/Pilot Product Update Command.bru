@@ -4,8 +4,8 @@ meta {
   seq: 4
 }
 
-post {
-  url: http://localhost:3001/api/pilot-product
+put {
+  url: http://localhost:3001/api/pilot-product/02c56eb2-f816-4ce0-b7d0-f2b99501f5a4
   body: json
   auth: inherit
 }
@@ -16,37 +16,8 @@ headers {
 
 body:json {
   {
-    "label": "Tapis Berbere Atlas",
-    "type": "TAPIS",
-    "category": "STANDARD",
-    "description": "Un beau tapis fait main",
-    "priceRange": "PREMIUM",
-    "variants": [
-      {
-        "size": "REGULAR"
-      },
-      {
-        "size": "LARGE"
-      }
-    ],
-    "views": [
-      {
-        "viewType": "FRONT",
-        "imageUrl": "https://cdn.example.com/front.jpg"
-      },
-      {
-        "viewType": "DETAIL",
-        "imageUrl": "https://cdn.example.com/detail.jpg"
-      },
-      {
-        "viewType": "BACK",
-        "imageUrl": "https://cdn.example.com/back.jpg"
-      },
-      {
-        "viewType": "AMBIANCE",
-        "imageUrl": "https://cdn.example.com/ambiance.jpg"
-      }
-    ],
+    "label": "Tapis Berbere Atlas 3",
+    
     "status": "PUBLISHED"
   }
 }

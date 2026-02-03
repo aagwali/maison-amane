@@ -7,85 +7,64 @@ import { fromEnum } from '../shared'
 // ============================================
 
 export const ProductType = {
-  TAPIS: "TAPIS",
+  TAPIS: 'TAPIS',
   // Extensible: COUSSIN, PLAID...
 } as const
 
-export type ProductType = typeof ProductType[keyof typeof ProductType]
+export type ProductType = (typeof ProductType)[keyof typeof ProductType]
 
 // ============================================
-// PRODUCT CATEGORY
+// PRODUCT CATEGORY (shared - cross-context)
 // ============================================
 
-export const ProductCategory = {
-  RUNNER: "RUNNER",
-  STANDARD: "STANDARD",
-} as const
-
-export type ProductCategory = typeof ProductCategory[keyof typeof ProductCategory]
+export { ProductCategory, ProductCategorySchema } from '@maison-amane/shared-kernel'
+export type { ProductCategory as ProductCategoryType } from '@maison-amane/shared-kernel'
 
 // ============================================
-// SIZE
+// SIZE (shared - cross-context)
 // ============================================
 
-export const Size = {
-  REGULAR: "REGULAR",
-  LARGE: "LARGE",
-  CUSTOM: "CUSTOM",
-} as const
-
-export type Size = typeof Size[keyof typeof Size]
-export type PredefinedSize = Exclude<Size, "CUSTOM">
+export { Size, SizeSchema } from '@maison-amane/shared-kernel'
+export type PredefinedSize = 'REGULAR' | 'LARGE'
 
 // ============================================
-// PRICE RANGE
+// PRICE RANGE (shared - cross-context)
 // ============================================
 
-export const PriceRange = {
-  DISCOUNT: "DISCOUNT",
-  STANDARD: "STANDARD",
-  PREMIUM: "PREMIUM",
-} as const
-
-export type PriceRange = typeof PriceRange[keyof typeof PriceRange]
+export { PriceRange, PriceRangeSchema } from '@maison-amane/shared-kernel'
+export type { PriceRange as PriceRangeType } from '@maison-amane/shared-kernel'
 
 // ============================================
 // PRODUCT STATUS
 // ============================================
 
 export const ProductStatus = {
-  DRAFT: "DRAFT",
-  PUBLISHED: "PUBLISHED",
-  ARCHIVED: "ARCHIVED",
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  ARCHIVED: 'ARCHIVED',
 } as const
 
-export type ProductStatus = typeof ProductStatus[keyof typeof ProductStatus]
+export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus]
 
 // ============================================
 // VIEW TYPE
 // ============================================
 
 export const ViewType = {
-  FRONT: "FRONT",
-  DETAIL: "DETAIL",
-  BACK: "BACK",
-  AMBIANCE: "AMBIANCE",
+  FRONT: 'FRONT',
+  DETAIL: 'DETAIL',
+  BACK: 'BACK',
+  AMBIANCE: 'AMBIANCE',
 } as const
 
-export type ViewType = typeof ViewType[keyof typeof ViewType]
+export type ViewType = (typeof ViewType)[keyof typeof ViewType]
 
-export const REQUIRED_VIEW_TYPES: readonly ViewType[] = [
-  ViewType.FRONT,
-  ViewType.DETAIL,
-]
+export const REQUIRED_VIEW_TYPES: readonly ViewType[] = [ViewType.FRONT, ViewType.DETAIL]
 
 // ============================================
 // ENUM SCHEMAS
 // ============================================
 
 export const ProductTypeSchema = fromEnum(ProductType)
-export const ProductCategorySchema = fromEnum(ProductCategory)
-export const SizeSchema = fromEnum(Size)
-export const PriceRangeSchema = fromEnum(PriceRange)
 export const ProductStatusSchema = fromEnum(ProductStatus)
 export const ViewTypeSchema = fromEnum(ViewType)

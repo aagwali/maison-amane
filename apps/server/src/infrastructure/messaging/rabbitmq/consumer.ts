@@ -1,33 +1,22 @@
 // src/infrastructure/messaging/rabbitmq/consumer.ts
 
-import { Data, Duration, Effect, Fiber, Runtime } from 'effect'
+import { Duration, Effect, Fiber, Runtime } from 'effect'
 import { RabbitMQConnection } from '@maison-amane/shared-kernel'
 import type * as amqp from 'amqplib'
 
 import { RabbitMQConfig } from '../../../composition/config'
 import type { PilotDomainEvent } from '../../../domain/pilot'
+import {
+  MessageHandlerError,
+  MessageParseError,
+  MessageTimeoutError,
+  type MessageHandler,
+} from '../../../ports/driven'
 
 import { buildQueueNames, calculateDelay, getRetryCount } from './topology'
 
-
-// ============================================
-// CONSUMER ERRORS
-// ============================================
-
-export class MessageParseError extends Data.TaggedError('MessageParseError')<{
-  readonly rawMessage: string
-  readonly cause: unknown
-}> {}
-
-export class MessageHandlerError extends Data.TaggedError('MessageHandlerError')<{
-  readonly event: PilotDomainEvent
-  readonly cause: unknown
-}> {}
-
-export class MessageTimeoutError extends Data.TaggedError('MessageTimeoutError')<{
-  readonly event: PilotDomainEvent
-  readonly timeoutMs: number
-}> {}
+// Re-export for backwards compatibility during migration
+export { MessageHandlerError, MessageParseError, MessageTimeoutError, type MessageHandler }
 
 // ============================================
 // DESERIALIZE MESSAGE
@@ -47,14 +36,6 @@ const deserializeEvent = (
     },
     catch: (error) => new MessageParseError({ rawMessage: msg.content.toString(), cause: error }),
   })
-
-// ============================================
-// MESSAGE HANDLER TYPE
-// ============================================
-
-export type MessageHandler<E extends PilotDomainEvent = PilotDomainEvent, R = never> = (
-  event: E
-) => Effect.Effect<void, MessageHandlerError, R>
 
 // ============================================
 // HELLO WORLD HANDLER (for testing)

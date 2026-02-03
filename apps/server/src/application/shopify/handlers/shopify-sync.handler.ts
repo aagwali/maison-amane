@@ -5,16 +5,20 @@ import { Data, Effect, Option } from 'effect'
 import {
   ProductStatus,
   SyncStatusMachine,
+  withSyncStatus,
   type PilotProduct,
   type PilotProductPublished,
   type PilotProductUpdated,
   type ProductId,
   type ShopifyProductId,
 } from '../../../domain/pilot'
-import { MessageHandlerError } from '../../../infrastructure/messaging/rabbitmq/consumer'
-import { PilotProductRepository, ShopifyClient, ShopifyClientError } from '../../../ports/driven'
-import { mapToShopifyProduct } from '../mappers'
-import type { MessageHandler } from '../../../infrastructure/messaging/rabbitmq/consumer'
+import {
+  Clock,
+  MessageHandlerError,
+  PilotProductRepository,
+  ShopifyClient,
+  type MessageHandler,
+} from '../../../ports/driven'
 
 // ============================================
 // SHOPIFY SYNC ERROR
@@ -49,7 +53,7 @@ export type ShopifySyncEvent = PilotProductPublished | PilotProductUpdated
  */
 export const shopifySyncHandler: MessageHandler<
   ShopifySyncEvent,
-  PilotProductRepository | ShopifyClient
+  PilotProductRepository | ShopifyClient | Clock
 > = (event) =>
   Effect.gen(function* () {
     const { product, productId, correlationId, userId } = event
@@ -90,62 +94,15 @@ export const shopifySyncHandler: MessageHandler<
 const syncToShopify = (
   event: ShopifySyncEvent,
   product: PilotProduct
-): Effect.Effect<void, MessageHandlerError, PilotProductRepository | ShopifyClient> =>
+): Effect.Effect<void, MessageHandlerError, PilotProductRepository | ShopifyClient | Clock> =>
   Effect.gen(function* () {
     const { productId } = event
-
-    // 1. Map to Shopify input
-    const shopifyInput = mapToShopifyProduct(product)
-
-    yield* Effect.logDebug('Mapped product to Shopify format').pipe(
-      Effect.annotateLogs({
-        handle: shopifyInput.handle,
-        variantsCount: shopifyInput.variants.length,
-      })
-    )
-
-    // 2. Call Shopify API
     const shopifyClient = yield* ShopifyClient
-    const response = yield* shopifyClient
-      .productSet(shopifyInput)
+
+    // Call Shopify API (adapter handles the domain → API mapping)
+    const shopifyProductId = yield* shopifyClient
+      .syncProduct(product)
       .pipe(Effect.mapError((error) => new MessageHandlerError({ event, cause: error })))
-
-    // 3. Check for Shopify user errors
-    if (response.userErrors.length > 0) {
-      const errorMessages = response.userErrors
-        .map((e) => `${e.field.join('.')}: ${e.message}`)
-        .join('; ')
-
-      yield* Effect.logError('Shopify API returned user errors').pipe(
-        Effect.annotateLogs({
-          errors: errorMessages,
-        })
-      )
-
-      return yield* Effect.fail(
-        new MessageHandlerError({
-          event,
-          cause: new ShopifyClientError({
-            operation: 'productSet',
-            cause: errorMessages,
-          }),
-        })
-      )
-    }
-
-    if (!response.product) {
-      return yield* Effect.fail(
-        new MessageHandlerError({
-          event,
-          cause: new ShopifyClientError({
-            operation: 'productSet',
-            cause: 'No product returned from Shopify',
-          }),
-        })
-      )
-    }
-
-    const shopifyProductId = response.product.id as ShopifyProductId
 
     yield* Effect.logInfo('Product synced to Shopify').pipe(
       Effect.annotateLogs({
@@ -153,7 +110,7 @@ const syncToShopify = (
       })
     )
 
-    // 4. Update PilotProduct syncStatus
+    // Update PilotProduct syncStatus
     yield* updateSyncStatus(event, productId, shopifyProductId)
   })
 
@@ -164,7 +121,7 @@ const syncToShopify = (
 const archiveOnShopify = (
   event: ShopifySyncEvent,
   product: PilotProduct
-): Effect.Effect<void, MessageHandlerError, PilotProductRepository | ShopifyClient> =>
+): Effect.Effect<void, MessageHandlerError, ShopifyClient> =>
   Effect.gen(function* () {
     const { productId } = event
 
@@ -188,10 +145,10 @@ const archiveOnShopify = (
       })
     )
 
-    // Call Shopify API to archive (set status to ARCHIVED)
+    // Call Shopify API to archive
     const shopifyClient = yield* ShopifyClient
     yield* shopifyClient
-      .productArchive(shopifyProductId)
+      .archiveProduct(shopifyProductId)
       .pipe(Effect.mapError((error) => new MessageHandlerError({ event, cause: error })))
 
     yield* Effect.logInfo('Product archived on Shopify').pipe(
@@ -210,10 +167,11 @@ const updateSyncStatus = (
   event: ShopifySyncEvent,
   productId: ProductId,
   shopifyProductId: ShopifyProductId
-): Effect.Effect<void, MessageHandlerError, PilotProductRepository> =>
+): Effect.Effect<void, MessageHandlerError, PilotProductRepository | Clock> =>
   Effect.gen(function* () {
     const pilotRepo = yield* PilotProductRepository
-    const now = new Date()
+    const clock = yield* Clock
+    const now = yield* clock.now()
 
     const existingProduct = yield* pilotRepo
       .findById(productId)
@@ -228,19 +186,15 @@ const updateSyncStatus = (
 
     const currentProduct = existingProduct.value
 
-    // Use state machine to transition
+    // Use state machine to transition, then aggregate method to update
     if (SyncStatusMachine.canSync(currentProduct.syncStatus)) {
-      const updatedSyncStatus = SyncStatusMachine.markSynced(
+      const newSyncStatus = SyncStatusMachine.markSynced(
         currentProduct.syncStatus,
         shopifyProductId,
         now
       )
 
-      const updatedProduct = {
-        ...currentProduct,
-        syncStatus: updatedSyncStatus,
-        updatedAt: now,
-      }
+      const updatedProduct = withSyncStatus(currentProduct, newSyncStatus, now)
 
       yield* pilotRepo
         .update(updatedProduct)

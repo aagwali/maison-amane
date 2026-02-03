@@ -1,12 +1,12 @@
 // src/ports/driven/services/shopify-client.ts
+//
+// Port for Shopify integration.
+// Speaks in domain terms (PilotProduct, ShopifyProductId).
+// The adapter handles the translation to Shopify's API format.
 
 import { Context, Data, Effect } from 'effect'
 
-import type { ShopifyProductId } from '../../../domain/pilot'
-import type {
-  ShopifyProductSetInput,
-  ShopifyProductSetResponse,
-} from '../../../application/shopify/dtos'
+import type { PilotProduct, ShopifyProductId } from '../../../domain/pilot'
 
 // ============================================
 // SHOPIFY CLIENT ERROR
@@ -21,12 +21,33 @@ export class ShopifyClientError extends Data.TaggedError('ShopifyClientError')<{
 // SHOPIFY CLIENT
 // ============================================
 
+/**
+ * Port for Shopify product synchronization.
+ *
+ * This interface speaks in domain terms:
+ * - Input: PilotProduct (domain aggregate)
+ * - Output: ShopifyProductId (domain value object)
+ *
+ * The adapter implementation handles:
+ * - Mapping domain → Shopify API format
+ * - API calls
+ * - Error handling
+ */
 export interface ShopifyClientService {
-  readonly productSet: (
-    input: ShopifyProductSetInput
-  ) => Effect.Effect<ShopifyProductSetResponse, ShopifyClientError>
+  /**
+   * Syncs a product to Shopify (create or update).
+   * Returns the Shopify product ID on success.
+   */
+  readonly syncProduct: (
+    product: PilotProduct
+  ) => Effect.Effect<ShopifyProductId, ShopifyClientError>
 
-  readonly productArchive: (productId: ShopifyProductId) => Effect.Effect<void, ShopifyClientError>
+  /**
+   * Archives a product on Shopify.
+   */
+  readonly archiveProduct: (
+    shopifyProductId: ShopifyProductId
+  ) => Effect.Effect<void, ShopifyClientError>
 }
 
 export class ShopifyClient extends Context.Tag('ShopifyClient')<
