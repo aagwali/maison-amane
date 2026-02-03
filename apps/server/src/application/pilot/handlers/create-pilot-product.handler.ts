@@ -12,7 +12,7 @@ import {
 import { Clock, EventPublisher, IdGenerator, PilotProductRepository } from '../../../ports/driven'
 import { type ValidatedProductData, validateProductData } from '../validation'
 import { createVariants } from '../mappers/variant.mapper'
-import { publishEventWithRetry } from '../../shared/event-helpers'
+import { publishEvent } from '../../shared/event-helpers'
 import type { PilotProduct } from '../../../domain/pilot'
 import type { PilotProductCreationCommand } from '../commands'
 // ============================================
@@ -92,5 +92,5 @@ const emitEvent = (
       timestamp: now,
     })
 
-    yield* publishEventWithRetry(event)
+    yield* publishEvent(event)
   })

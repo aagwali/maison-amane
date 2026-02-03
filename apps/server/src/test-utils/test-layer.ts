@@ -26,21 +26,12 @@
 
 import { Layer } from 'effect'
 
-import {
-  InMemoryPilotProductRepositoryLive,
-} from '../infrastructure/persistence/in-memory/pilot-product.repository'
-import {
-  Clock,
-  EventPublisher,
-  IdGenerator,
-  PilotProductRepository,
-} from '../ports/driven'
+import { InMemoryPilotProductRepositoryLive } from '../infrastructure/persistence/in-memory/pilot-product.repository'
+import { Clock, EventPublisher, IdGenerator, PilotProductRepository } from '../ports/driven'
+
 import { StubIdGeneratorLive } from './deterministic-id-generator'
 import { StubClockLive, TEST_DATE } from './fixed-clock'
-import {
-  type SpyEventPublisher,
-  SpyEventPublisherLive,
-} from './spy-event-publisher'
+import { type SpyEventPublisher, SpyEventPublisherLive } from './spy-event-publisher'
 
 export { TEST_DATE }
 
