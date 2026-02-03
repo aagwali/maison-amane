@@ -1,16 +1,16 @@
-// src/runtime/consumer-bootstrap.ts
+// src/runtime/bootstrap.ts
 
 import { Config, Layer, Logger, LogLevel } from 'effect'
 
 // ============================================
-// CONSUMER CONFIGURATION SCHEMA
+// BOOTSTRAP CONFIGURATION SCHEMA
 // ============================================
 
 /**
- * Standard configuration schema for all consumers.
+ * Base configuration schema shared by all apps (server, consumers).
  * Reads NODE_ENV and LOG_LEVEL from environment variables.
  */
-export const ConsumerConfig = Config.all({
+export const BootstrapConfig = Config.all({
   nodeEnv: Config.literal(
     'development',
     'production',
@@ -53,7 +53,7 @@ const logLevelMap = {
  *
  * @example
  * ```typescript
- * const { nodeEnv, logLevel } = yield* ConsumerConfig
+ * const { nodeEnv, logLevel } = yield* BootstrapConfig
  * const LoggerLive = createLoggerLayer(
  *   nodeEnv !== 'production',
  *   logLevel,

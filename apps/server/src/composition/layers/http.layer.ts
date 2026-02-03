@@ -1,17 +1,15 @@
 // src/composition/layers/http.layer.ts
 
-import { Effect, Layer } from 'effect'
 import { createServer } from 'node:http'
 
+import { Effect, Layer } from 'effect'
 import { HttpApiBuilder, HttpMiddleware, HttpServer } from '@effect/platform'
 import { NodeHttpServer } from '@effect/platform-node'
 import { MaisonAmaneApi } from '@maison-amane/api'
 
-import {
-  PilotProductHandlerLive,
-  SystemHandlerLive,
-} from '../../infrastructure/http'
+import { MongoDatabaseLive, PilotProductHandlerLive, SystemHandlerLive } from '../../infrastructure'
 import { AppConfig } from '../config'
+
 import { DevelopmentLayer } from './development.layer'
 
 // ============================================
@@ -20,7 +18,7 @@ import { DevelopmentLayer } from './development.layer'
 
 export const ApiLive = HttpApiBuilder.api(MaisonAmaneApi).pipe(
   Layer.provide(PilotProductHandlerLive),
-  Layer.provide(SystemHandlerLive),
+  Layer.provide(SystemHandlerLive.pipe(Layer.provide(MongoDatabaseLive))),
   Layer.provide(DevelopmentLayer)
 )
 

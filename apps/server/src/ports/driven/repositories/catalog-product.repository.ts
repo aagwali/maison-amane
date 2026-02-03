@@ -13,7 +13,6 @@ import type { PersistenceError } from '../errors'
 // This interface differs from PilotProductRepository because:
 // - CatalogProduct is a READ MODEL (CQRS pattern)
 // - Uses `upsert` instead of `save`/`update` for idempotent projections
-// - Includes `findAll` for listing (UI-oriented queries)
 // - No separate create/update distinction needed for projections
 //
 // See PilotProductRepository for the WRITE MODEL interface.
@@ -25,8 +24,6 @@ export interface CatalogProductRepositoryService {
   readonly findById: (
     id: ProductId
   ) => Effect.Effect<Option.Option<CatalogProduct>, PersistenceError>
-
-  readonly findAll: () => Effect.Effect<readonly CatalogProduct[], PersistenceError>
 }
 
 export class CatalogProductRepository extends Context.Tag('CatalogProductRepository')<

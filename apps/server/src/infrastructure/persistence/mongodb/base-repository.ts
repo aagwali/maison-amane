@@ -1,9 +1,9 @@
 // src/infrastructure/persistence/mongodb/base-repository.ts
 
 import { Effect, Option, pipe } from 'effect'
-import { PersistenceError } from '../../../ports/driven'
+import type { Collection, Document } from 'mongodb'
 
-import type { Collection, Document } from "mongodb"
+import { PersistenceError } from '../../../ports/driven'
 
 // ============================================
 // GENERIC MONGODB HELPERS
@@ -38,11 +38,7 @@ export const upsertDocument = <TDocument extends Document, TEntity>(
 ): Effect.Effect<TEntity, PersistenceError> =>
   pipe(
     tryMongoOperation(async () => {
-      await collection.updateOne(
-        { _id: id } as any,
-        { $set: document },
-        { upsert: true }
-      )
+      await collection.updateOne({ _id: id } as any, { $set: document }, { upsert: true })
       return domainEntity
     })
   )
@@ -104,25 +100,5 @@ export const findDocumentById = <TDocument extends Document, TEntity>(
     tryMongoOperation(async () => {
       const doc = await collection.findOne({ _id: id } as any)
       return doc ? Option.some(fromDocument(doc as TDocument)) : Option.none()
-    })
-  )
-
-/**
- * Generic findAll operation for MongoDB
- * Returns array of all documents in collection
- *
- * @param collection MongoDB collection
- * @param fromDocument Mapper function from MongoDB document to domain entity
- * @param filter Optional MongoDB filter (defaults to empty = all documents)
- */
-export const findAllDocuments = <TDocument extends Document, TEntity>(
-  collection: Collection<TDocument>,
-  fromDocument: (doc: TDocument) => TEntity,
-  filter: any = {}
-): Effect.Effect<readonly TEntity[], PersistenceError> =>
-  pipe(
-    tryMongoOperation(async () => {
-      const docs = await collection.find(filter).toArray()
-      return docs.map((doc) => fromDocument(doc as TDocument))
     })
   )

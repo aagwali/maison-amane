@@ -20,7 +20,7 @@ import type {
   ShopifyProductSetInput,
   ShopifyProductStatus,
   ShopifyVariantInput,
-} from './shopify-api.types'
+} from './dtos'
 
 // ============================================
 // SIZE/DIMENSION MAPPING

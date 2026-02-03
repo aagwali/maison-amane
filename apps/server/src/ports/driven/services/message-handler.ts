@@ -6,7 +6,7 @@
 
 import { Data, Effect } from 'effect'
 
-import type { PilotDomainEvent } from '../../../domain/pilot'
+import type { DomainEvent } from '../../../domain/events'
 
 // ============================================
 // MESSAGE HANDLER ERRORS
@@ -17,7 +17,7 @@ import type { PilotDomainEvent } from '../../../domain/pilot'
  * The consumer infrastructure uses this to determine retry/DLQ behavior.
  */
 export class MessageHandlerError extends Data.TaggedError('MessageHandlerError')<{
-  readonly event: PilotDomainEvent
+  readonly event: DomainEvent
   readonly cause: unknown
 }> {}
 
@@ -25,7 +25,7 @@ export class MessageHandlerError extends Data.TaggedError('MessageHandlerError')
  * Error thrown when a message handler exceeds its timeout.
  */
 export class MessageTimeoutError extends Data.TaggedError('MessageTimeoutError')<{
-  readonly event: PilotDomainEvent
+  readonly event: DomainEvent
   readonly timeoutMs: number
 }> {}
 
@@ -47,6 +47,6 @@ export class MessageParseError extends Data.TaggedError('MessageParseError')<{
  * @template E - The specific domain event type this handler processes
  * @template R - The Effect requirements (dependencies) needed by the handler
  */
-export type MessageHandler<E extends PilotDomainEvent = PilotDomainEvent, R = never> = (
+export type MessageHandler<E extends DomainEvent = DomainEvent, R = never> = (
   event: E
 ) => Effect.Effect<void, MessageHandlerError, R>

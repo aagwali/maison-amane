@@ -3,4 +3,4 @@
 export * from './domain/main'
 export * from './infrastructure/config/main'
 export * from './messaging'
-export * from './runtime/consumer-bootstrap'
+export * from './runtime/bootstrap'

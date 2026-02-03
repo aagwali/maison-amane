@@ -2,7 +2,6 @@
 
 import { Context, Data, Effect, Layer, Redacted } from 'effect'
 import { Db, MongoClient } from 'mongodb'
-
 import { MongoConfig, MongoConfigLive } from '@maison-amane/shared-kernel/config'
 
 // Re-export for convenience

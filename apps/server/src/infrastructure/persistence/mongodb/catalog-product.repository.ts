@@ -10,7 +10,7 @@ import {
   catalogToDocument,
   type CatalogProductDocument,
 } from './mappers/catalog-product.mapper'
-import { findAllDocuments, findDocumentById, upsertDocument } from './base-repository'
+import { findDocumentById, upsertDocument } from './base-repository'
 import { createRepositoryLayer } from './repository-layer-factory'
 
 // ============================================
@@ -27,8 +27,6 @@ export const createMongodbCatalogProductRepository = (db: Db): CatalogProductRep
     },
 
     findById: (id) => findDocumentById(collection, id, catalogFromDocument),
-
-    findAll: () => findAllDocuments(collection, catalogFromDocument),
   }
 }
 

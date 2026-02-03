@@ -11,7 +11,6 @@ import { PersistenceError } from '../../../ports/driven'
 export interface InMemoryRepository<T, Id extends string> {
   readonly save: (entity: T) => Effect.Effect<T, PersistenceError>
   readonly findById: (id: Id) => Effect.Effect<Option.Option<T>, PersistenceError>
-  readonly findAll: () => Effect.Effect<readonly T[], PersistenceError>
   readonly update: (entity: T) => Effect.Effect<T, PersistenceError>
   readonly upsert: (entity: T) => Effect.Effect<T, PersistenceError>
 }
@@ -37,12 +36,6 @@ export const createInMemoryRepository = <T, Id extends string>(
           const entity = store.get(id)
           return entity ? Option.some(entity) : Option.none()
         },
-        catch: (error) => new PersistenceError({ cause: error }),
-      }),
-
-    findAll: () =>
-      Effect.try({
-        try: () => Array.from(store.values()),
         catch: (error) => new PersistenceError({ cause: error }),
       }),
 

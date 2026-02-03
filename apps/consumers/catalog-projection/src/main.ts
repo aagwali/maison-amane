@@ -14,7 +14,7 @@ import {
   startConsumer,
 } from '@maison-amane/server'
 import {
-  ConsumerConfig,
+  BootstrapConfig,
   createLoggerLayer,
   declareConsumerInfrastructure,
   EXCHANGES,
@@ -32,7 +32,7 @@ const CONSUMER_NAME = 'catalog-projection'
 // ============================================
 
 const program = Effect.gen(function* () {
-  const { nodeEnv, logLevel } = yield* ConsumerConfig
+  const { nodeEnv, logLevel } = yield* BootstrapConfig
 
   const LoggerLive = createLoggerLayer(nodeEnv !== 'production', logLevel, PrettyLogger, JsonLogger)
 

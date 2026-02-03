@@ -1,7 +1,6 @@
 // src/main.ts
 
 import { Layer } from 'effect'
-
 import { NodeRuntime } from '@effect/platform-node'
 
 import { HttpLive, LoggerLive } from './composition'

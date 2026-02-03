@@ -3,21 +3,16 @@
 import { Effect, Layer } from 'effect'
 
 import { RabbitMQConfigLive } from '../../../composition/config'
+
 import { RabbitMQConnectionLayer } from './connection'
-import {
-  helloWorldHandler,
-  type MessageHandler,
-  startConsumer,
-} from './consumer'
+import { helloWorldHandler, type MessageHandler, startConsumer } from './consumer'
 import { setupConsumerQueue, setupTopology } from './topology'
 
 // ============================================
 // RABBITMQ FULL LAYER (connection + config)
 // ============================================
 
-export const RabbitMQLive = RabbitMQConnectionLayer.pipe(
-  Layer.provide(RabbitMQConfigLive)
-)
+export const RabbitMQLive = RabbitMQConnectionLayer.pipe(Layer.provide(RabbitMQConfigLive))
 
 // ============================================
 // RABBITMQ SETUP LAYER
@@ -34,10 +29,8 @@ export const RabbitMQSetupLayer = Layer.effectDiscard(setupTopology).pipe(
 // START CONSUMER WITH DEPENDENCIES
 // ============================================
 
-export const runConsumer = (
-  consumerName: string,
-  handler: MessageHandler = helloWorldHandler
-) => startConsumer(consumerName, handler).pipe(Effect.provide(RabbitMQLive))
+export const runConsumer = (consumerName: string, handler: MessageHandler = helloWorldHandler) =>
+  startConsumer(consumerName, handler).pipe(Effect.provide(RabbitMQLive))
 
 // ============================================
 // SETUP TOPOLOGY EFFECT (for one-time setup)

@@ -5,7 +5,7 @@ import { RabbitMQConnection } from '@maison-amane/shared-kernel'
 import type * as amqp from 'amqplib'
 
 import { RabbitMQConfig } from '../../../composition/config'
-import type { PilotDomainEvent } from '../../../domain/pilot'
+import type { DomainEvent } from '../../../domain/events'
 import {
   MessageHandlerError,
   MessageParseError,
@@ -24,7 +24,7 @@ export { MessageHandlerError, MessageParseError, MessageTimeoutError, type Messa
 
 const deserializeEvent = (
   msg: amqp.ConsumeMessage
-): Effect.Effect<PilotDomainEvent, MessageParseError> =>
+): Effect.Effect<DomainEvent, MessageParseError> =>
   Effect.try({
     try: () => {
       const content = msg.content.toString()
@@ -32,7 +32,7 @@ const deserializeEvent = (
       return {
         ...parsed,
         timestamp: new Date(parsed.timestamp),
-      } as PilotDomainEvent
+      } as DomainEvent
     },
     catch: (error) => new MessageParseError({ rawMessage: msg.content.toString(), cause: error }),
   })
@@ -58,7 +58,7 @@ export const helloWorldHandler: MessageHandler = (event) =>
 // Implements retry with exponential backoff + DLQ
 // ============================================
 
-export const startConsumer = <E extends PilotDomainEvent, R>(
+export const startConsumer = <E extends DomainEvent, R>(
   consumerName: string,
   handler: MessageHandler<E, R>
 ) =>

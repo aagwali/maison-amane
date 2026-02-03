@@ -6,4 +6,4 @@ export type {
   ShopifyProductSetInput,
   ShopifyProductSetResponse,
   ShopifyProductStatus,
-} from './shopify-api.types'
+} from './dtos'
