@@ -3,17 +3,17 @@
 // DDD: Infrastructure mapper for Catalog bounded context.
 // Uses Catalog-specific types, imports ProductId from shared-kernel.
 
-import { MakeProductId } from '@maison-amane/shared-kernel'
+import { makeProductId } from '@maison-amane/shared-kernel'
 
 import type { CatalogProduct, CatalogVariant } from '../../../../domain/catalog'
 import {
-  MakeCatalogLabel,
-  MakeCatalogDescription,
-  MakeCatalogImageUrl,
-  MakeCatalogDimension,
-  MakeCatalogPrice,
-  MakeCatalogCategory,
-  MakeCatalogPriceRange,
+  makeCatalogLabel,
+  makeCatalogDescription,
+  makeCatalogImageUrl,
+  makeCatalogDimension,
+  makeCatalogPrice,
+  makeCatalogCategory,
+  makeCatalogPriceRange,
 } from '../../../../domain/catalog'
 
 // ============================================
@@ -79,16 +79,16 @@ export const catalogToDocument = (product: CatalogProduct): CatalogProductDocume
 
 export const catalogFromDocument = (doc: CatalogProductDocument): CatalogProduct => ({
   _tag: 'CatalogProduct',
-  id: MakeProductId(doc._id),
-  label: MakeCatalogLabel(doc.label),
-  description: MakeCatalogDescription(doc.description),
-  category: MakeCatalogCategory(doc.category),
-  priceRange: MakeCatalogPriceRange(doc.priceRange),
+  id: makeProductId(doc._id),
+  label: makeCatalogLabel(doc.label),
+  description: makeCatalogDescription(doc.description),
+  category: makeCatalogCategory(doc.category),
+  priceRange: makeCatalogPriceRange(doc.priceRange),
   variants: doc.variants.map(mapVariant),
   images: {
-    front: MakeCatalogImageUrl(doc.images.front),
-    detail: MakeCatalogImageUrl(doc.images.detail),
-    gallery: doc.images.gallery.map((url) => MakeCatalogImageUrl(url)),
+    front: makeCatalogImageUrl(doc.images.front),
+    detail: makeCatalogImageUrl(doc.images.detail),
+    gallery: doc.images.gallery.map((url) => makeCatalogImageUrl(url)),
   },
   ...(doc.shopifyUrl ? { shopifyUrl: doc.shopifyUrl } : {}),
   publishedAt: doc.publishedAt,
@@ -104,10 +104,10 @@ const mapVariant = (v: CatalogProductDocument['variants'][number]): CatalogVaria
       _tag: 'CustomVariant',
       size: v.size as 'CUSTOM',
       dimensions: {
-        width: MakeCatalogDimension(v.dimensions!.width),
-        length: MakeCatalogDimension(v.dimensions!.length),
+        width: makeCatalogDimension(v.dimensions!.width),
+        length: makeCatalogDimension(v.dimensions!.length),
       },
-      price: MakeCatalogPrice(v.price!),
+      price: makeCatalogPrice(v.price!),
     }
   }
   return {

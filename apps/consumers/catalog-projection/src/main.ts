@@ -1,7 +1,7 @@
 // src/main.ts
 // Catalog Projection Consumer - maintains read model for alternative UI
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
 import { NodeRuntime } from '@effect/platform-node'
 import {
   catalogProjectionHandler,
@@ -20,6 +20,7 @@ import {
   EXCHANGES,
   ROUTING_KEYS,
 } from '@maison-amane/shared-kernel'
+import { logInfo, gen, provide, never } from 'effect/Effect'
 
 // ============================================
 // CONSUMER IDENTITY
@@ -31,39 +32,36 @@ const CONSUMER_NAME = 'catalog-projection'
 // MAIN PROGRAM
 // ============================================
 
-const program = Effect.gen(function* () {
+const program = gen(function* () {
   const { nodeEnv, logLevel } = yield* BootstrapConfig
 
   const LoggerLive = createLoggerLayer(nodeEnv !== 'production', logLevel, PrettyLogger, JsonLogger)
 
   const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLayer, RabbitMQConfigLive)
 
-  // MongoDB repository layer with its database dependency
   const CatalogProductRepositoryLayer = MongodbCatalogProductRepositoryLive.pipe(
     Layer.provide(MongoDatabaseLive)
   )
 
-  yield* Effect.provide(
-    Effect.gen(function* () {
-      yield* Effect.logInfo(`Starting ${CONSUMER_NAME} consumer...`)
+  const layers = Layer.mergeAll(RabbitMQLayer, LoggerLive, CatalogProductRepositoryLayer)
 
-      yield* declareConsumerInfrastructure({
-        queuePrefix: 'catalog-projection',
-        exchange: EXCHANGES.PILOT_EVENTS,
-        routingKeys: [ROUTING_KEYS.PRODUCT_PUBLISHED, ROUTING_KEYS.PRODUCT_UPDATED],
-      })
+  gen(function* () {
+    yield* logInfo(`Starting ${CONSUMER_NAME} consumer...`)
 
-      // Start catalog projection consumer
-      yield* startConsumer(CONSUMER_NAME, catalogProjectionHandler)
+    yield* declareConsumerInfrastructure({
+      queuePrefix: 'catalog-projection',
+      exchange: EXCHANGES.PILOT_EVENTS,
+      routingKeys: [ROUTING_KEYS.PRODUCT_PUBLISHED, ROUTING_KEYS.PRODUCT_UPDATED],
+    })
 
-      yield* Effect.logInfo(
-        `${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished and PilotProductUpdated events...`
-      )
+    yield* startConsumer(CONSUMER_NAME, catalogProjectionHandler)
 
-      yield* Effect.never
-    }),
-    Layer.mergeAll(RabbitMQLayer, LoggerLive, CatalogProductRepositoryLayer)
-  )
+    yield* logInfo(
+      `${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished and PilotProductUpdated events...`
+    )
+
+    yield* never
+  }).pipe(provide(layers))
 })
 
 // ============================================

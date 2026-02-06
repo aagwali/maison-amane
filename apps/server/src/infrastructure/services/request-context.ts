@@ -15,8 +15,8 @@ export interface RequestContextValue {
 }
 
 const defaultRequestContext: RequestContextValue = {
-  correlationId: "no-correlation-id",
-  userId: "anonymous",
+  correlationId: 'no-correlation-id',
+  userId: 'anonymous',
   startTime: new Date(),
 }
 
@@ -32,18 +32,15 @@ export interface RequestContextService {
   readonly set: (ctx: RequestContextValue) => Effect.Effect<void>
 }
 
-export class RequestContext extends Context.Tag("RequestContext")<
+export class RequestContext extends Context.Tag('RequestContext')<
   RequestContext,
   RequestContextService
 >() {}
 
-export const RequestContextLive = Layer.succeed(
-  RequestContext,
-  {
-    get: FiberRef.get(RequestContextRef),
-    set: (ctx: RequestContextValue) => FiberRef.set(RequestContextRef, ctx),
-  }
-)
+export const RequestContextLive = Layer.succeed(RequestContext, {
+  get: FiberRef.get(RequestContextRef),
+  set: (ctx: RequestContextValue) => FiberRef.set(RequestContextRef, ctx),
+})
 
 // ============================================
 // HELPER: Run effect with request context
@@ -52,8 +49,7 @@ export const RequestContextLive = Layer.succeed(
 export const withRequestContext = <A, E, R>(
   ctx: RequestContextValue,
   effect: Effect.Effect<A, E, R>
-): Effect.Effect<A, E, R> =>
-  Effect.locally(RequestContextRef, ctx)(effect)
+): Effect.Effect<A, E, R> => Effect.locally(RequestContextRef, ctx)(effect)
 
 // ============================================
 // HELPER: Annotate logs with current request context

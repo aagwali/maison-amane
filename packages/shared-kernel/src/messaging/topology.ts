@@ -1,7 +1,8 @@
 // packages/shared-kernel/src/messaging/topology.ts
 
 import type * as amqp from 'amqplib'
-import { Context, Data, Effect } from 'effect'
+import { Context, Data } from 'effect'
+import { annotateLogs, gen, logInfo, tryPromise, type Effect } from 'effect/Effect'
 
 // ============================================
 // RABBITMQ CONNECTION SERVICE (Interface)
@@ -59,36 +60,21 @@ export const ROUTING_KEYS = {
  */
 export const declareExchange = (
   exchange: string
-): Effect.Effect<void, RabbitMQError, RabbitMQConnection> =>
-  Effect.gen(function* () {
+): Effect<void, RabbitMQError, RabbitMQConnection> =>
+  gen(function* () {
     const { channel } = yield* RabbitMQConnection
     const dlx = toDlxExchange(exchange)
 
-    yield* Effect.tryPromise({
+    yield* tryPromise({
       try: async () => {
-        // Dead Letter Exchange
-        await channel.assertExchange(dlx, 'topic', {
-          durable: true,
-        })
+        await channel.assertExchange(dlx, 'topic', { durable: true })
 
-        // Main Exchange
-        await channel.assertExchange(exchange, 'topic', {
-          durable: true,
-        })
+        await channel.assertExchange(exchange, 'topic', { durable: true })
       },
-      catch: (error) =>
-        new RabbitMQError({
-          cause: error,
-          operation: 'declareExchange',
-        }),
+      catch: (error) => new RabbitMQError({ cause: error, operation: 'declareExchange' }),
     })
 
-    yield* Effect.logInfo('RabbitMQ exchange declared').pipe(
-      Effect.annotateLogs({
-        exchange,
-        dlx,
-      })
-    )
+    yield* logInfo('RabbitMQ exchange declared').pipe(annotateLogs({ exchange, dlx }))
   })
 
 // ============================================
@@ -115,8 +101,8 @@ export interface ConsumerInfraConfig {
  */
 export const declareConsumerInfrastructure = (
   config: ConsumerInfraConfig
-): Effect.Effect<void, RabbitMQError, RabbitMQConnection> =>
-  Effect.gen(function* () {
+): Effect<void, RabbitMQError, RabbitMQConnection> =>
+  gen(function* () {
     const { channel } = yield* RabbitMQConnection
     const { queuePrefix, exchange, routingKeys, retryTtl = 5000 } = config
 
@@ -130,20 +116,14 @@ export const declareConsumerInfrastructure = (
     const retryName = `${queuePrefix}.retry`
     const mainName = `${queuePrefix}.queue`
 
-    yield* Effect.tryPromise({
+    yield* tryPromise({
       try: async () => {
-        // 1. DLQ (Dead Letter Queue)
-        await channel.assertQueue(dlqName, {
-          durable: true,
-        })
+        await channel.assertQueue(dlqName, { durable: true })
 
-        // Bind DLQ to DLX for all routing keys
         for (const routingKey of routingKeys) {
           await channel.bindQueue(dlqName, dlxExchange, routingKey)
         }
 
-        // 2. Retry Queue
-        // Note: Pas de x-dead-letter-routing-key → RabbitMQ préserve l'originale
         await channel.assertQueue(retryName, {
           durable: true,
           arguments: {
@@ -152,8 +132,6 @@ export const declareConsumerInfrastructure = (
           },
         })
 
-        // 3. Main Queue
-        // Note: Pas de x-dead-letter-routing-key → RabbitMQ préserve l'originale
         await channel.assertQueue(mainName, {
           durable: true,
           arguments: {
@@ -161,7 +139,6 @@ export const declareConsumerInfrastructure = (
           },
         })
 
-        // Bind main queue to main exchange for all routing keys
         for (const routingKey of routingKeys) {
           await channel.bindQueue(mainName, mainExchange, routingKey)
         }
@@ -173,8 +150,8 @@ export const declareConsumerInfrastructure = (
         }),
     })
 
-    yield* Effect.logInfo(`${queuePrefix} infrastructure declared`).pipe(
-      Effect.annotateLogs({
+    yield* logInfo(`${queuePrefix} infrastructure declared`).pipe(
+      annotateLogs({
         queues: [mainName, retryName, dlqName].join(', '),
         exchange: mainExchange,
         dlx: dlxExchange,

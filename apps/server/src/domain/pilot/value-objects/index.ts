@@ -5,10 +5,10 @@
 // ============================================
 export {
   ProductIdSchema,
-  MakeProductId,
+  makeProductId,
   type ProductId,
   ShopifyProductIdSchema,
-  MakeShopifyProductId,
+  makeShopifyProductId,
   type ShopifyProductId,
 } from './ids'
 
@@ -17,19 +17,19 @@ export {
 // ============================================
 export {
   ProductLabelSchema,
-  MakeProductLabel,
+  makeProductLabel,
   type ProductLabel,
   ProductDescriptionSchema,
-  MakeProductDescription,
+  makeProductDescription,
   type ProductDescription,
   PriceSchema,
-  MakePrice,
+  makePrice,
   type Price,
   PositiveCmSchema,
-  MakePositiveCm,
+  makePositiveCm,
   type PositiveCm,
   ImageUrlSchema,
-  MakeImageUrl,
+  makeImageUrl,
   type ImageUrl,
 } from './scalar-types'
 
@@ -68,11 +68,11 @@ export {
 export {
   SyncErrorSchema,
   type SyncError,
-  MakeNotSynced,
+  makeNotSynced,
   type NotSynced,
-  MakeSynced,
+  makeSynced,
   type Synced,
-  MakeSyncFailed,
+  makeSyncFailed,
   type SyncFailed,
   SyncStatusSchema,
   type SyncStatus,

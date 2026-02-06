@@ -7,14 +7,14 @@ import { Effect, Layer } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
-  MakePilotProduct,
-  MakePilotProductPublished,
-  MakePilotProductUpdated,
-  MakeNotSynced,
-  MakeStandardVariant,
-  MakeCustomVariant,
-  MakePrice,
-  MakePositiveCm,
+  makePilotProduct,
+  makePilotProductPublished,
+  makePilotProductUpdated,
+  makeNotSynced,
+  makeStandardVariant,
+  makeCustomVariant,
+  makePrice,
+  makePositiveCm,
   PriceRange,
   ProductCategory,
   ProductStatus,
@@ -23,7 +23,7 @@ import {
   ViewType,
   type PilotProduct,
 } from '../../../domain/pilot'
-import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
+import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import { CatalogProductRepository } from '../../../ports/driven'
 import { InMemoryCatalogProductRepositoryLive } from '../../../infrastructure/persistence/in-memory'
 import { TEST_DATE } from '../../../test-utils'
@@ -36,7 +36,7 @@ import { catalogProjectionHandler } from './catalog-projection.handler'
 // ============================================
 
 const createPilotProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct =>
-  MakePilotProduct({
+  makePilotProduct({
     id: 'test-product-1' as any,
     label: 'Tapis Berbère Atlas' as any,
     type: ProductType.TAPIS,
@@ -44,8 +44,8 @@ const createPilotProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct
     description: 'Beautiful handmade rug' as any,
     priceRange: PriceRange.PREMIUM,
     variants: [
-      MakeStandardVariant({ size: Size.REGULAR }),
-      MakeStandardVariant({ size: Size.LARGE }),
+      makeStandardVariant({ size: Size.REGULAR }),
+      makeStandardVariant({ size: Size.LARGE }),
     ],
     views: {
       front: { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' as any },
@@ -56,27 +56,27 @@ const createPilotProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct
       ],
     },
     status: ProductStatus.PUBLISHED,
-    syncStatus: MakeNotSynced(),
+    syncStatus: makeNotSynced(),
     createdAt: TEST_DATE,
     updatedAt: TEST_DATE,
     ...overrides,
   })
 
 const buildPublishedEvent = (product: PilotProduct = createPilotProduct()): ProjectionEvent =>
-  MakePilotProductPublished({
+  makePilotProductPublished({
     productId: product.id,
     product,
-    correlationId: MakeCorrelationId('test-correlation-id'),
-    userId: MakeUserId('test-user'),
+    correlationId: makeCorrelationId('test-correlation-id'),
+    userId: makeUserId('test-user'),
     timestamp: TEST_DATE,
   })
 
 const buildUpdatedEvent = (product: PilotProduct = createPilotProduct()): ProjectionEvent =>
-  MakePilotProductUpdated({
+  makePilotProductUpdated({
     productId: product.id,
     product,
-    correlationId: MakeCorrelationId('test-correlation-id'),
-    userId: MakeUserId('test-user'),
+    correlationId: makeCorrelationId('test-correlation-id'),
+    userId: makeUserId('test-user'),
     timestamp: TEST_DATE,
   })
 
@@ -170,13 +170,13 @@ describe('catalogProjectionHandler', () => {
     it('maps custom variants with dimensions', async () => {
       const product = createPilotProduct({
         variants: [
-          MakeCustomVariant({
+          makeCustomVariant({
             size: Size.CUSTOM,
             customDimensions: {
-              width: MakePositiveCm(150),
-              length: MakePositiveCm(300),
+              width: makePositiveCm(150),
+              length: makePositiveCm(300),
             },
-            price: MakePrice(25000),
+            price: makePrice(25000),
           }),
         ],
       })
@@ -207,11 +207,11 @@ describe('catalogProjectionHandler', () => {
     it('sets publishedAt from event timestamp', async () => {
       const product = createPilotProduct()
       const customTimestamp = new Date('2024-06-15T10:30:00Z')
-      const event = MakePilotProductPublished({
+      const event = makePilotProductPublished({
         productId: product.id,
         product,
-        correlationId: MakeCorrelationId('test-correlation-id'),
-        userId: MakeUserId('test-user'),
+        correlationId: makeCorrelationId('test-correlation-id'),
+        userId: makeUserId('test-user'),
         timestamp: customTimestamp,
       })
 

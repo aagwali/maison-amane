@@ -3,17 +3,14 @@
 import { Effect, Layer } from 'effect'
 import { v4 as uuidv4 } from 'uuid'
 
-import { MakeProductId } from '../../domain/pilot'
+import { makeProductId } from '../../domain/pilot'
 import { IdGenerator } from '../../ports/driven'
 
 // ============================================
 // UUID ID GENERATOR
 // ============================================
 
-export const UuidIdGeneratorLive = Layer.succeed(
-  IdGenerator,
-  {
-    generateProductId: () => Effect.succeed(MakeProductId(uuidv4())),
-    generateCorrelationId: () => Effect.succeed(uuidv4()),
-  }
-)
+export const UuidIdGeneratorLive = Layer.succeed(IdGenerator, {
+  generateProductId: () => Effect.succeed(makeProductId(uuidv4())),
+  generateCorrelationId: () => Effect.succeed(uuidv4()),
+})

@@ -17,7 +17,7 @@ export const ProductCategory = {
 export type ProductCategory = (typeof ProductCategory)[keyof typeof ProductCategory]
 
 export const ProductCategorySchema = S.Literal('RUNNER', 'STANDARD')
-export const MakeProductCategory = S.decodeUnknownSync(ProductCategorySchema)
+export const makeProductCategory = S.decodeUnknownSync(ProductCategorySchema)
 
 // ============================================
 // PRICE RANGE
@@ -32,7 +32,7 @@ export const PriceRange = {
 export type PriceRange = (typeof PriceRange)[keyof typeof PriceRange]
 
 export const PriceRangeSchema = S.Literal('DISCOUNT', 'STANDARD', 'PREMIUM')
-export const MakePriceRange = S.decodeUnknownSync(PriceRangeSchema)
+export const makePriceRange = S.decodeUnknownSync(PriceRangeSchema)
 
 // ============================================
 // SIZE
@@ -47,4 +47,4 @@ export const Size = {
 export type Size = (typeof Size)[keyof typeof Size]
 
 export const SizeSchema = S.Literal('REGULAR', 'LARGE', 'CUSTOM')
-export const MakeSize = S.decodeUnknownSync(SizeSchema)
+export const makeSize = S.decodeUnknownSync(SizeSchema)

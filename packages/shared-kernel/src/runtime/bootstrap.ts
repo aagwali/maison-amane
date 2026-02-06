@@ -1,6 +1,7 @@
 // src/runtime/bootstrap.ts
 
 import { Config, Layer, Logger, LogLevel } from 'effect'
+import { withDefault } from 'effect/Config'
 
 // ============================================
 // BOOTSTRAP CONFIGURATION SCHEMA
@@ -15,13 +16,8 @@ export const BootstrapConfig = Config.all({
     'development',
     'production',
     'test'
-  )('NODE_ENV').pipe(Config.withDefault('development')),
-  logLevel: Config.literal(
-    'debug',
-    'info',
-    'warn',
-    'error'
-  )('LOG_LEVEL').pipe(Config.withDefault('info')),
+  )('NODE_ENV').pipe(withDefault('development')),
+  logLevel: Config.literal('debug', 'info', 'warn', 'error')('LOG_LEVEL').pipe(withDefault('info')),
 })
 
 // ============================================

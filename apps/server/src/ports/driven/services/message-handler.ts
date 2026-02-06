@@ -4,7 +4,8 @@
 // These types define the contract between the messaging infrastructure
 // and application-level event handlers.
 
-import { Data, Effect } from 'effect'
+import { Data } from 'effect'
+import type { Effect } from 'effect/Effect'
 
 import type { DomainEvent } from '../../../domain/events'
 
@@ -49,4 +50,4 @@ export class MessageParseError extends Data.TaggedError('MessageParseError')<{
  */
 export type MessageHandler<E extends DomainEvent = DomainEvent, R = never> = (
   event: E
-) => Effect.Effect<void, MessageHandlerError, R>
+) => Effect<void, MessageHandlerError, R>

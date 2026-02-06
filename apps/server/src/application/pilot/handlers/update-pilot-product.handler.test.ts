@@ -7,7 +7,7 @@ import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
-  MakeProductId,
+  makeProductId,
   PriceRange,
   ProductCategory,
   ProductNotFoundError,
@@ -17,11 +17,11 @@ import {
   ValidationError,
   ViewType,
 } from '../../../domain/pilot'
-import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
+import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import { provideTestLayer, TEST_DATE } from '../../../test-utils'
 import {
-  MakePilotProductCreationCommand,
-  MakePilotProductUpdateCommand,
+  makePilotProductCreationCommand,
+  makePilotProductUpdateCommand,
   type UnvalidatedProductData,
   type UnvalidatedUpdateData,
 } from '../commands'
@@ -50,19 +50,19 @@ const validProductData: UnvalidatedProductData = {
 }
 
 const buildCreateCommand = (data: UnvalidatedProductData = validProductData) =>
-  MakePilotProductCreationCommand({
+  makePilotProductCreationCommand({
     data,
-    correlationId: MakeCorrelationId('test-correlation-id'),
-    userId: MakeUserId('test-user'),
+    correlationId: makeCorrelationId('test-correlation-id'),
+    userId: makeUserId('test-user'),
     timestamp: TEST_DATE,
   })
 
 const buildUpdateCommand = (productId: string, data: UnvalidatedUpdateData = {}) =>
-  MakePilotProductUpdateCommand({
-    productId: MakeProductId(productId),
+  makePilotProductUpdateCommand({
+    productId: makeProductId(productId),
     data,
-    correlationId: MakeCorrelationId('test-correlation-id'),
-    userId: MakeUserId('test-user'),
+    correlationId: makeCorrelationId('test-correlation-id'),
+    userId: makeUserId('test-user'),
     timestamp: TEST_DATE,
   })
 

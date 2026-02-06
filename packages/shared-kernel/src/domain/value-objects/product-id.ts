@@ -4,4 +4,4 @@ import * as S from 'effect/Schema'
 
 export const ProductIdSchema = S.String.pipe(S.brand('ProductId'))
 export type ProductId = typeof ProductIdSchema.Type
-export const MakeProductId = S.decodeUnknownSync(ProductIdSchema)
+export const makeProductId = S.decodeUnknownSync(ProductIdSchema)

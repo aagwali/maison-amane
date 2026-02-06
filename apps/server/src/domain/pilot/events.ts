@@ -22,7 +22,7 @@ const PilotProductPublishedSchema = S.TaggedStruct('PilotProductPublished', {
 
 export type PilotProductPublished = typeof PilotProductPublishedSchema.Type
 
-export const MakePilotProductPublished = (
+export const makePilotProductPublished = (
   params: Omit<PilotProductPublished, '_tag'>
 ): PilotProductPublished =>
   Data.case<PilotProductPublished>()({ _tag: 'PilotProductPublished', ...params })
@@ -41,7 +41,7 @@ const PilotProductUpdatedSchema = S.TaggedStruct('PilotProductUpdated', {
 
 export type PilotProductUpdated = typeof PilotProductUpdatedSchema.Type
 
-export const MakePilotProductUpdated = (
+export const makePilotProductUpdated = (
   params: Omit<PilotProductUpdated, '_tag'>
 ): PilotProductUpdated =>
   Data.case<PilotProductUpdated>()({ _tag: 'PilotProductUpdated', ...params })

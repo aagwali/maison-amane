@@ -28,7 +28,7 @@ const PilotProductCreationCommandSchema = S.TaggedStruct('CreatePilotProductComm
 
 export type PilotProductCreationCommand = typeof PilotProductCreationCommandSchema.Type
 
-export const MakePilotProductCreationCommand = (
+export const makePilotProductCreationCommand = (
   params: Omit<PilotProductCreationCommand, '_tag'>
 ): PilotProductCreationCommand =>
   Data.case<PilotProductCreationCommand>()({ _tag: 'CreatePilotProductCommand', ...params })

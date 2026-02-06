@@ -15,12 +15,10 @@ import {
   ValidationError,
   ViewType,
 } from '../../../domain/pilot'
-import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
+import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import { provideTestLayer, TEST_DATE } from '../../../test-utils'
-import {
-  MakePilotProductCreationCommand,
-  type UnvalidatedProductData,
-} from '../commands'
+import { makePilotProductCreationCommand, type UnvalidatedProductData } from '../commands'
+
 import { handlePilotProductCreation } from './create-pilot-product.handler'
 
 // ============================================
@@ -28,29 +26,26 @@ import { handlePilotProductCreation } from './create-pilot-product.handler'
 // ============================================
 
 const validProductData: UnvalidatedProductData = {
-  label: "Tapis Berbère Atlas",
+  label: 'Tapis Berbère Atlas',
   type: ProductType.TAPIS,
   category: ProductCategory.RUNNER,
-  description: "Beautiful handmade Berber rug from the Atlas mountains",
+  description: 'Beautiful handmade Berber rug from the Atlas mountains',
   priceRange: PriceRange.PREMIUM,
-  variants: [
-    { size: Size.REGULAR },
-    { size: Size.LARGE },
-  ],
+  variants: [{ size: Size.REGULAR }, { size: Size.LARGE }],
   views: [
-    { viewType: ViewType.FRONT, imageUrl: "https://cdn.example.com/front.jpg" },
-    { viewType: ViewType.DETAIL, imageUrl: "https://cdn.example.com/detail.jpg" },
-    { viewType: ViewType.BACK, imageUrl: "https://cdn.example.com/back.jpg" },
-    { viewType: ViewType.AMBIANCE, imageUrl: "https://cdn.example.com/ambiance.jpg" },
+    { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' },
+    { viewType: ViewType.DETAIL, imageUrl: 'https://cdn.example.com/detail.jpg' },
+    { viewType: ViewType.BACK, imageUrl: 'https://cdn.example.com/back.jpg' },
+    { viewType: ViewType.AMBIANCE, imageUrl: 'https://cdn.example.com/ambiance.jpg' },
   ],
   status: ProductStatus.DRAFT,
 }
 
 const buildCommand = (data: UnvalidatedProductData = validProductData) =>
-  MakePilotProductCreationCommand({
+  makePilotProductCreationCommand({
     data,
-    correlationId: MakeCorrelationId("test-correlation-id"),
-    userId: MakeUserId("test-user"),
+    correlationId: makeCorrelationId('test-correlation-id'),
+    userId: makeUserId('test-user'),
     timestamp: TEST_DATE,
   })
 
@@ -58,26 +53,26 @@ const buildCommand = (data: UnvalidatedProductData = validProductData) =>
 // TESTS
 // ============================================
 
-describe("handlePilotProductCreation", () => {
+describe('handlePilotProductCreation', () => {
   let testCtx: ReturnType<typeof provideTestLayer>
 
   beforeEach(() => {
     testCtx = provideTestLayer()
   })
 
-  describe("success cases", () => {
-    it("creates a product with deterministic ID", async () => {
+  describe('success cases', () => {
+    it('creates a product with deterministic ID', async () => {
       const command = buildCommand()
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
       )
 
-      expect(result.id).toBe("test-product-1")
-      expect(result.label).toBe("Tapis Berbère Atlas")
+      expect(result.id).toBe('test-product-1')
+      expect(result.label).toBe('Tapis Berbère Atlas')
     })
 
-    it("creates product with correct timestamps from fixed clock", async () => {
+    it('creates product with correct timestamps from fixed clock', async () => {
       const command = buildCommand()
 
       const result = await Effect.runPromise(
@@ -88,7 +83,7 @@ describe("handlePilotProductCreation", () => {
       expect(result.updatedAt).toEqual(TEST_DATE)
     })
 
-    it("creates variants as value objects with correct sizes", async () => {
+    it('creates variants as value objects with correct sizes', async () => {
       const command = buildCommand()
 
       const result = await Effect.runPromise(
@@ -96,23 +91,23 @@ describe("handlePilotProductCreation", () => {
       )
 
       expect(result.variants).toHaveLength(2)
-      expect(result.variants[0]?._tag).toBe("StandardVariant")
+      expect(result.variants[0]?._tag).toBe('StandardVariant')
       expect(result.variants[0]?.size).toBe(Size.REGULAR)
-      expect(result.variants[1]?._tag).toBe("StandardVariant")
+      expect(result.variants[1]?._tag).toBe('StandardVariant')
       expect(result.variants[1]?.size).toBe(Size.LARGE)
     })
 
-    it("initializes syncStatus as NotSynced", async () => {
+    it('initializes syncStatus as NotSynced', async () => {
       const command = buildCommand()
 
       const result = await Effect.runPromise(
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
       )
 
-      expect(result.syncStatus._tag).toBe("NotSynced")
+      expect(result.syncStatus._tag).toBe('NotSynced')
     })
 
-    it("structures views correctly", async () => {
+    it('structures views correctly', async () => {
       const command = buildCommand()
 
       const result = await Effect.runPromise(
@@ -124,7 +119,7 @@ describe("handlePilotProductCreation", () => {
       expect(result.views.additional).toHaveLength(2)
     })
 
-    it("handles custom variant with dimensions", async () => {
+    it('handles custom variant with dimensions', async () => {
       const dataWithCustom: UnvalidatedProductData = {
         ...validProductData,
         variants: [
@@ -141,8 +136,8 @@ describe("handlePilotProductCreation", () => {
         handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
       )
 
-      expect(result.variants[0]._tag).toBe("CustomVariant")
-      if (result.variants[0]._tag === "CustomVariant") {
+      expect(result.variants[0]._tag).toBe('CustomVariant')
+      if (result.variants[0]._tag === 'CustomVariant') {
         expect(result.variants[0].customDimensions.width).toBe(150)
         expect(result.variants[0].customDimensions.length).toBe(300)
         expect(result.variants[0].price).toBe(25000)
@@ -150,8 +145,8 @@ describe("handlePilotProductCreation", () => {
     })
   })
 
-  describe("event emission", () => {
-    it("does NOT emit event for DRAFT status", async () => {
+  describe('event emission', () => {
+    it('does NOT emit event for DRAFT status', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.DRAFT })
 
       await Effect.runPromise(
@@ -161,7 +156,7 @@ describe("handlePilotProductCreation", () => {
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(0)
     })
 
-    it("emits PilotProductPublished for PUBLISHED status", async () => {
+    it('emits PilotProductPublished for PUBLISHED status', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
       await Effect.runPromise(
@@ -169,10 +164,10 @@ describe("handlePilotProductCreation", () => {
       )
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(1)
-      expect(testCtx.eventSpy.lastEvent?._tag).toBe("PilotProductPublished")
+      expect(testCtx.eventSpy.lastEvent?._tag).toBe('PilotProductPublished')
     })
 
-    it("includes product and correlation info in event", async () => {
+    it('includes product and correlation info in event', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
       await Effect.runPromise(
@@ -180,25 +175,22 @@ describe("handlePilotProductCreation", () => {
       )
 
       const event = testCtx.eventSpy.lastEvent
-      expect(event?.productId).toBe("test-product-1")
-      expect(event?.correlationId).toBe("test-correlation-id")
-      expect(event?.userId).toBe("test-user")
+      expect(event?.productId).toBe('test-product-1')
+      expect(event?.correlationId).toBe('test-correlation-id')
+      expect(event?.userId).toBe('test-user')
     })
   })
 
-  describe("validation errors", () => {
-    it("propagates ValidationError from invalid input", async () => {
-      const command = buildCommand({ ...validProductData, label: "   " })
+  describe('validation errors', () => {
+    it('propagates ValidationError from invalid input', async () => {
+      const command = buildCommand({ ...validProductData, label: '   ' })
 
       const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(
-          Effect.either,
-          Effect.provide(testCtx.layer)
-        )
+        handlePilotProductCreation(command).pipe(Effect.either, Effect.provide(testCtx.layer))
       )
 
-      expect(result._tag).toBe("Left")
-      if (result._tag === "Left") {
+      expect(result._tag).toBe('Left')
+      if (result._tag === 'Left') {
         expect(result.left).toBeInstanceOf(ValidationError)
       }
     })

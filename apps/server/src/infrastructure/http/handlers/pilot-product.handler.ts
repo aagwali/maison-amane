@@ -1,17 +1,17 @@
 // src/infrastructure/http/handlers/pilot-product.handler.ts
 
-import { Effect } from 'effect'
 import { HttpApiBuilder } from '@effect/platform'
 import { FullPaths, GroupNames, MaisonAmaneApi } from '@maison-amane/api'
+import { logInfo, gen, annotateLogs } from 'effect/Effect'
 
 import {
   handlePilotProductCreation,
   handlePilotProductUpdate,
-  MakePilotProductCreationCommand,
-  MakePilotProductUpdateCommand,
+  makePilotProductCreationCommand,
+  makePilotProductUpdateCommand,
 } from '../../../application/pilot'
-import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
-import { MakeProductId } from '../../../domain/pilot'
+import { makeCorrelationId, makeUserId } from '../../../domain/shared'
+import { makeProductId } from '../../../domain/pilot'
 import {
   toProblemDetail,
   toResponse,
@@ -31,15 +31,15 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
   (handlers) =>
     handlers
       .handle('create', ({ payload }) =>
-        Effect.gen(function* () {
+        gen(function* () {
           const { correlationId, userId, ctx, errorCtx } = yield* generateCommandContext(
             FullPaths.PILOT_PRODUCT
           )
 
-          const command = MakePilotProductCreationCommand({
+          const command = makePilotProductCreationCommand({
             data: toUnvalidatedProductData(payload),
-            correlationId: MakeCorrelationId(correlationId),
-            userId: MakeUserId(userId),
+            correlationId: makeCorrelationId(correlationId),
+            userId: makeUserId(userId),
             timestamp: new Date(),
           })
 
@@ -51,24 +51,24 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
             (error) => toProblemDetail(error, errorCtx)
           )
 
-          yield* Effect.logInfo('Pilot product created successfully').pipe(
-            Effect.annotateLogs({ productId: product.id })
+          yield* logInfo('Pilot product created successfully').pipe(
+            annotateLogs({ productId: product.id })
           )
 
           return toResponse(product)
         })
       )
       .handle('update', ({ path, payload }) =>
-        Effect.gen(function* () {
+        gen(function* () {
           const { correlationId, userId, ctx, errorCtx } = yield* generateCommandContext(
             `${FullPaths.PILOT_PRODUCT}/${path.id}`
           )
 
-          const command = MakePilotProductUpdateCommand({
-            productId: MakeProductId(path.id),
+          const command = makePilotProductUpdateCommand({
+            productId: makeProductId(path.id),
             data: toUnvalidatedUpdateData(payload),
-            correlationId: MakeCorrelationId(correlationId),
-            userId: MakeUserId(userId),
+            correlationId: makeCorrelationId(correlationId),
+            userId: makeUserId(userId),
             timestamp: new Date(),
           })
 
@@ -80,8 +80,8 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
             (error) => toUpdateProblemDetail(error, errorCtx)
           )
 
-          yield* Effect.logInfo('Pilot product updated successfully').pipe(
-            Effect.annotateLogs({ productId: product.id })
+          yield* logInfo('Pilot product updated successfully').pipe(
+            annotateLogs({ productId: product.id })
           )
 
           return toResponse(product)

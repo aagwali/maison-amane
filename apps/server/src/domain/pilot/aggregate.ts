@@ -50,10 +50,10 @@ import {
 // VARIANT CONSTRUCTORS
 // ============================================
 
-export const MakeStandardVariant = (params: Omit<StandardVariant, '_tag'>): StandardVariant =>
+export const makeStandardVariant = (params: Omit<StandardVariant, '_tag'>): StandardVariant =>
   Data.case<StandardVariant>()({ _tag: 'StandardVariant', ...params })
 
-export const MakeCustomVariant = (params: Omit<CustomVariant, '_tag'>): CustomVariant =>
+export const makeCustomVariant = (params: Omit<CustomVariant, '_tag'>): CustomVariant =>
   Data.case<CustomVariant>()({ _tag: 'CustomVariant', ...params })
 
 // ============================================
@@ -79,7 +79,7 @@ export const PilotProductSchema = S.TaggedStruct('PilotProduct', {
 
 export type PilotProduct = typeof PilotProductSchema.Type
 
-export const MakePilotProduct = (params: Omit<PilotProduct, '_tag'>): PilotProduct =>
+export const makePilotProduct = (params: Omit<PilotProduct, '_tag'>): PilotProduct =>
   Data.case<PilotProduct>()({ _tag: 'PilotProduct', ...params })
 
 // ============================================
@@ -96,7 +96,7 @@ export const withSyncStatus = (
   syncStatus: PilotProduct['syncStatus'],
   updatedAt: Date
 ): PilotProduct =>
-  MakePilotProduct({
+  makePilotProduct({
     ...product,
     syncStatus,
     updatedAt,
@@ -116,7 +116,7 @@ export const withUpdatedFields = (
   >,
   updatedAt: Date
 ): PilotProduct =>
-  MakePilotProduct({
+  makePilotProduct({
     ...product,
     ...updates,
     updatedAt,

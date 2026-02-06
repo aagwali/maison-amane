@@ -6,10 +6,10 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  MakeNotSynced,
-  MakeShopifyProductId,
-  MakeSynced,
-  MakeSyncFailed,
+  makeNotSynced,
+  makeShopifyProductId,
+  makeSynced,
+  makeSyncFailed,
   type SyncError,
 } from '../value-objects'
 
@@ -19,7 +19,7 @@ import { SyncStatusMachine } from './sync-status.machine'
 // TEST FIXTURES
 // ============================================
 
-const shopifyId = MakeShopifyProductId('shopify-123')
+const shopifyId = makeShopifyProductId('shopify-123')
 const syncDate = new Date('2024-01-15T10:00:00Z')
 const failDate = new Date('2024-01-15T11:00:00Z')
 
@@ -47,7 +47,7 @@ describe('SyncStatusMachine.initial', () => {
 
 describe('SyncStatusMachine.markSynced', () => {
   it('transitions from NotSynced to Synced', () => {
-    const notSynced = MakeNotSynced()
+    const notSynced = makeNotSynced()
 
     const synced = SyncStatusMachine.markSynced(notSynced, shopifyId, syncDate)
 
@@ -57,7 +57,7 @@ describe('SyncStatusMachine.markSynced', () => {
   })
 
   it('transitions from SyncFailed to Synced', () => {
-    const failed = MakeSyncFailed({ error: syncError, failedAt: failDate, attempts: 2 })
+    const failed = makeSyncFailed({ error: syncError, failedAt: failDate, attempts: 2 })
 
     const synced = SyncStatusMachine.markSynced(failed, shopifyId, syncDate)
 
@@ -66,9 +66,9 @@ describe('SyncStatusMachine.markSynced', () => {
   })
 
   it('transitions from Synced to Synced (resync updates timestamp)', () => {
-    const previousSynced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
+    const previousSynced = makeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
     const newSyncDate = new Date('2024-01-16T10:00:00Z')
-    const newShopifyId = MakeShopifyProductId('shopify-456')
+    const newShopifyId = makeShopifyProductId('shopify-456')
 
     const synced = SyncStatusMachine.markSynced(previousSynced, newShopifyId, newSyncDate)
 
@@ -80,7 +80,7 @@ describe('SyncStatusMachine.markSynced', () => {
 
 describe('SyncStatusMachine.markFailed', () => {
   it('transitions from NotSynced to SyncFailed with attempts = 1', () => {
-    const notSynced = MakeNotSynced()
+    const notSynced = makeNotSynced()
 
     const failed = SyncStatusMachine.markFailed(notSynced, syncError, failDate)
 
@@ -91,7 +91,7 @@ describe('SyncStatusMachine.markFailed', () => {
   })
 
   it('increments attempts when transitioning from SyncFailed', () => {
-    const previousFailed = MakeSyncFailed({
+    const previousFailed = makeSyncFailed({
       error: syncError,
       failedAt: failDate,
       attempts: 3,
@@ -107,7 +107,7 @@ describe('SyncStatusMachine.markFailed', () => {
   })
 
   it('transitions from Synced to SyncFailed with attempts = 1 (resync failure)', () => {
-    const synced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
+    const synced = makeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
 
     const failed = SyncStatusMachine.markFailed(synced, syncError, failDate)
 
@@ -120,7 +120,7 @@ describe('SyncStatusMachine.markFailed', () => {
 
 describe('SyncStatusMachine.reset', () => {
   it('transitions from Synced to NotSynced', () => {
-    const synced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
+    const synced = makeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
 
     const reset = SyncStatusMachine.reset(synced)
 
@@ -128,7 +128,7 @@ describe('SyncStatusMachine.reset', () => {
   })
 
   it('transitions from SyncFailed to NotSynced', () => {
-    const failed = MakeSyncFailed({ error: syncError, failedAt: failDate, attempts: 5 })
+    const failed = makeSyncFailed({ error: syncError, failedAt: failDate, attempts: 5 })
 
     const reset = SyncStatusMachine.reset(failed)
 
@@ -142,32 +142,32 @@ describe('SyncStatusMachine.reset', () => {
 
 describe('SyncStatusMachine.canSync', () => {
   it('returns true for NotSynced', () => {
-    expect(SyncStatusMachine.canSync(MakeNotSynced())).toBe(true)
+    expect(SyncStatusMachine.canSync(makeNotSynced())).toBe(true)
   })
 
   it('returns true for SyncFailed', () => {
-    const failed = MakeSyncFailed({ error: syncError, failedAt: failDate, attempts: 1 })
+    const failed = makeSyncFailed({ error: syncError, failedAt: failDate, attempts: 1 })
     expect(SyncStatusMachine.canSync(failed)).toBe(true)
   })
 
   it('returns false for Synced', () => {
-    const synced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
+    const synced = makeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
     expect(SyncStatusMachine.canSync(synced)).toBe(false)
   })
 })
 
 describe('SyncStatusMachine.canReset', () => {
   it('returns false for NotSynced', () => {
-    expect(SyncStatusMachine.canReset(MakeNotSynced())).toBe(false)
+    expect(SyncStatusMachine.canReset(makeNotSynced())).toBe(false)
   })
 
   it('returns true for Synced', () => {
-    const synced = MakeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
+    const synced = makeSynced({ shopifyProductId: shopifyId, syncedAt: syncDate })
     expect(SyncStatusMachine.canReset(synced)).toBe(true)
   })
 
   it('returns true for SyncFailed', () => {
-    const failed = MakeSyncFailed({ error: syncError, failedAt: failDate, attempts: 1 })
+    const failed = makeSyncFailed({ error: syncError, failedAt: failDate, attempts: 1 })
     expect(SyncStatusMachine.canReset(failed)).toBe(true)
   })
 })

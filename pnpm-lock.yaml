@@ -52,9 +52,6 @@ importers:
 
   apps/consumers/catalog-projection:
     dependencies:
-      '@effect/platform':
-        specifier: ^0.77.1
-        version: 0.77.7(effect@3.19.14)
       '@effect/platform-node':
         specifier: ^0.73.1
         version: 0.73.7(@effect/platform@0.77.7(effect@3.19.14))(effect@3.19.14)
@@ -64,16 +61,10 @@ importers:
       '@maison-amane/shared-kernel':
         specifier: workspace:*
         version: link:../../../packages/shared-kernel
-      amqplib:
-        specifier: ^0.10.9
-        version: 0.10.9
       effect:
         specifier: ^3.13.1
         version: 3.19.14
     devDependencies:
-      '@types/amqplib':
-        specifier: ^0.10.8
-        version: 0.10.8
       '@types/node':
         specifier: ^22.5.1
         version: 22.19.7

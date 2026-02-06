@@ -1,7 +1,9 @@
 // src/infrastructure/persistence/mongodb/base-repository.ts
 
-import { Effect, Option, pipe } from 'effect'
 import type { Collection, Document } from 'mongodb'
+import { tryPromise, type Effect } from 'effect/Effect'
+import type { Option as OptionType } from 'effect/Option'
+import { Option } from 'effect'
 
 import { PersistenceError } from '../../../ports/driven'
 
@@ -13,10 +15,8 @@ import { PersistenceError } from '../../../ports/driven'
 /**
  * Wraps a MongoDB operation in Effect with automatic PersistenceError mapping
  */
-export const tryMongoOperation = <A>(
-  operation: () => Promise<A>
-): Effect.Effect<A, PersistenceError> =>
-  Effect.tryPromise({
+export const tryMongoOperation = <A>(operation: () => Promise<A>): Effect<A, PersistenceError> =>
+  tryPromise({
     try: operation,
     catch: (error) => new PersistenceError({ cause: error }),
   })
@@ -35,13 +35,11 @@ export const upsertDocument = <TDocument extends Document, TEntity>(
   id: string,
   document: TDocument,
   domainEntity: TEntity
-): Effect.Effect<TEntity, PersistenceError> =>
-  pipe(
-    tryMongoOperation(async () => {
-      await collection.updateOne({ _id: id } as any, { $set: document }, { upsert: true })
-      return domainEntity
-    })
-  )
+): Effect<TEntity, PersistenceError> =>
+  tryMongoOperation(async () => {
+    await collection.updateOne({ _id: id } as any, { $set: document }, { upsert: true })
+    return domainEntity
+  })
 
 /**
  * Generic insert operation for MongoDB
@@ -54,13 +52,11 @@ export const insertDocument = <TDocument extends Document, TEntity>(
   collection: Collection<TDocument>,
   document: TDocument,
   domainEntity: TEntity
-): Effect.Effect<TEntity, PersistenceError> =>
-  pipe(
-    tryMongoOperation(async () => {
-      await collection.insertOne(document as any)
-      return domainEntity
-    })
-  )
+): Effect<TEntity, PersistenceError> =>
+  tryMongoOperation(async () => {
+    await collection.insertOne(document as any)
+    return domainEntity
+  })
 
 /**
  * Generic update operation for MongoDB (replace entire document)
@@ -75,13 +71,11 @@ export const replaceDocument = <TDocument extends Document, TEntity>(
   id: string,
   document: TDocument,
   domainEntity: TEntity
-): Effect.Effect<TEntity, PersistenceError> =>
-  pipe(
-    tryMongoOperation(async () => {
-      await collection.replaceOne({ _id: id } as any, document)
-      return domainEntity
-    })
-  )
+): Effect<TEntity, PersistenceError> =>
+  tryMongoOperation(async () => {
+    await collection.replaceOne({ _id: id } as any, document)
+    return domainEntity
+  })
 
 /**
  * Generic findById operation for MongoDB
@@ -95,10 +89,8 @@ export const findDocumentById = <TDocument extends Document, TEntity>(
   collection: Collection<TDocument>,
   id: string,
   fromDocument: (doc: TDocument) => TEntity
-): Effect.Effect<Option.Option<TEntity>, PersistenceError> =>
-  pipe(
-    tryMongoOperation(async () => {
-      const doc = await collection.findOne({ _id: id } as any)
-      return doc ? Option.some(fromDocument(doc as TDocument)) : Option.none()
-    })
-  )
+): Effect<OptionType<TEntity>, PersistenceError> =>
+  tryMongoOperation(async () => {
+    const doc = await collection.findOne({ _id: id } as any)
+    return doc ? Option.some(fromDocument(doc as TDocument)) : Option.none()
+  })

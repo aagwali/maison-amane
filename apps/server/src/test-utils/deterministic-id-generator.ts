@@ -5,10 +5,10 @@
 
 import { Effect, Layer } from 'effect'
 
-import { MakeProductId } from '../domain/pilot'
+import { makeProductId } from '../domain/pilot'
 import { IdGenerator } from '../ports/driven'
 
-export const stubIdGenerator = (prefix = "test") => {
+export const stubIdGenerator = (prefix = 'test') => {
   let productCounter = 0
   let correlationCounter = 0
 
@@ -16,7 +16,7 @@ export const stubIdGenerator = (prefix = "test") => {
     generateProductId: () =>
       Effect.sync(() => {
         productCounter++
-        return MakeProductId(`${prefix}-product-${productCounter}`)
+        return makeProductId(`${prefix}-product-${productCounter}`)
       }),
 
     generateCorrelationId: () =>
@@ -35,5 +35,5 @@ export const stubIdGenerator = (prefix = "test") => {
 
 export type StubIdGenerator = ReturnType<typeof stubIdGenerator>
 
-export const StubIdGeneratorLive = (prefix = "test") =>
+export const StubIdGeneratorLive = (prefix = 'test') =>
   Layer.succeed(IdGenerator, stubIdGenerator(prefix))

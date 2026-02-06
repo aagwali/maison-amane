@@ -1,9 +1,9 @@
 // src/domain/pilot/services/sync-status.machine.ts
 
 import {
-  MakeNotSynced,
-  MakeSynced,
-  MakeSyncFailed,
+  makeNotSynced,
+  makeSynced,
+  makeSyncFailed,
   type NotSynced,
   type ShopifyProductId,
   type Synced,
@@ -18,27 +18,27 @@ import {
 
 export const SyncStatusMachine = {
   // Initial state
-  initial: (): NotSynced => MakeNotSynced(),
+  initial: (): NotSynced => makeNotSynced(),
 
   // Transitions
   markSynced: (
     _current: NotSynced | SyncFailed | Synced,
     shopifyProductId: ShopifyProductId,
     syncedAt: Date
-  ): Synced => MakeSynced({ shopifyProductId, syncedAt }),
+  ): Synced => makeSynced({ shopifyProductId, syncedAt }),
 
   markFailed: (
     current: NotSynced | SyncFailed | Synced,
     error: SyncError,
     failedAt: Date
   ): SyncFailed =>
-    MakeSyncFailed({
+    makeSyncFailed({
       error,
       failedAt,
       attempts: current._tag === 'SyncFailed' ? current.attempts + 1 : 1,
     }),
 
-  reset: (_current: Synced | SyncFailed): NotSynced => MakeNotSynced(),
+  reset: (_current: Synced | SyncFailed): NotSynced => makeNotSynced(),
 
   // Guards
   canSync: (status: SyncStatus): status is NotSynced | SyncFailed =>

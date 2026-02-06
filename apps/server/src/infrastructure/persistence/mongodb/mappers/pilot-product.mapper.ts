@@ -1,13 +1,13 @@
 // src/infrastructure/persistence/mongodb/mappers/pilot-product.mapper.ts
 
 import {
-  MakeImageUrl,
-  MakePositiveCm,
-  MakePrice,
-  MakeProductDescription,
-  MakeProductId,
-  MakeProductLabel,
-  MakeShopifyProductId,
+  makeImageUrl,
+  makePositiveCm,
+  makePrice,
+  makeProductDescription,
+  makeProductId,
+  makeProductLabel,
+  makeShopifyProductId,
   type PilotProduct,
   type PredefinedSize,
   PriceRange,
@@ -125,11 +125,11 @@ export const pilotToDocument = (product: PilotProduct): PilotProductDocument => 
 
 export const pilotFromDocument = (doc: PilotProductDocument): PilotProduct => ({
   _tag: 'PilotProduct',
-  id: MakeProductId(doc._id),
-  label: MakeProductLabel(doc.label),
+  id: makeProductId(doc._id),
+  label: makeProductLabel(doc.label),
   type: doc.type as ProductType,
   category: doc.category as ProductCategory,
-  description: MakeProductDescription(doc.description),
+  description: makeProductDescription(doc.description),
   priceRange: doc.priceRange as PriceRange,
   variants: doc.variants.map((v) =>
     v._tag === 'CustomVariant'
@@ -137,10 +137,10 @@ export const pilotFromDocument = (doc: PilotProductDocument): PilotProduct => ({
           _tag: 'CustomVariant' as const,
           size: Size.CUSTOM,
           customDimensions: {
-            width: MakePositiveCm(v.customDimensions!.width),
-            length: MakePositiveCm(v.customDimensions!.length),
+            width: makePositiveCm(v.customDimensions!.width),
+            length: makePositiveCm(v.customDimensions!.length),
           },
-          price: MakePrice(v.price!),
+          price: makePrice(v.price!),
         }
       : {
           _tag: 'StandardVariant' as const,
@@ -150,15 +150,15 @@ export const pilotFromDocument = (doc: PilotProductDocument): PilotProduct => ({
   views: {
     front: {
       viewType: doc.views.front.viewType as ViewType,
-      imageUrl: MakeImageUrl(doc.views.front.imageUrl),
+      imageUrl: makeImageUrl(doc.views.front.imageUrl),
     },
     detail: {
       viewType: doc.views.detail.viewType as ViewType,
-      imageUrl: MakeImageUrl(doc.views.detail.imageUrl),
+      imageUrl: makeImageUrl(doc.views.detail.imageUrl),
     },
     additional: doc.views.additional.map((v) => ({
       viewType: v.viewType as ViewType,
-      imageUrl: MakeImageUrl(v.imageUrl),
+      imageUrl: makeImageUrl(v.imageUrl),
     })),
   },
   status: doc.status as ProductStatus,
@@ -176,7 +176,7 @@ const mapSyncStatus = (status: PilotProductDocument['syncStatus']): SyncStatus =
     case 'Synced':
       return {
         _tag: 'Synced',
-        shopifyProductId: MakeShopifyProductId(status.shopifyProductId!),
+        shopifyProductId: makeShopifyProductId(status.shopifyProductId!),
         syncedAt: status.syncedAt!,
       }
     case 'SyncFailed':

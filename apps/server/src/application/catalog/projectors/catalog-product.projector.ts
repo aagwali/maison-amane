@@ -8,14 +8,14 @@ import { Data, Effect } from 'effect'
 import {
   type CatalogProduct,
   type CatalogVariant,
-  MakeCatalogProduct,
-  MakeCatalogLabel,
-  MakeCatalogDescription,
-  MakeCatalogCategory,
-  MakeCatalogPriceRange,
-  MakeCatalogImageUrl,
-  MakeCatalogDimension,
-  MakeCatalogPrice,
+  makeCatalogProduct,
+  makeCatalogLabel,
+  makeCatalogDescription,
+  makeCatalogCategory,
+  makeCatalogPriceRange,
+  makeCatalogImageUrl,
+  makeCatalogDimension,
+  makeCatalogPrice,
 } from '../../../domain/catalog'
 import { CatalogProductRepository } from '../../../ports/driven'
 import type {
@@ -44,17 +44,17 @@ export class ProjectionError extends Data.TaggedError('ProjectionError')<{
 // ============================================
 
 const mapToCatalogProduct = (product: PilotProduct, publishedAt: Date): CatalogProduct =>
-  MakeCatalogProduct({
+  makeCatalogProduct({
     id: product.id,
-    label: MakeCatalogLabel(product.label),
-    description: MakeCatalogDescription(product.description),
-    category: MakeCatalogCategory(product.category),
-    priceRange: MakeCatalogPriceRange(product.priceRange),
+    label: makeCatalogLabel(product.label),
+    description: makeCatalogDescription(product.description),
+    category: makeCatalogCategory(product.category),
+    priceRange: makeCatalogPriceRange(product.priceRange),
     variants: product.variants.map(mapVariant),
     images: {
-      front: MakeCatalogImageUrl(product.views.front.imageUrl),
-      detail: MakeCatalogImageUrl(product.views.detail.imageUrl),
-      gallery: product.views.additional.map((v) => MakeCatalogImageUrl(v.imageUrl)),
+      front: makeCatalogImageUrl(product.views.front.imageUrl),
+      detail: makeCatalogImageUrl(product.views.detail.imageUrl),
+      gallery: product.views.additional.map((v) => makeCatalogImageUrl(v.imageUrl)),
     },
     publishedAt,
   })
@@ -65,10 +65,10 @@ const mapVariant = (variant: PilotProduct['variants'][number]): CatalogVariant =
       _tag: 'CustomVariant',
       size: variant.size,
       dimensions: {
-        width: MakeCatalogDimension(variant.customDimensions.width),
-        length: MakeCatalogDimension(variant.customDimensions.length),
+        width: makeCatalogDimension(variant.customDimensions.width),
+        length: makeCatalogDimension(variant.customDimensions.length),
       },
-      price: MakeCatalogPrice(variant.price),
+      price: makeCatalogPrice(variant.price),
     }
   }
   return {

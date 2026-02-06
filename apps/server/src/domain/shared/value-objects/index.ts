@@ -4,8 +4,8 @@
 export {
   CorrelationIdSchema,
   type CorrelationId,
-  MakeCorrelationId,
+  makeCorrelationId,
   UserIdSchema,
   type UserId,
-  MakeUserId,
+  makeUserId,
 } from '@maison-amane/shared-kernel/domain'

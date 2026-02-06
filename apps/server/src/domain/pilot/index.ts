@@ -6,26 +6,26 @@
 export {
   // IDs
   ProductIdSchema,
-  MakeProductId,
+  makeProductId,
   type ProductId,
   ShopifyProductIdSchema,
-  MakeShopifyProductId,
+  makeShopifyProductId,
   type ShopifyProductId,
   // Scalar Types
   ProductLabelSchema,
-  MakeProductLabel,
+  makeProductLabel,
   type ProductLabel,
   ProductDescriptionSchema,
-  MakeProductDescription,
+  makeProductDescription,
   type ProductDescription,
   PriceSchema,
-  MakePrice,
+  makePrice,
   type Price,
   PositiveCmSchema,
-  MakePositiveCm,
+  makePositiveCm,
   type PositiveCm,
   ImageUrlSchema,
-  MakeImageUrl,
+  makeImageUrl,
   type ImageUrl,
   // Dimensions
   CustomDimensionSchema,
@@ -41,11 +41,11 @@ export {
   // Sync Status
   SyncErrorSchema,
   type SyncError,
-  MakeNotSynced,
+  makeNotSynced,
   type NotSynced,
-  MakeSynced,
+  makeSynced,
   type Synced,
-  MakeSyncFailed,
+  makeSyncFailed,
   type SyncFailed,
   SyncStatusSchema,
   type SyncStatus,
@@ -103,9 +103,9 @@ export {
 // AGGREGATE
 // ============================================
 export {
-  MakeStandardVariant,
-  MakePilotProduct,
-  MakeCustomVariant,
+  makeStandardVariant,
+  makePilotProduct,
+  makeCustomVariant,
   withSyncStatus,
   withUpdatedFields,
   type PilotProduct,
@@ -115,8 +115,8 @@ export {
 // EVENTS
 // ============================================
 export {
-  MakePilotProductPublished,
-  MakePilotProductUpdated,
+  makePilotProductPublished,
+  makePilotProductUpdated,
   type PilotProductPublished,
   type PilotProductUpdated,
   type PilotDomainEvent,
@@ -136,4 +136,4 @@ export {
 // POLICIES
 // ============================================
 // export { canSyncProduct, SyncNotAllowed } from "./policies"
-export { canPublish, PublicationNotAllowed } from './policies'
+export { canPublish, PublicationNotAllowed, requiresChangeNotification } from './policies'

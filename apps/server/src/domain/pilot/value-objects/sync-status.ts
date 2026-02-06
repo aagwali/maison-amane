@@ -21,7 +21,7 @@ export type SyncError = typeof SyncErrorSchema.Type
 // NOT SYNCED
 // ============================================
 
-const NotSyncedSchema = S.TaggedStruct("NotSynced", {})
+const NotSyncedSchema = S.TaggedStruct('NotSynced', {})
 
 export type NotSynced = typeof NotSyncedSchema.Type
 
@@ -29,7 +29,7 @@ export type NotSynced = typeof NotSyncedSchema.Type
 // SYNCED
 // ============================================
 
-const SyncedSchema = S.TaggedStruct("Synced", {
+const SyncedSchema = S.TaggedStruct('Synced', {
   shopifyProductId: ShopifyProductIdSchema,
   syncedAt: S.Date,
 })
@@ -40,7 +40,7 @@ export type Synced = typeof SyncedSchema.Type
 // SYNC FAILED
 // ============================================
 
-const SyncFailedSchema = S.TaggedStruct("SyncFailed", {
+const SyncFailedSchema = S.TaggedStruct('SyncFailed', {
   error: SyncErrorSchema,
   failedAt: S.Date,
   attempts: S.Number,
@@ -60,10 +60,10 @@ export type SyncStatus = typeof SyncStatusSchema.Type
 // CONSTRUCTORS
 // ============================================
 
-export const MakeNotSynced = (): NotSynced => Data.case<NotSynced>()({ _tag: "NotSynced" })
+export const makeNotSynced = (): NotSynced => Data.case<NotSynced>()({ _tag: 'NotSynced' })
 
-export const MakeSynced = (params: Omit<Synced, "_tag">): Synced =>
-  Data.case<Synced>()({ _tag: "Synced", ...params })
+export const makeSynced = (params: Omit<Synced, '_tag'>): Synced =>
+  Data.case<Synced>()({ _tag: 'Synced', ...params })
 
-export const MakeSyncFailed = (params: Omit<SyncFailed, "_tag">): SyncFailed =>
-  Data.case<SyncFailed>()({ _tag: "SyncFailed", ...params })
+export const makeSyncFailed = (params: Omit<SyncFailed, '_tag'>): SyncFailed =>
+  Data.case<SyncFailed>()({ _tag: 'SyncFailed', ...params })

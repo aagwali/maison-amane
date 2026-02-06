@@ -1,10 +1,13 @@
 // src/ports/driven/repositories/catalog-product.repository.ts
 
-import { Context, Effect, Option } from 'effect'
+import { Context } from 'effect'
 import type { ProductId } from '@maison-amane/shared-kernel'
+import type { Effect } from 'effect/Effect'
+import type { Option } from 'effect/Option'
 
 import type { CatalogProduct } from '../../../domain/catalog'
-import type { PersistenceError } from '../errors'
+
+import type { PersistenceError } from './errors'
 
 // ============================================
 // CATALOG PRODUCT REPOSITORY (Read Model)
@@ -19,11 +22,9 @@ import type { PersistenceError } from '../errors'
 // ============================================
 
 export interface CatalogProductRepositoryService {
-  readonly upsert: (product: CatalogProduct) => Effect.Effect<CatalogProduct, PersistenceError>
+  readonly upsert: (product: CatalogProduct) => Effect<CatalogProduct, PersistenceError>
 
-  readonly findById: (
-    id: ProductId
-  ) => Effect.Effect<Option.Option<CatalogProduct>, PersistenceError>
+  readonly findById: (id: ProductId) => Effect<Option<CatalogProduct>, PersistenceError>
 }
 
 export class CatalogProductRepository extends Context.Tag('CatalogProductRepository')<

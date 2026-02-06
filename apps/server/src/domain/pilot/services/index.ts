@@ -25,7 +25,7 @@
 //       ): Price => {
 //         const surface = dimensions.width * dimensions.length
 //         const coefficient = CATEGORY_COEFFICIENTS[category][priceRange]
-//         return MakePrice(Math.round(surface * coefficient))
+//         return makePrice(Math.round(surface * coefficient))
 //       }
 //
 //   - DimensionService: Validate custom dimensions against category rules
@@ -35,5 +35,5 @@
 //
 // ============================================
 
-export { SyncStatusMachine } from "./sync-status.machine"
-export { structureViews, flattenViews, MIN_VIEWS } from "./views.service"
+export { SyncStatusMachine } from './sync-status.machine'
+export { structureViews, flattenViews, MIN_VIEWS } from './views.service'

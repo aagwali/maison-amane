@@ -1,13 +1,13 @@
 // src/application/pilot/commands/index.ts
 
 export {
-  MakePilotProductCreationCommand,
+  makePilotProductCreationCommand,
   type PilotProductCreationCommand,
   type UnvalidatedProductData,
 } from './create-pilot-product.command'
 
 export {
-  MakePilotProductUpdateCommand,
+  makePilotProductUpdateCommand,
   type PilotProductUpdateCommand,
   type UnvalidatedUpdateData,
 } from './update-pilot-product.command'

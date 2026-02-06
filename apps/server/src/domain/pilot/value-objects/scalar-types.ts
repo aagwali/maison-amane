@@ -16,10 +16,10 @@ const DESCRIPTION_MAX_LENGTH = 5000
 export const ProductLabelSchema = S.Trim.pipe(
   S.minLength(1),
   S.maxLength(LABEL_MAX_LENGTH),
-  S.brand("ProductLabel"),
+  S.brand('ProductLabel')
 )
 export type ProductLabel = typeof ProductLabelSchema.Type
-export const MakeProductLabel = S.decodeUnknownSync(ProductLabelSchema)
+export const makeProductLabel = S.decodeUnknownSync(ProductLabelSchema)
 
 // ============================================
 // PRODUCT DESCRIPTION
@@ -27,42 +27,31 @@ export const MakeProductLabel = S.decodeUnknownSync(ProductLabelSchema)
 
 export const ProductDescriptionSchema = S.String.pipe(
   S.maxLength(DESCRIPTION_MAX_LENGTH),
-  S.brand("ProductDescription"),
+  S.brand('ProductDescription')
 )
 export type ProductDescription = typeof ProductDescriptionSchema.Type
-export const MakeProductDescription = S.decodeUnknownSync(ProductDescriptionSchema)
+export const makeProductDescription = S.decodeUnknownSync(ProductDescriptionSchema)
 
 // ============================================
 // PRICE (in centimes)
 // ============================================
 
-export const PriceSchema = S.Number.pipe(
-  S.int(),
-  S.positive(),
-  S.brand("Price"),
-)
+export const PriceSchema = S.Number.pipe(S.int(), S.positive(), S.brand('Price'))
 export type Price = typeof PriceSchema.Type
-export const MakePrice = S.decodeUnknownSync(PriceSchema)
+export const makePrice = S.decodeUnknownSync(PriceSchema)
 
 // ============================================
 // POSITIVE CM (for dimensions)
 // ============================================
 
-export const PositiveCmSchema = S.Number.pipe(
-  S.int(),
-  S.positive(),
-  S.brand("PositiveCm"),
-)
+export const PositiveCmSchema = S.Number.pipe(S.int(), S.positive(), S.brand('PositiveCm'))
 export type PositiveCm = typeof PositiveCmSchema.Type
-export const MakePositiveCm = S.decodeUnknownSync(PositiveCmSchema)
+export const makePositiveCm = S.decodeUnknownSync(PositiveCmSchema)
 
 // ============================================
 // IMAGE URL
 // ============================================
 
-export const ImageUrlSchema = S.String.pipe(
-  S.pattern(/^https:\/\/.+/),
-  S.brand("ImageUrl"),
-)
+export const ImageUrlSchema = S.String.pipe(S.pattern(/^https:\/\/.+/), S.brand('ImageUrl'))
 export type ImageUrl = typeof ImageUrlSchema.Type
-export const MakeImageUrl = S.decodeUnknownSync(ImageUrlSchema)
+export const makeImageUrl = S.decodeUnknownSync(ImageUrlSchema)

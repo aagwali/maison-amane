@@ -33,7 +33,7 @@ export interface GeneratedContext {
  * - Generating a unique correlation ID
  * - Creating observability context with timestamp
  * - Creating error context with instance path
- * - Using system user ID (TODO: extract from auth)
+ * - Using system user ID (TODO : extract from auth)
  *
  * @param instance - The resource instance path (e.g., "/api/v1/pilot-products" or "/api/v1/pilot-products/123")
  * @returns Effect that provides the generated context
@@ -49,7 +49,7 @@ export const generateCommandContext = (
   Effect.gen(function* () {
     const idGen = yield* IdGenerator
     const correlationId = yield* idGen.generateCorrelationId()
-    const userId = 'system' // TODO: Extract from auth context
+    const userId = 'system' // TODO : Extract from auth context
 
     return {
       correlationId,

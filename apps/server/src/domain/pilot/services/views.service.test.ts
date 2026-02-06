@@ -6,16 +6,17 @@
 import { describe, expect, it } from 'vitest'
 
 import { ViewType } from '../enums'
-import { MakeImageUrl, type ProductView } from '../value-objects'
+import { makeImageUrl, type ProductView } from '../value-objects'
+
 import { flattenViews, structureViews } from './views.service'
 
 // ============================================
 // TEST FIXTURES
 // ============================================
 
-const makeView = (viewType: ViewType, suffix = ""): ProductView => ({
+const makeView = (viewType: ViewType, suffix = ''): ProductView => ({
   viewType,
-  imageUrl: MakeImageUrl(`https://cdn.example.com/${viewType.toLowerCase()}${suffix}.jpg`),
+  imageUrl: makeImageUrl(`https://cdn.example.com/${viewType.toLowerCase()}${suffix}.jpg`),
 })
 
 const frontView = makeView(ViewType.FRONT)
@@ -27,8 +28,8 @@ const ambianceView = makeView(ViewType.AMBIANCE)
 // structureViews
 // ============================================
 
-describe("structureViews", () => {
-  it("extracts front view into dedicated field", () => {
+describe('structureViews', () => {
+  it('extracts front view into dedicated field', () => {
     const views = [frontView, detailView, backView, ambianceView]
 
     const structured = structureViews(views)
@@ -36,7 +37,7 @@ describe("structureViews", () => {
     expect(structured.front).toEqual(frontView)
   })
 
-  it("extracts detail view into dedicated field", () => {
+  it('extracts detail view into dedicated field', () => {
     const views = [frontView, detailView, backView, ambianceView]
 
     const structured = structureViews(views)
@@ -44,7 +45,7 @@ describe("structureViews", () => {
     expect(structured.detail).toEqual(detailView)
   })
 
-  it("puts remaining views into additional array", () => {
+  it('puts remaining views into additional array', () => {
     const views = [frontView, detailView, backView, ambianceView]
 
     const structured = structureViews(views)
@@ -54,7 +55,7 @@ describe("structureViews", () => {
     expect(structured.additional).toContainEqual(ambianceView)
   })
 
-  it("handles views in any order", () => {
+  it('handles views in any order', () => {
     const views = [ambianceView, backView, detailView, frontView]
 
     const structured = structureViews(views)
@@ -69,8 +70,8 @@ describe("structureViews", () => {
 // flattenViews
 // ============================================
 
-describe("flattenViews", () => {
-  it("returns array with front, detail, then additional views", () => {
+describe('flattenViews', () => {
+  it('returns array with front, detail, then additional views', () => {
     const structured = {
       front: frontView,
       detail: detailView,
@@ -86,7 +87,7 @@ describe("flattenViews", () => {
     expect(flattened[3]).toEqual(ambianceView)
   })
 
-  it("handles empty additional array", () => {
+  it('handles empty additional array', () => {
     const structured = {
       front: frontView,
       detail: detailView,
@@ -103,8 +104,8 @@ describe("flattenViews", () => {
 // ROUNDTRIP
 // ============================================
 
-describe("structureViews <-> flattenViews roundtrip", () => {
-  it("preserves data through structure then flatten", () => {
+describe('structureViews <-> flattenViews roundtrip', () => {
+  it('preserves data through structure then flatten', () => {
     const views = [frontView, detailView, backView, ambianceView]
 
     const structured = structureViews(views)

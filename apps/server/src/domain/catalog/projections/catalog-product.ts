@@ -63,5 +63,5 @@ const CatalogProductSchema = S.TaggedStruct('CatalogProduct', {
 
 export type CatalogProduct = typeof CatalogProductSchema.Type
 
-export const MakeCatalogProduct = (params: Omit<CatalogProduct, '_tag'>): CatalogProduct =>
+export const makeCatalogProduct = (params: Omit<CatalogProduct, '_tag'>): CatalogProduct =>
   Data.case<CatalogProduct>()({ _tag: 'CatalogProduct', ...params })

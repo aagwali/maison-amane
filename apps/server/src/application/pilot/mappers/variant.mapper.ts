@@ -1,8 +1,8 @@
 // src/application/pilot/mappers/variant.mapper.ts
 
 import {
-  MakeCustomVariant,
-  MakeStandardVariant,
+  makeCustomVariant,
+  makeStandardVariant,
   type ProductVariant,
   Size,
 } from '../../../domain/pilot'
@@ -17,13 +17,13 @@ import type { ValidatedVariant } from '../validation'
  */
 export const createVariant = (v: ValidatedVariant): ProductVariant => {
   if (v._tag === 'CustomVariant') {
-    return MakeCustomVariant({
+    return makeCustomVariant({
       size: Size.CUSTOM,
       customDimensions: v.customDimensions,
       price: v.price,
     })
   }
-  return MakeStandardVariant({
+  return makeStandardVariant({
     size: v.size,
   })
 }

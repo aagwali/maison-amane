@@ -54,3 +54,20 @@ export const canPublish = (product: PilotProduct): Effect.Effect<void, Publicati
   // All rules passed
   return Effect.void
 }
+
+// ============================================
+// CHANGE NOTIFICATION POLICY
+// ============================================
+
+/**
+ * Determines if a product state change requires event emission.
+ *
+ * Business rule:
+ * - PUBLISHED products: changes must be propagated to catalog (read model)
+ * - ARCHIVED products: changes must be propagated for cleanup/archival
+ * - DRAFT products: no notification needed (not visible externally)
+ *
+ * This policy ensures consistent event emission logic across all handlers.
+ */
+export const requiresChangeNotification = (product: PilotProduct): boolean =>
+  product.status === ProductStatus.PUBLISHED || product.status === ProductStatus.ARCHIVED

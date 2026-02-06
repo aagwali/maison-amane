@@ -21,7 +21,7 @@ export const CatalogLabelSchema = S.String.pipe(
   S.brand('CatalogLabel')
 )
 export type CatalogLabel = typeof CatalogLabelSchema.Type
-export const MakeCatalogLabel = S.decodeUnknownSync(CatalogLabelSchema)
+export const makeCatalogLabel = S.decodeUnknownSync(CatalogLabelSchema)
 
 // Description (UI display)
 export const CatalogDescriptionSchema = S.String.pipe(
@@ -30,12 +30,12 @@ export const CatalogDescriptionSchema = S.String.pipe(
   S.brand('CatalogDescription')
 )
 export type CatalogDescription = typeof CatalogDescriptionSchema.Type
-export const MakeCatalogDescription = S.decodeUnknownSync(CatalogDescriptionSchema)
+export const makeCatalogDescription = S.decodeUnknownSync(CatalogDescriptionSchema)
 
 // Price (centimes, positive)
 export const CatalogPriceSchema = S.Number.pipe(S.int(), S.positive(), S.brand('CatalogPrice'))
 export type CatalogPrice = typeof CatalogPriceSchema.Type
-export const MakeCatalogPrice = S.decodeUnknownSync(CatalogPriceSchema)
+export const makeCatalogPrice = S.decodeUnknownSync(CatalogPriceSchema)
 
 // Dimension (positive cm)
 export const CatalogDimensionSchema = S.Number.pipe(
@@ -44,7 +44,7 @@ export const CatalogDimensionSchema = S.Number.pipe(
   S.brand('CatalogDimension')
 )
 export type CatalogDimension = typeof CatalogDimensionSchema.Type
-export const MakeCatalogDimension = S.decodeUnknownSync(CatalogDimensionSchema)
+export const makeCatalogDimension = S.decodeUnknownSync(CatalogDimensionSchema)
 
 // Image URL (https only)
 export const CatalogImageUrlSchema = S.String.pipe(
@@ -52,7 +52,7 @@ export const CatalogImageUrlSchema = S.String.pipe(
   S.brand('CatalogImageUrl')
 )
 export type CatalogImageUrl = typeof CatalogImageUrlSchema.Type
-export const MakeCatalogImageUrl = S.decodeUnknownSync(CatalogImageUrlSchema)
+export const makeCatalogImageUrl = S.decodeUnknownSync(CatalogImageUrlSchema)
 
 // ============================================
 // ENUMS (shared - cross-context, from shared-kernel)
@@ -60,10 +60,10 @@ export const MakeCatalogImageUrl = S.decodeUnknownSync(CatalogImageUrlSchema)
 
 export {
   ProductCategorySchema as CatalogCategorySchema,
-  MakeProductCategory as MakeCatalogCategory,
+  makeProductCategory as makeCatalogCategory,
   PriceRangeSchema as CatalogPriceRangeSchema,
-  MakePriceRange as MakeCatalogPriceRange,
+  makePriceRange as makeCatalogPriceRange,
   Size,
   SizeSchema as CatalogSizeSchema,
-  MakeSize as MakeCatalogSize,
+  makeSize as makeCatalogSize,
 } from '@maison-amane/shared-kernel'

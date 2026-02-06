@@ -6,6 +6,6 @@ import { Data } from 'effect'
 // PERSISTENCE ERROR
 // ============================================
 
-export class PersistenceError extends Data.TaggedError("PersistenceError")<{
+export class PersistenceError extends Data.TaggedError('PersistenceError')<{
   readonly cause: unknown
 }> {}

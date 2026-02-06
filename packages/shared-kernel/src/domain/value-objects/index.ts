@@ -1,19 +1,19 @@
 // packages/shared-kernel/src/domain/value-objects/index.ts
 
-export { CorrelationIdSchema, MakeCorrelationId, type CorrelationId } from './correlation-id'
+export { CorrelationIdSchema, makeCorrelationId, type CorrelationId } from './correlation-id'
 
-export { UserIdSchema, MakeUserId, type UserId } from './user-id'
+export { UserIdSchema, makeUserId, type UserId } from './user-id'
 
-export { ProductIdSchema, MakeProductId, type ProductId } from './product-id'
+export { ProductIdSchema, makeProductId, type ProductId } from './product-id'
 
 export {
   ProductCategory,
   ProductCategorySchema,
-  MakeProductCategory,
+  makeProductCategory,
   PriceRange,
   PriceRangeSchema,
-  MakePriceRange,
+  makePriceRange,
   Size,
   SizeSchema,
-  MakeSize,
+  makeSize,
 } from './product-enums'

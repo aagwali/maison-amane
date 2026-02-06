@@ -3,12 +3,12 @@
 import { Effect, Option } from 'effect'
 
 import {
-  MakePilotProduct,
-  MakePilotProductUpdated,
+  makePilotProduct,
+  makePilotProductUpdated,
   type PilotProduct,
   type PilotProductUpdateError,
   ProductNotFoundError,
-  ProductStatus,
+  requiresChangeNotification,
 } from '../../../domain/pilot'
 import { Clock, EventPublisher, PilotProductRepository } from '../../../ports/driven'
 import { type ValidatedUpdateData, validateUpdateData } from '../validation'
@@ -41,19 +41,12 @@ export const handlePilotProductUpdate = (
 
     const savedProduct = yield* repo.update(updatedProduct)
 
-    if (shouldEmitEvent(savedProduct.status)) {
+    if (requiresChangeNotification(savedProduct)) {
       yield* emitEvent(savedProduct, command)
     }
 
     return savedProduct
   })
-
-// ============================================
-// SHOULD EMIT EVENT
-// ============================================
-
-const shouldEmitEvent = (status: ProductStatus): boolean =>
-  status === ProductStatus.PUBLISHED || status === ProductStatus.ARCHIVED
 
 // ============================================
 // APPLY UPDATES TO AGGREGATE
@@ -67,7 +60,7 @@ const applyUpdates = (
     const clock = yield* Clock
     const now = yield* clock.now()
 
-    return MakePilotProduct({
+    return makePilotProduct({
       ...product,
       label: Option.getOrElse(validated.label, () => product.label),
       type: Option.getOrElse(validated.type, () => product.type),
@@ -96,7 +89,7 @@ const emitEvent = (
     const clock = yield* Clock
     const now = yield* clock.now()
 
-    const event = MakePilotProductUpdated({
+    const event = makePilotProductUpdated({
       productId: product.id,
       product,
       correlationId: command.correlationId,

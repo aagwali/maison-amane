@@ -1,6 +1,15 @@
 // src/application/shopify/handlers/shopify-sync.handler.ts
 
-import { Data, Effect, Option } from 'effect'
+import { Option } from 'effect'
+import {
+  annotateLogs,
+  gen,
+  logInfo,
+  logWarning,
+  mapError,
+  withLogSpan,
+  type Effect,
+} from 'effect/Effect'
 
 import {
   ProductStatus,
@@ -21,23 +30,11 @@ import {
 } from '../../../ports/driven'
 
 // ============================================
-// SHOPIFY SYNC ERROR
-// ============================================
-
-export class ShopifySyncError extends Data.TaggedError('ShopifySyncError')<{
-  readonly cause: unknown
-}> {}
-
-// ============================================
 // SYNC EVENT TYPE
 // Both events have the same structure for sync
 // ============================================
 
 export type ShopifySyncEvent = PilotProductPublished | PilotProductUpdated
-
-// ============================================
-// SHOPIFY SYNC HANDLER
-// ============================================
 
 /**
  * Handles PilotProductPublished and PilotProductUpdated events to sync products to Shopify
@@ -55,26 +52,23 @@ export const shopifySyncHandler: MessageHandler<
   ShopifySyncEvent,
   PilotProductRepository | ShopifyClient | Clock
 > = (event) =>
-  Effect.gen(function* () {
+  gen(function* () {
     const { product, productId, correlationId, userId } = event
 
-    yield* Effect.logInfo('Processing product for Shopify sync').pipe(
-      Effect.annotateLogs({
+    yield* logInfo('Processing product for Shopify sync').pipe(
+      annotateLogs({
         productId,
         correlationId,
         userId,
         status: product.status,
         eventType: event._tag,
       }),
-      Effect.withLogSpan('shopify-sync.process')
+      withLogSpan('shopify-sync.process')
     )
 
-    // Check product status to determine action
     switch (product.status) {
       case ProductStatus.DRAFT:
-        yield* Effect.logInfo('Product is DRAFT, skipping Shopify sync').pipe(
-          Effect.annotateLogs({ productId })
-        )
+        yield* logInfo('Product is DRAFT, skipping Shopify sync').pipe(annotateLogs({ productId }))
         return
 
       case ProductStatus.PUBLISHED:
@@ -94,23 +88,17 @@ export const shopifySyncHandler: MessageHandler<
 const syncToShopify = (
   event: ShopifySyncEvent,
   product: PilotProduct
-): Effect.Effect<void, MessageHandlerError, PilotProductRepository | ShopifyClient | Clock> =>
-  Effect.gen(function* () {
+): Effect<void, MessageHandlerError, PilotProductRepository | ShopifyClient | Clock> =>
+  gen(function* () {
     const { productId } = event
     const shopifyClient = yield* ShopifyClient
 
-    // Call Shopify API (adapter handles the domain → API mapping)
     const shopifyProductId = yield* shopifyClient
       .syncProduct(product)
-      .pipe(Effect.mapError((error) => new MessageHandlerError({ event, cause: error })))
+      .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
-    yield* Effect.logInfo('Product synced to Shopify').pipe(
-      Effect.annotateLogs({
-        shopifyProductId,
-      })
-    )
+    yield* logInfo('Product synced to Shopify').pipe(annotateLogs({ shopifyProductId }))
 
-    // Update PilotProduct syncStatus
     yield* updateSyncStatus(event, productId, shopifyProductId)
   })
 
@@ -121,41 +109,31 @@ const syncToShopify = (
 const archiveOnShopify = (
   event: ShopifySyncEvent,
   product: PilotProduct
-): Effect.Effect<void, MessageHandlerError, ShopifyClient> =>
-  Effect.gen(function* () {
+): Effect<void, MessageHandlerError, ShopifyClient> =>
+  gen(function* () {
     const { productId } = event
 
-    // Check if product is synced with Shopify
     if (product.syncStatus._tag !== 'Synced') {
-      yield* Effect.logInfo('Product not synced to Shopify, nothing to archive').pipe(
-        Effect.annotateLogs({
-          productId,
-          syncStatus: product.syncStatus._tag,
-        })
+      yield* logInfo('Product not synced to Shopify, nothing to archive').pipe(
+        annotateLogs({ productId, syncStatus: product.syncStatus._tag })
       )
       return
     }
 
     const { shopifyProductId } = product.syncStatus
 
-    yield* Effect.logInfo('Archiving product on Shopify').pipe(
-      Effect.annotateLogs({
-        productId,
-        shopifyProductId,
-      })
+    yield* logInfo('Archiving product on Shopify').pipe(
+      annotateLogs({ productId, shopifyProductId })
     )
 
-    // Call Shopify API to archive
     const shopifyClient = yield* ShopifyClient
+
     yield* shopifyClient
       .archiveProduct(shopifyProductId)
-      .pipe(Effect.mapError((error) => new MessageHandlerError({ event, cause: error })))
+      .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
-    yield* Effect.logInfo('Product archived on Shopify').pipe(
-      Effect.annotateLogs({
-        productId,
-        shopifyProductId,
-      })
+    yield* logInfo('Product archived on Shopify').pipe(
+      annotateLogs({ productId, shopifyProductId })
     )
   })
 
@@ -167,19 +145,19 @@ const updateSyncStatus = (
   event: ShopifySyncEvent,
   productId: ProductId,
   shopifyProductId: ShopifyProductId
-): Effect.Effect<void, MessageHandlerError, PilotProductRepository | Clock> =>
-  Effect.gen(function* () {
+): Effect<void, MessageHandlerError, PilotProductRepository | Clock> =>
+  gen(function* () {
     const pilotRepo = yield* PilotProductRepository
     const clock = yield* Clock
     const now = yield* clock.now()
 
     const existingProduct = yield* pilotRepo
       .findById(productId)
-      .pipe(Effect.mapError((error) => new MessageHandlerError({ event, cause: error })))
+      .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
     if (Option.isNone(existingProduct)) {
-      yield* Effect.logWarning('Product not found in repository, skipping syncStatus update').pipe(
-        Effect.annotateLogs({ productId })
+      yield* logWarning('Product not found in repository, skipping syncStatus update').pipe(
+        annotateLogs({ productId })
       )
       return
     }
@@ -198,20 +176,14 @@ const updateSyncStatus = (
 
       yield* pilotRepo
         .update(updatedProduct)
-        .pipe(Effect.mapError((error) => new MessageHandlerError({ event, cause: error })))
+        .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
-      yield* Effect.logInfo('Updated product syncStatus to Synced').pipe(
-        Effect.annotateLogs({
-          productId,
-          shopifyProductId,
-          syncedAt: now.toISOString(),
-        })
+      yield* logInfo('Updated product syncStatus to Synced').pipe(
+        annotateLogs({ productId, shopifyProductId, syncedAt: now.toISOString() })
       )
     } else {
-      yield* Effect.logInfo('Product already synced, skipping syncStatus update').pipe(
-        Effect.annotateLogs({
-          currentSyncStatus: currentProduct.syncStatus._tag,
-        })
+      yield* logInfo('Product already synced, skipping syncStatus update').pipe(
+        annotateLogs({ currentSyncStatus: currentProduct.syncStatus._tag })
       )
     }
   })

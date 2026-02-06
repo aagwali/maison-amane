@@ -7,12 +7,12 @@ import { Effect, Layer } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
-  MakePilotProduct,
-  MakePilotProductPublished,
-  MakePilotProductUpdated,
-  MakeNotSynced,
-  MakeSynced,
-  MakeStandardVariant,
+  makePilotProduct,
+  makePilotProductPublished,
+  makePilotProductUpdated,
+  makeNotSynced,
+  makeSynced,
+  makeStandardVariant,
   PriceRange,
   ProductCategory,
   ProductStatus,
@@ -22,7 +22,7 @@ import {
   type PilotProduct,
   type ShopifyProductId,
 } from '../../../domain/pilot'
-import { MakeCorrelationId, MakeUserId } from '../../../domain/shared'
+import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import {
   Clock,
   PilotProductRepository,
@@ -92,7 +92,7 @@ const createTestClock = () => ({
 // ============================================
 
 const createPilotProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct =>
-  MakePilotProduct({
+  makePilotProduct({
     id: 'test-product-1' as any,
     label: 'Tapis Berbère Atlas' as any,
     type: ProductType.TAPIS,
@@ -100,8 +100,8 @@ const createPilotProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct
     description: 'Beautiful handmade rug' as any,
     priceRange: PriceRange.PREMIUM,
     variants: [
-      MakeStandardVariant({ size: Size.REGULAR }),
-      MakeStandardVariant({ size: Size.LARGE }),
+      makeStandardVariant({ size: Size.REGULAR }),
+      makeStandardVariant({ size: Size.LARGE }),
     ],
     views: {
       front: { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' as any },
@@ -112,27 +112,27 @@ const createPilotProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct
       ],
     },
     status: ProductStatus.PUBLISHED,
-    syncStatus: MakeNotSynced(),
+    syncStatus: makeNotSynced(),
     createdAt: TEST_DATE,
     updatedAt: TEST_DATE,
     ...overrides,
   })
 
 const buildPublishedEvent = (product: PilotProduct = createPilotProduct()): ShopifySyncEvent =>
-  MakePilotProductPublished({
+  makePilotProductPublished({
     productId: product.id,
     product,
-    correlationId: MakeCorrelationId('test-correlation-id'),
-    userId: MakeUserId('test-user'),
+    correlationId: makeCorrelationId('test-correlation-id'),
+    userId: makeUserId('test-user'),
     timestamp: TEST_DATE,
   })
 
 const buildUpdatedEvent = (product: PilotProduct = createPilotProduct()): ShopifySyncEvent =>
-  MakePilotProductUpdated({
+  makePilotProductUpdated({
     productId: product.id,
     product,
-    correlationId: MakeCorrelationId('test-correlation-id'),
-    userId: MakeUserId('test-user'),
+    correlationId: makeCorrelationId('test-correlation-id'),
+    userId: makeUserId('test-user'),
     timestamp: TEST_DATE,
   })
 
@@ -272,7 +272,7 @@ describe('shopifySyncHandler', () => {
     it('calls archiveProduct for ARCHIVED products with Synced status', async () => {
       const product = createPilotProduct({
         status: ProductStatus.ARCHIVED,
-        syncStatus: MakeSynced({
+        syncStatus: makeSynced({
           shopifyProductId: 'gid://shopify/Product/existing-123' as ShopifyProductId,
           syncedAt: TEST_DATE,
         }),
@@ -294,7 +294,7 @@ describe('shopifySyncHandler', () => {
     it('skips archive for ARCHIVED products not synced to Shopify', async () => {
       const product = createPilotProduct({
         status: ProductStatus.ARCHIVED,
-        syncStatus: MakeNotSynced(),
+        syncStatus: makeNotSynced(),
       })
 
       const event = buildUpdatedEvent(product)
