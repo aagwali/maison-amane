@@ -62,12 +62,8 @@ export type ErrorCode =
 // --------------------------------------------
 
 export const ErrorCodeTitles: Record<ErrorCode, string> = {
-  // Validation
   [ValidationErrorCodes.INVALID_PRODUCT_DATA]: 'Invalid Product Data',
-  // Persistence
   [PersistenceErrorCodes.SAVE_FAILED]: 'Save Operation Failed',
-  // Not Found
   [NotFoundErrorCodes.PRODUCT_NOT_FOUND]: 'Product Not Found',
-  // System
   [SystemErrorCodes.INTERNAL_ERROR]: 'Internal Server Error',
 }
