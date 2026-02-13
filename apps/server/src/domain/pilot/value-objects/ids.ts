@@ -12,6 +12,7 @@ export { ProductIdSchema, makeProductId, type ProductId } from '@maison-amane/sh
 // SHOPIFY PRODUCT ID (Pilot-specific)
 // ============================================
 
-export const ShopifyProductIdSchema = S.String.pipe(S.brand('ShopifyProductId'))
+export const ShopifyProductIdSchema = S.String
+  .pipe(S.brand('ShopifyProductId'))
 export type ShopifyProductId = typeof ShopifyProductIdSchema.Type
 export const makeShopifyProductId = S.decodeUnknownSync(ShopifyProductIdSchema)

@@ -2,7 +2,8 @@
 
 import { createServer } from 'node:http'
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { gen } from 'effect/Effect'
 import { HttpApiBuilder, HttpMiddleware, HttpServer } from '@effect/platform'
 import { NodeHttpServer } from '@effect/platform-node'
 import { MaisonAmaneApi } from '@maison-amane/api'
@@ -16,26 +17,25 @@ import { DevelopmentLayer } from './development.layer'
 // API LAYER
 // ============================================
 
-export const ApiLive = HttpApiBuilder.api(MaisonAmaneApi).pipe(
-  Layer.provide(PilotProductHandlerLive),
-  Layer.provide(SystemHandlerLive.pipe(Layer.provide(MongoDatabaseLive))),
-  Layer.provide(DevelopmentLayer)
-)
+export const ApiLive = HttpApiBuilder.api(MaisonAmaneApi)
+  .pipe(Layer.provide(PilotProductHandlerLive),
+  Layer.provide(SystemHandlerLive
+    .pipe(Layer.provide(MongoDatabaseLive))),
+  Layer.provide(DevelopmentLayer))
 
 // ============================================
 // HTTP SERVER LAYER
 // ============================================
 
 const HttpServerLive = Layer.unwrapEffect(
-  Effect.gen(function* () {
+  gen(function* () {
     const { port } = yield* AppConfig
     return NodeHttpServer.layer(createServer, { port })
   })
 )
 
-export const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
-  Layer.provide(HttpApiBuilder.middlewareCors()),
+export const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger)
+  .pipe(Layer.provide(HttpApiBuilder.middlewareCors()),
   Layer.provide(ApiLive),
   HttpServer.withLogAddress,
-  Layer.provide(HttpServerLive)
-)
+  Layer.provide(HttpServerLive))

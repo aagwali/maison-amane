@@ -1,6 +1,7 @@
 // src/composition/layers/logger.layer.ts
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { gen } from 'effect/Effect'
 import { BootstrapConfig, createLoggerLayer } from '@maison-amane/shared-kernel'
 
 import { JsonLogger, PrettyLogger } from '../../infrastructure'
@@ -10,7 +11,7 @@ import { JsonLogger, PrettyLogger } from '../../infrastructure'
 // ============================================
 
 export const LoggerLive = Layer.unwrapEffect(
-  Effect.gen(function* () {
+  gen(function* () {
     const { nodeEnv, logLevel } = yield* BootstrapConfig
 
     return createLoggerLayer(nodeEnv !== 'production', logLevel, PrettyLogger, JsonLogger)

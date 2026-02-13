@@ -29,23 +29,14 @@ export const catalogProjectionHandler: MessageHandler<ProjectionEvent, CatalogPr
     const { productId, correlationId, userId } = event
 
     yield* logInfo('Processing product publication for catalog projection')
-      .pipe(
-        annotateLogs({
-          productId,
-          correlationId,
-          userId,
-        })
-      )
+      .pipe(annotateLogs({ productId, correlationId, userId }))
       .pipe(withLogSpan('catalog-projection.process'))
 
-    const catalogProduct = yield* projectToCatalog(event).pipe(
-      mapError((error) => new MessageHandlerError({ event, cause: error.cause }))
-    )
+    const catalogProduct = yield* projectToCatalog(event)
+      .pipe(mapError((error) => new MessageHandlerError({ event, cause: error.cause })))
 
-    yield* logInfo('Successfully projected product to catalog').pipe(
-      annotateLogs({
-        catalogProductId: catalogProduct.id,
-        publishedAt: catalogProduct.publishedAt.toISOString(),
-      })
-    )
+    const { id: catalogProductId, publishedAt } = catalogProduct
+
+    yield* logInfo('Successfully projected product to catalog')
+      .pipe(annotateLogs({ catalogProductId, publishedAt: publishedAt.toISOString() }))
   })

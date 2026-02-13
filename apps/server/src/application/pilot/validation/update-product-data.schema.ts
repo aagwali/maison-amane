@@ -1,6 +1,8 @@
 // src/application/pilot/validation/update-product-data.schema.ts
 
-import { Effect, Option } from 'effect'
+import { Option } from 'effect'
+import { type Effect, gen, succeed, map, mapError } from 'effect/Effect'
+import type { Option as OptionType } from 'effect/Option'
 import * as S from 'effect/Schema'
 
 import {
@@ -26,14 +28,14 @@ export type { ValidatedVariant }
 // ============================================
 
 export interface ValidatedUpdateData {
-  readonly label: Option.Option<S.Schema.Type<typeof ProductLabelSchema>>
-  readonly type: Option.Option<S.Schema.Type<typeof ProductTypeSchema>>
-  readonly category: Option.Option<S.Schema.Type<typeof ProductCategorySchema>>
-  readonly description: Option.Option<S.Schema.Type<typeof ProductDescriptionSchema>>
-  readonly priceRange: Option.Option<S.Schema.Type<typeof PriceRangeSchema>>
-  readonly variants: Option.Option<readonly [ValidatedVariant, ...ValidatedVariant[]]>
-  readonly views: Option.Option<S.Schema.Type<typeof ProductViewsSchema>>
-  readonly status: Option.Option<S.Schema.Type<typeof ProductStatusSchema>>
+  readonly label: OptionType<S.Schema.Type<typeof ProductLabelSchema>>
+  readonly type: OptionType<S.Schema.Type<typeof ProductTypeSchema>>
+  readonly category: OptionType<S.Schema.Type<typeof ProductCategorySchema>>
+  readonly description: OptionType<S.Schema.Type<typeof ProductDescriptionSchema>>
+  readonly priceRange: OptionType<S.Schema.Type<typeof PriceRangeSchema>>
+  readonly variants: OptionType<readonly [ValidatedVariant, ...ValidatedVariant[]]>
+  readonly views: OptionType<S.Schema.Type<typeof ProductViewsSchema>>
+  readonly status: OptionType<S.Schema.Type<typeof ProductStatusSchema>>
 }
 
 // ============================================
@@ -42,8 +44,8 @@ export interface ValidatedUpdateData {
 
 export const validateUpdateData = (
   data: UnvalidatedUpdateData
-): Effect.Effect<ValidatedUpdateData, ValidationError> =>
-  Effect.gen(function* () {
+): Effect<ValidatedUpdateData, ValidationError> =>
+  gen(function* () {
     const label = yield* validateOptionalField(data.label, ProductLabelSchema)
     const type = yield* validateOptionalField(data.type, ProductTypeSchema)
     const category = yield* validateOptionalField(data.category, ProductCategorySchema)
@@ -72,39 +74,33 @@ export const validateUpdateData = (
 const validateOptionalField = <A, I, R>(
   value: unknown,
   schema: S.Schema<A, I, R>
-): Effect.Effect<Option.Option<A>, ValidationError, R> => {
+): Effect<OptionType<A>, ValidationError, R> => {
   if (value === undefined) {
-    return Effect.succeed(Option.none())
+    return succeed(Option.none())
   }
-  return S.decodeUnknown(schema)(value).pipe(
-    Effect.map(Option.some),
-    Effect.mapError(ValidationError.fromParseError)
-  )
+  return S.decodeUnknown(schema)(value)
+    .pipe(map(Option.some),
+    mapError(ValidationError.fromParseError))
 }
 
 const validateOptionalVariants = (
   variants: UnvalidatedUpdateData['variants']
-): Effect.Effect<
-  Option.Option<readonly [ValidatedVariant, ...ValidatedVariant[]]>,
-  ValidationError
-> => {
+): Effect<OptionType<readonly [ValidatedVariant, ...ValidatedVariant[]]>, ValidationError> => {
   if (variants === undefined || variants.length === 0) {
-    return Effect.succeed(Option.none())
+    return succeed(Option.none())
   }
-  return S.decodeUnknown(S.NonEmptyArray(ValidatedVariantSchema))(variants).pipe(
-    Effect.map(Option.some),
-    Effect.mapError(ValidationError.fromParseError)
-  )
+  return S.decodeUnknown(S.NonEmptyArray(ValidatedVariantSchema))(variants)
+    .pipe(map(Option.some),
+    mapError(ValidationError.fromParseError))
 }
 
 const validateOptionalViews = (
   views: UnvalidatedUpdateData['views']
-): Effect.Effect<Option.Option<S.Schema.Type<typeof ProductViewsSchema>>, ValidationError> => {
+): Effect<OptionType<S.Schema.Type<typeof ProductViewsSchema>>, ValidationError> => {
   if (views === undefined || views.length === 0) {
-    return Effect.succeed(Option.none())
+    return succeed(Option.none())
   }
-  return S.decodeUnknown(ProductViewsTransformSchema)(views).pipe(
-    Effect.map(Option.some),
-    Effect.mapError(ValidationError.fromParseError)
-  )
+  return S.decodeUnknown(ProductViewsTransformSchema)(views)
+    .pipe(map(Option.some),
+    mapError(ValidationError.fromParseError))
 }

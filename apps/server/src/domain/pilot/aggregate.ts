@@ -18,7 +18,8 @@
 //
 // ============================================
 
-import { Data, Effect } from 'effect'
+import { Data } from 'effect'
+import { type Effect, fail, succeed } from 'effect/Effect'
 import * as S from 'effect/Schema'
 
 import { type CustomVariant, ProductVariantSchema, type StandardVariant } from './value-objects'
@@ -107,26 +108,24 @@ export const withUpdatedFields = (
 export const publish = (
   product: PilotProduct,
   updatedAt: Date
-): Effect.Effect<PilotProduct, PublicationNotAllowed> => {
+): Effect<PilotProduct, PublicationNotAllowed> => {
   if (product.status === ProductStatus.ARCHIVED) {
-    return Effect.fail(new PublicationNotAllowed({ reason: 'Cannot publish an archived product' }))
+    return fail(new PublicationNotAllowed({ reason: 'Cannot publish an archived product' }))
   }
   if (product.status === ProductStatus.PUBLISHED) {
-    return Effect.fail(new PublicationNotAllowed({ reason: 'Product is already published' }))
+    return fail(new PublicationNotAllowed({ reason: 'Product is already published' }))
   }
-  return Effect.succeed(
-    makePilotProduct({ ...product, status: ProductStatus.PUBLISHED, updatedAt })
-  )
+  return succeed(makePilotProduct({ ...product, status: ProductStatus.PUBLISHED, updatedAt }))
 }
 
 export const archive = (
   product: PilotProduct,
   updatedAt: Date
-): Effect.Effect<PilotProduct, ArchiveNotAllowed> => {
+): Effect<PilotProduct, ArchiveNotAllowed> => {
   if (product.status === ProductStatus.ARCHIVED) {
-    return Effect.fail(new ArchiveNotAllowed({ reason: 'Product is already archived' }))
+    return fail(new ArchiveNotAllowed({ reason: 'Product is already archived' }))
   }
-  return Effect.succeed(makePilotProduct({ ...product, status: ProductStatus.ARCHIVED, updatedAt }))
+  return succeed(makePilotProduct({ ...product, status: ProductStatus.ARCHIVED, updatedAt }))
 }
 
 // ============================================

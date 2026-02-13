@@ -14,43 +14,40 @@ import * as S from 'effect/Schema'
 // ============================================
 
 // Label (display name for UI)
-export const CatalogLabelSchema = S.String.pipe(
-  S.trimmed(),
+export const CatalogLabelSchema = S.String
+  .pipe(S.trimmed(),
   S.minLength(1),
   S.maxLength(255),
-  S.brand('CatalogLabel')
-)
+  S.brand('CatalogLabel'))
 export type CatalogLabel = typeof CatalogLabelSchema.Type
 export const makeCatalogLabel = S.decodeUnknownSync(CatalogLabelSchema)
 
 // Description (UI display)
-export const CatalogDescriptionSchema = S.String.pipe(
-  S.trimmed(),
+export const CatalogDescriptionSchema = S.String
+  .pipe(S.trimmed(),
   S.maxLength(2000),
-  S.brand('CatalogDescription')
-)
+  S.brand('CatalogDescription'))
 export type CatalogDescription = typeof CatalogDescriptionSchema.Type
 export const makeCatalogDescription = S.decodeUnknownSync(CatalogDescriptionSchema)
 
 // Price (centimes, positive)
-export const CatalogPriceSchema = S.Number.pipe(S.int(), S.positive(), S.brand('CatalogPrice'))
+export const CatalogPriceSchema = S.Number
+  .pipe(S.int(), S.positive(), S.brand('CatalogPrice'))
 export type CatalogPrice = typeof CatalogPriceSchema.Type
 export const makeCatalogPrice = S.decodeUnknownSync(CatalogPriceSchema)
 
 // Dimension (positive cm)
-export const CatalogDimensionSchema = S.Number.pipe(
-  S.int(),
+export const CatalogDimensionSchema = S.Number
+  .pipe(S.int(),
   S.positive(),
-  S.brand('CatalogDimension')
-)
+  S.brand('CatalogDimension'))
 export type CatalogDimension = typeof CatalogDimensionSchema.Type
 export const makeCatalogDimension = S.decodeUnknownSync(CatalogDimensionSchema)
 
 // Image URL (https only)
-export const CatalogImageUrlSchema = S.String.pipe(
-  S.pattern(/^https:\/\/.+/),
-  S.brand('CatalogImageUrl')
-)
+export const CatalogImageUrlSchema = S.String
+  .pipe(S.pattern(/^https:\/\/.+/),
+  S.brand('CatalogImageUrl'))
 export type CatalogImageUrl = typeof CatalogImageUrlSchema.Type
 export const makeCatalogImageUrl = S.decodeUnknownSync(CatalogImageUrlSchema)
 

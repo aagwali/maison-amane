@@ -1,6 +1,6 @@
 // src/infrastructure/http/helpers/command-context.ts
 
-import { Effect } from 'effect'
+import { type Effect, gen } from 'effect/Effect'
 
 import { IdGenerator } from '../../../ports/driven'
 
@@ -45,8 +45,8 @@ export interface GeneratedContext {
  */
 export const generateCommandContext = (
   instance: string
-): Effect.Effect<GeneratedContext, never, IdGenerator> =>
-  Effect.gen(function* () {
+): Effect<GeneratedContext, never, IdGenerator> =>
+  gen(function* () {
     const idGen = yield* IdGenerator
     const correlationId = yield* idGen.generateCorrelationId()
     const userId = 'system' // TODO : Extract from auth context

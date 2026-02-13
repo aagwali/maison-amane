@@ -3,7 +3,18 @@
 // INTEGRATION TESTS: Tests the shopify sync handler flow.
 // Uses in-memory repository and spy ShopifyClient for verification.
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import {
+  type Effect,
+  gen,
+  fail,
+  succeed,
+  catchAll,
+  runPromise,
+  provide,
+  either,
+  void as effectVoid,
+} from 'effect/Effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -58,20 +69,20 @@ const createSpyShopifyClient = (): SpyShopifyClient => {
       shouldFail = fail
     },
     syncProduct: (product) =>
-      Effect.gen(function* () {
+      gen(function* () {
         calls.push({ method: 'syncProduct', args: [product] })
         if (shouldFail) {
-          return yield* Effect.fail(
+          return yield* fail(
             new ShopifyClientError({ operation: 'syncProduct', cause: 'Test error' })
           )
         }
         return 'gid://shopify/Product/123456789' as ShopifyProductId
       }),
     archiveProduct: (shopifyProductId) =>
-      Effect.gen(function* () {
+      gen(function* () {
         calls.push({ method: 'archiveProduct', args: [shopifyProductId] })
         if (shouldFail) {
-          return yield* Effect.fail(
+          return yield* fail(
             new ShopifyClientError({ operation: 'archiveProduct', cause: 'Test error' })
           )
         }
@@ -84,7 +95,7 @@ const createSpyShopifyClient = (): SpyShopifyClient => {
 // ============================================
 
 const createTestClock = () => ({
-  now: () => Effect.succeed(TEST_DATE),
+  now: () => succeed(TEST_DATE),
 })
 
 // ============================================
@@ -143,7 +154,7 @@ const buildUpdatedEvent = (product: PilotProduct = createPilotProduct()): Shopif
 interface TestContext {
   layer: Layer.Layer<PilotProductRepository | ShopifyClient | Clock>
   shopifySpy: SpyShopifyClient
-  seedProduct: (product: PilotProduct) => Effect.Effect<void, never, PilotProductRepository>
+  seedProduct: (product: PilotProduct) => Effect<void, never, PilotProductRepository>
 }
 
 const provideShopifySyncTestLayer = (): TestContext => {
@@ -156,10 +167,11 @@ const provideShopifySyncTestLayer = (): TestContext => {
   )
 
   const seedProduct = (product: PilotProduct) =>
-    Effect.gen(function* () {
+    gen(function* () {
       const repo = yield* PilotProductRepository
       yield* repo.save(product)
-    }).pipe(Effect.catchAll(() => Effect.void))
+    })
+      .pipe(catchAll(() => effectVoid))
 
   return { layer, shopifySpy, seedProduct }
 }
@@ -180,7 +192,8 @@ describe('shopifySyncHandler', () => {
       const product = createPilotProduct({ status: ProductStatus.DRAFT })
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(shopifySyncHandler(event).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(shopifySyncHandler(event)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.shopifySpy.calls).toHaveLength(0)
     })
@@ -191,11 +204,13 @@ describe('shopifySyncHandler', () => {
       const product = createPilotProduct({ status: ProductStatus.PUBLISHED })
 
       // Seed the product first (needed for syncStatus update)
-      await Effect.runPromise(testCtx.seedProduct(product).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(testCtx.seedProduct(product)
+        .pipe(provide(testCtx.layer)))
 
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(shopifySyncHandler(event).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(shopifySyncHandler(event)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.shopifySpy.calls).toHaveLength(1)
       const firstCall = testCtx.shopifySpy.calls[0]
@@ -209,11 +224,13 @@ describe('shopifySyncHandler', () => {
         label: 'Test Product' as any,
       })
 
-      await Effect.runPromise(testCtx.seedProduct(product).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(testCtx.seedProduct(product)
+        .pipe(provide(testCtx.layer)))
 
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(shopifySyncHandler(event).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(shopifySyncHandler(event)
+        .pipe(provide(testCtx.layer)))
 
       const call = testCtx.shopifySpy.calls[0]
       expect(call).toBeDefined()
@@ -227,20 +244,23 @@ describe('shopifySyncHandler', () => {
     it('updates syncStatus to Synced after successful sync', async () => {
       const product = createPilotProduct({ status: ProductStatus.PUBLISHED })
 
-      await Effect.runPromise(testCtx.seedProduct(product).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(testCtx.seedProduct(product)
+        .pipe(provide(testCtx.layer)))
 
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(shopifySyncHandler(event).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(shopifySyncHandler(event)
+        .pipe(provide(testCtx.layer)))
 
       // Check the updated product
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* PilotProductRepository
-        }).pipe(Effect.provide(testCtx.layer))
+        })
+          .pipe(provide(testCtx.layer))
       )
 
-      const updated = await Effect.runPromise(repo.findById(product.id))
+      const updated = await runPromise(repo.findById(product.id))
 
       if (updated._tag === 'Some') {
         expect(updated.value.syncStatus._tag).toBe('Synced')
@@ -253,15 +273,17 @@ describe('shopifySyncHandler', () => {
     it('handles Shopify client errors', async () => {
       const product = createPilotProduct({ status: ProductStatus.PUBLISHED })
 
-      await Effect.runPromise(testCtx.seedProduct(product).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(testCtx.seedProduct(product)
+        .pipe(provide(testCtx.layer)))
 
       // Set error mode
       testCtx.shopifySpy.setShouldFail(true)
 
       const event = buildPublishedEvent(product)
 
-      const result = await Effect.runPromise(
-        shopifySyncHandler(event).pipe(Effect.either, Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        shopifySyncHandler(event)
+          .pipe(either, provide(testCtx.layer))
       )
 
       expect(result._tag).toBe('Left')
@@ -278,11 +300,13 @@ describe('shopifySyncHandler', () => {
         }),
       })
 
-      await Effect.runPromise(testCtx.seedProduct(product).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(testCtx.seedProduct(product)
+        .pipe(provide(testCtx.layer)))
 
       const event = buildUpdatedEvent(product)
 
-      await Effect.runPromise(shopifySyncHandler(event).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(shopifySyncHandler(event)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.shopifySpy.calls).toHaveLength(1)
       const archiveCall = testCtx.shopifySpy.calls[0]
@@ -299,7 +323,8 @@ describe('shopifySyncHandler', () => {
 
       const event = buildUpdatedEvent(product)
 
-      await Effect.runPromise(shopifySyncHandler(event).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(shopifySyncHandler(event)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.shopifySpy.calls).toHaveLength(0)
     })
@@ -309,11 +334,13 @@ describe('shopifySyncHandler', () => {
     it('syncs updated PUBLISHED product to Shopify', async () => {
       const product = createPilotProduct({ status: ProductStatus.PUBLISHED })
 
-      await Effect.runPromise(testCtx.seedProduct(product).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(testCtx.seedProduct(product)
+        .pipe(provide(testCtx.layer)))
 
       const event = buildUpdatedEvent(product)
 
-      await Effect.runPromise(shopifySyncHandler(event).pipe(Effect.provide(testCtx.layer)))
+      await runPromise(shopifySyncHandler(event)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.shopifySpy.calls).toHaveLength(1)
       const updateCall = testCtx.shopifySpy.calls[0]

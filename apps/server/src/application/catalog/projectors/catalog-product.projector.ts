@@ -3,7 +3,8 @@
 // DDD: Anti-corruption layer - maps Pilot types to Catalog types.
 // The projector translates between bounded contexts.
 
-import { Data, Effect } from 'effect'
+import { Data } from 'effect'
+import { gen, mapError, type Effect } from 'effect/Effect'
 
 import {
   type CatalogProduct,
@@ -83,11 +84,11 @@ const mapVariant = (variant: PilotProduct['variants'][number]): CatalogVariant =
 
 export const projectToCatalog = (
   event: ProjectionEvent
-): Effect.Effect<CatalogProduct, ProjectionError, CatalogProductRepository> =>
-  Effect.gen(function* () {
+): Effect<CatalogProduct, ProjectionError, CatalogProductRepository> =>
+  gen(function* () {
     const catalogProduct = mapToCatalogProduct(event.product, event.timestamp)
     const repo = yield* CatalogProductRepository
     return yield* repo
       .upsert(catalogProduct)
-      .pipe(Effect.mapError((cause) => new ProjectionError({ cause })))
+      .pipe(mapError((cause) => new ProjectionError({ cause })))
   })

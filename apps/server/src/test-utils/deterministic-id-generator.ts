@@ -3,7 +3,8 @@
 // TEST UTILITY: Generates predictable IDs for deterministic tests.
 // Use this instead of UuidIdGenerator in tests to get reproducible results.
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { sync } from 'effect/Effect'
 
 import { makeProductId } from '../domain/pilot'
 import { IdGenerator } from '../ports/driven'
@@ -14,13 +15,13 @@ export const stubIdGenerator = (prefix = 'test') => {
 
   return {
     generateProductId: () =>
-      Effect.sync(() => {
+      sync(() => {
         productCounter++
         return makeProductId(`${prefix}-product-${productCounter}`)
       }),
 
     generateCorrelationId: () =>
-      Effect.sync(() => {
+      sync(() => {
         correlationCounter++
         return `${prefix}-correlation-${correlationCounter}`
       }),

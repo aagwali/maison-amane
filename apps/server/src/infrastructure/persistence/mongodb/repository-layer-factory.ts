@@ -1,6 +1,7 @@
 // src/infrastructure/persistence/mongodb/repository-layer-factory.ts
 
-import { Context, Effect, Layer } from 'effect'
+import { Context, Layer } from 'effect'
+import { map } from 'effect/Effect'
 import type { Db } from 'mongodb'
 
 import { MongoDatabase } from './mongo-database'
@@ -36,4 +37,4 @@ export const createRepositoryLayer = <
   tag: TTag,
   createRepository: (db: Db) => TService
 ): Layer.Layer<Context.Tag.Identifier<TTag>, never, MongoDatabase> =>
-  Layer.effect(tag, Effect.map(MongoDatabase, createRepository))
+  Layer.effect(tag, map(MongoDatabase, createRepository))

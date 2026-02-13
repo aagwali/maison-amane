@@ -1,6 +1,6 @@
 // src/application/pilot/validation/product-data.schema.ts
 
-import { Effect } from 'effect'
+import { type Effect, mapError } from 'effect/Effect'
 import * as S from 'effect/Schema'
 
 import {
@@ -43,7 +43,6 @@ export type ValidatedProductData = typeof ValidatedProductDataSchema.Type
 
 export const validateProductData = (
   data: UnvalidatedProductData
-): Effect.Effect<ValidatedProductData, ValidationError> =>
-  S.decodeUnknown(ValidatedProductDataSchema)(data).pipe(
-    Effect.mapError(ValidationError.fromParseError)
-  )
+): Effect<ValidatedProductData, ValidationError> =>
+  S.decodeUnknown(ValidatedProductDataSchema)(data)
+    .pipe(mapError(ValidationError.fromParseError))

@@ -1,3 +1,3 @@
 // src/application/catalog/handlers/index.ts
 
-export * from "./catalog-projection.handler"
+export * from './catalog-projection.handler'

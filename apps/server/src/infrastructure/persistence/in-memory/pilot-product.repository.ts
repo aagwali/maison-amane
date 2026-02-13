@@ -3,9 +3,10 @@
 import { Layer } from 'effect'
 
 import { PilotProductRepository } from '../../../ports/driven'
+import type { PilotProduct } from '../../../domain/pilot'
+
 import { createInMemoryRepository } from './generic.repository'
 
-import type { PilotProduct } from "../../../domain/pilot"
 // ============================================
 // IN-MEMORY PILOT PRODUCT REPOSITORY
 // ============================================

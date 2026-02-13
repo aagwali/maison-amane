@@ -1,6 +1,7 @@
 // src/infrastructure/persistence/mongodb/mongo-database.ts
 
-import { Context, Data, Effect, Layer, Redacted } from 'effect'
+import { Context, Data, Layer, Redacted } from 'effect'
+import { gen, acquireRelease, tryPromise, promise, tap, logInfo } from 'effect/Effect'
 import { Db, MongoClient } from 'mongodb'
 import { MongoConfig, MongoConfigLive } from '@maison-amane/shared-kernel/config'
 
@@ -23,12 +24,12 @@ export class MongoDatabaseError extends Data.TaggedError('MongoDatabaseError')<{
 
 export const MongoDatabaseLive = Layer.scoped(
   MongoDatabase,
-  Effect.gen(function* () {
+  gen(function* () {
     const config = yield* MongoConfig
     const uri = Redacted.value(config.uri)
 
-    const { client: _client, db } = yield* Effect.acquireRelease(
-      Effect.tryPromise({
+    const { client: _client, db } = yield* acquireRelease(
+      tryPromise({
         try: async () => {
           const mongoClient = new MongoClient(uri)
           await mongoClient.connect()
@@ -37,12 +38,12 @@ export const MongoDatabaseLive = Layer.scoped(
         catch: (error) => new MongoDatabaseError({ cause: error }),
       }),
       ({ client: mongoClient }) =>
-        Effect.promise(() => mongoClient.close()).pipe(
-          Effect.tap(() => Effect.logInfo('MongoDB connection closed'))
-        )
+        promise(() => mongoClient.close())
+          .pipe(tap(() => logInfo('MongoDB connection closed')))
     )
 
-    yield* Effect.logInfo(`MongoDB connected to database: ${config.database}`)
+    yield* logInfo(`MongoDB connected to database: ${config.database}`)
     return db
   })
-).pipe(Layer.provide(MongoConfigLive))
+)
+  .pipe(Layer.provide(MongoConfigLive))

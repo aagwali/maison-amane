@@ -3,7 +3,7 @@
 // INTEGRATION TESTS: Tests the full handler flow with TestLayer.
 // Uses real in-memory repository, deterministic IDs, fixed clock, and spy publisher.
 
-import { Effect } from 'effect'
+import { runPromise, provide, either } from 'effect/Effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -83,17 +83,17 @@ describe('handlePilotProductUpdate', () => {
     it('updates product label', async () => {
       // First create a product
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
 
       // Then update it
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.id).toBe('test-product-1')
@@ -102,16 +102,16 @@ describe('handlePilotProductUpdate', () => {
 
     it('preserves unchanged fields', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       // Unchanged fields should be preserved
@@ -123,16 +123,18 @@ describe('handlePilotProductUpdate', () => {
 
     it('preserves immutable fields (id, createdAt)', async () => {
       const createCommand = buildCreateCommand()
-      const created = await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
+      const created = await runPromise(
+        handlePilotProductCreation(createCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.id).toBe(created.id)
@@ -141,16 +143,18 @@ describe('handlePilotProductUpdate', () => {
 
     it('updates updatedAt timestamp', async () => {
       const createCommand = buildCreateCommand()
-      const _created = await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
+      const _created = await runPromise(
+        handlePilotProductCreation(createCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       // updatedAt should be updated (using TEST_DATE from fixed clock)
@@ -159,16 +163,16 @@ describe('handlePilotProductUpdate', () => {
 
     it('updates status from DRAFT to PUBLISHED', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         status: ProductStatus.PUBLISHED,
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.status).toBe(ProductStatus.PUBLISHED)
@@ -176,9 +180,8 @@ describe('handlePilotProductUpdate', () => {
 
     it('updates multiple fields at once', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
@@ -186,8 +189,9 @@ describe('handlePilotProductUpdate', () => {
         priceRange: PriceRange.DISCOUNT,
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.label).toBe('Nouveau Label')
@@ -197,16 +201,16 @@ describe('handlePilotProductUpdate', () => {
 
     it('preserves syncStatus', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.syncStatus._tag).toBe('NotSynced')
@@ -216,18 +220,16 @@ describe('handlePilotProductUpdate', () => {
   describe('event emission', () => {
     it('does NOT emit event for DRAFT status', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
       testCtx.eventSpy.clear() // Clear events from creation
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductUpdate(updateCommand)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(0)
     })
@@ -237,18 +239,16 @@ describe('handlePilotProductUpdate', () => {
         ...validProductData,
         status: ProductStatus.PUBLISHED,
       })
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
       testCtx.eventSpy.clear() // Clear events from creation
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductUpdate(updateCommand)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(1)
       expect(testCtx.eventSpy.lastEvent?._tag).toBe('PilotProductUpdated')
@@ -256,18 +256,16 @@ describe('handlePilotProductUpdate', () => {
 
     it('emits PilotProductUpdated for ARCHIVED status', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
       testCtx.eventSpy.clear() // Clear events from creation
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         status: ProductStatus.ARCHIVED,
       })
 
-      await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductUpdate(updateCommand)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(1)
       expect(testCtx.eventSpy.lastEvent?._tag).toBe('PilotProductUpdated')
@@ -278,18 +276,16 @@ describe('handlePilotProductUpdate', () => {
         ...validProductData,
         status: ProductStatus.PUBLISHED,
       })
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
       testCtx.eventSpy.clear() // Clear events from creation
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
       })
 
-      await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductUpdate(updateCommand)
+        .pipe(provide(testCtx.layer)))
 
       const event = testCtx.eventSpy.lastEvent
       expect(event?.productId).toBe('test-product-1')
@@ -305,8 +301,9 @@ describe('handlePilotProductUpdate', () => {
         label: 'Nouveau Label',
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.either, Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(either, provide(testCtx.layer))
       )
 
       expect(result._tag).toBe('Left')
@@ -318,16 +315,16 @@ describe('handlePilotProductUpdate', () => {
 
     it('fails with ValidationError for invalid label', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: '   ', // Invalid: empty after trim
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.either, Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(either, provide(testCtx.layer))
       )
 
       expect(result._tag).toBe('Left')
@@ -338,16 +335,16 @@ describe('handlePilotProductUpdate', () => {
 
     it('fails with ValidationError for invalid status', async () => {
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
 
       const updateCommand = buildUpdateCommand('test-product-1', {
         status: 'INVALID_STATUS' as ProductStatus,
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.either, Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(either, provide(testCtx.layer))
       )
 
       expect(result._tag).toBe('Left')
@@ -359,13 +356,13 @@ describe('handlePilotProductUpdate', () => {
     it('fails with PublicationNotAllowed when publishing an ARCHIVED product', async () => {
       // Create and archive a product
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
-      await Effect.runPromise(
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
+      await runPromise(
         handlePilotProductUpdate(
           buildUpdateCommand('test-product-1', { status: ProductStatus.ARCHIVED })
-        ).pipe(Effect.provide(testCtx.layer))
+        )
+          .pipe(provide(testCtx.layer))
       )
 
       // Try to publish the archived product
@@ -373,8 +370,9 @@ describe('handlePilotProductUpdate', () => {
         status: ProductStatus.PUBLISHED,
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.either, Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(either, provide(testCtx.layer))
       )
 
       expect(result._tag).toBe('Left')
@@ -386,13 +384,13 @@ describe('handlePilotProductUpdate', () => {
     it('fails with ArchiveNotAllowed when archiving an already ARCHIVED product', async () => {
       // Create and archive a product
       const createCommand = buildCreateCommand()
-      await Effect.runPromise(
-        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
-      )
-      await Effect.runPromise(
+      await runPromise(handlePilotProductCreation(createCommand)
+        .pipe(provide(testCtx.layer)))
+      await runPromise(
         handlePilotProductUpdate(
           buildUpdateCommand('test-product-1', { status: ProductStatus.ARCHIVED })
-        ).pipe(Effect.provide(testCtx.layer))
+        )
+          .pipe(provide(testCtx.layer))
       )
 
       // Try to archive again
@@ -400,8 +398,9 @@ describe('handlePilotProductUpdate', () => {
         status: ProductStatus.ARCHIVED,
       })
 
-      const result = await Effect.runPromise(
-        handlePilotProductUpdate(updateCommand).pipe(Effect.either, Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductUpdate(updateCommand)
+          .pipe(either, provide(testCtx.layer))
       )
 
       expect(result._tag).toBe('Left')

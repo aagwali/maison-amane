@@ -1,6 +1,7 @@
 // src/infrastructure/services/uuid-id-generator.ts
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { succeed } from 'effect/Effect'
 import { v4 as uuidv4 } from 'uuid'
 
 import { makeProductId } from '../../domain/pilot'
@@ -11,6 +12,6 @@ import { IdGenerator } from '../../ports/driven'
 // ============================================
 
 export const UuidIdGeneratorLive = Layer.succeed(IdGenerator, {
-  generateProductId: () => Effect.succeed(makeProductId(uuidv4())),
-  generateCorrelationId: () => Effect.succeed(uuidv4()),
+  generateProductId: () => succeed(makeProductId(uuidv4())),
+  generateCorrelationId: () => succeed(uuidv4()),
 })

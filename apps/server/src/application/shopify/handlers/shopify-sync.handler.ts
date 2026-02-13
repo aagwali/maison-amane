@@ -54,20 +54,20 @@ export const shopifySyncHandler: MessageHandler<
   gen(function* () {
     const { product, productId, correlationId, userId } = event
 
-    yield* logInfo('Processing product for Shopify sync').pipe(
-      annotateLogs({
-        productId,
-        correlationId,
-        userId,
-        status: product.status,
-        eventType: event._tag,
-      }),
-      withLogSpan('shopify-sync.process')
-    )
+    yield* logInfo('Processing product for Shopify sync')
+      .pipe(annotateLogs({
+          productId,
+          correlationId,
+          userId,
+          status: product.status,
+          eventType: event._tag,
+        }))
+      .pipe(withLogSpan('shopify-sync.process'))
 
     switch (product.status) {
       case ProductStatus.DRAFT:
-        yield* logInfo('Product is DRAFT, skipping Shopify sync').pipe(annotateLogs({ productId }))
+        yield* logInfo('Product is DRAFT, skipping Shopify sync')
+          .pipe(annotateLogs({ productId }))
         return
 
       case ProductStatus.PUBLISHED:
@@ -96,7 +96,8 @@ const syncToShopify = (
       .syncProduct(product)
       .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
-    yield* logInfo('Product synced to Shopify').pipe(annotateLogs({ shopifyProductId }))
+    yield* logInfo('Product synced to Shopify')
+      .pipe(annotateLogs({ shopifyProductId }))
 
     yield* updateSyncStatus(event, productId, shopifyProductId)
   })
@@ -113,17 +114,15 @@ const archiveOnShopify = (
     const { productId } = event
 
     if (product.syncStatus._tag !== 'Synced') {
-      yield* logInfo('Product not synced to Shopify, nothing to archive').pipe(
-        annotateLogs({ productId, syncStatus: product.syncStatus._tag })
-      )
+      yield* logInfo('Product not synced to Shopify, nothing to archive')
+        .pipe(annotateLogs({ productId, syncStatus: product.syncStatus._tag }))
       return
     }
 
     const { shopifyProductId } = product.syncStatus
 
-    yield* logInfo('Archiving product on Shopify').pipe(
-      annotateLogs({ productId, shopifyProductId })
-    )
+    yield* logInfo('Archiving product on Shopify')
+      .pipe(annotateLogs({ productId, shopifyProductId }))
 
     const shopifyClient = yield* ShopifyClient
 
@@ -131,9 +130,8 @@ const archiveOnShopify = (
       .archiveProduct(shopifyProductId)
       .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
-    yield* logInfo('Product archived on Shopify').pipe(
-      annotateLogs({ productId, shopifyProductId })
-    )
+    yield* logInfo('Product archived on Shopify')
+      .pipe(annotateLogs({ productId, shopifyProductId }))
   })
 
 // ============================================
@@ -155,9 +153,8 @@ const updateSyncStatus = (
       .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
     if (Option.isNone(existingProduct)) {
-      yield* logWarning('Product not found in repository, skipping syncStatus update').pipe(
-        annotateLogs({ productId })
-      )
+      yield* logWarning('Product not found in repository, skipping syncStatus update')
+        .pipe(annotateLogs({ productId }))
       return
     }
 
@@ -169,7 +166,6 @@ const updateSyncStatus = (
       .update(updatedProduct)
       .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
-    yield* logInfo('Updated product syncStatus to Synced').pipe(
-      annotateLogs({ productId, shopifyProductId, syncedAt: now.toISOString() })
-    )
+    yield* logInfo('Updated product syncStatus to Synced')
+      .pipe(annotateLogs({ productId, shopifyProductId, syncedAt: now.toISOString() }))
   })

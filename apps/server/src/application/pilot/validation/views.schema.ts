@@ -19,19 +19,18 @@ import {
 // PRODUCT VIEWS INPUT SCHEMA (with business validation)
 // ============================================
 
-export const ProductViewsInputSchema = S.Array(ProductViewSchema).pipe(
-  S.filter((views): views is readonly ProductView[] => views.length >= MIN_VIEWS, {
-    message: () => `Minimum ${MIN_VIEWS} views required`,
-  }),
-  S.filter(
-    (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.FRONT),
-    { message: () => 'FRONT view is required' }
-  ),
-  S.filter(
-    (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.DETAIL),
-    { message: () => 'DETAIL view is required' }
-  )
-)
+export const ProductViewsInputSchema = S.Array(ProductViewSchema)
+  .pipe(S.filter((views): views is readonly ProductView[] => views.length >= MIN_VIEWS, {
+      message: () => `Minimum ${MIN_VIEWS} views required`,
+    }))
+  .pipe(S.filter(
+      (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.FRONT),
+      { message: () => 'FRONT view is required' }
+    ))
+  .pipe(S.filter(
+      (views): views is readonly ProductView[] => views.some((v) => v.viewType === ViewType.DETAIL),
+      { message: () => 'DETAIL view is required' }
+    ))
 
 // ============================================
 // PRODUCT VIEWS TRANSFORM SCHEMA

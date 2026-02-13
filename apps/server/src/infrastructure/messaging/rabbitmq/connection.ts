@@ -1,7 +1,8 @@
 // src/infrastructure/messaging/rabbitmq/connection.ts
 
 import amqp from 'amqplib'
-import { Data, Effect, Layer, Redacted } from 'effect'
+import { Data, Layer, Redacted } from 'effect'
+import { gen, acquireRelease, tryPromise, promise, tap, logInfo } from 'effect/Effect'
 import { RabbitMQConnection } from '@maison-amane/shared-kernel'
 
 import { RabbitMQConfig } from '../../../composition/config'
@@ -21,12 +22,12 @@ export class RabbitMQConnectionError extends Data.TaggedError('RabbitMQConnectio
 
 export const RabbitMQConnectionLayer = Layer.scoped(
   RabbitMQConnection,
-  Effect.gen(function* () {
+  gen(function* () {
     const config = yield* RabbitMQConfig
     const url = Redacted.value(config.url)
 
-    const { connection, channel } = yield* Effect.acquireRelease(
-      Effect.tryPromise({
+    const { connection, channel } = yield* acquireRelease(
+      tryPromise({
         try: async () => {
           const conn = await amqp.connect(url)
           const ch = await conn.createChannel()
@@ -35,13 +36,14 @@ export const RabbitMQConnectionLayer = Layer.scoped(
         catch: (error) => new RabbitMQConnectionError({ cause: error }),
       }),
       ({ connection: conn, channel: ch }) =>
-        Effect.promise(async () => {
+        promise(async () => {
           await ch.close()
           await conn.close()
-        }).pipe(Effect.tap(() => Effect.logInfo('RabbitMQ connection closed')))
+        })
+          .pipe(tap(() => logInfo('RabbitMQ connection closed')))
     )
 
-    yield* Effect.logInfo('RabbitMQ connected')
+    yield* logInfo('RabbitMQ connected')
     return { connection, channel }
   })
 )

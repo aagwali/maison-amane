@@ -3,9 +3,10 @@
 import { Layer } from 'effect'
 
 import { CatalogProductRepository } from '../../../ports/driven'
+import type { CatalogProduct } from '../../../domain/catalog'
+
 import { createInMemoryRepository } from './generic.repository'
 
-import type { CatalogProduct } from "../../../domain/catalog"
 // ============================================
 // IN-MEMORY CATALOG PRODUCT REPOSITORY
 // ============================================

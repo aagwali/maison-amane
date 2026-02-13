@@ -1,6 +1,6 @@
 // src/infrastructure/http/helpers/observability-wrapper.ts
 
-import { Effect } from 'effect'
+import { type Effect, mapError } from 'effect/Effect'
 
 import { withObservability } from '../../services'
 
@@ -43,7 +43,8 @@ export const executeWithObservability = <A, E, EM, R>(
   ctx: CommandContext,
   operationName: string,
   httpOperation: string,
-  handler: Effect.Effect<A, E, R>,
+  handler: Effect<A, E, R>,
   errorMapper: (error: E) => EM
-): Effect.Effect<A, EM, R> =>
-  withObservability(ctx, operationName, httpOperation, handler).pipe(Effect.mapError(errorMapper))
+): Effect<A, EM, R> =>
+  withObservability(ctx, operationName, httpOperation, handler)
+    .pipe(mapError(errorMapper))

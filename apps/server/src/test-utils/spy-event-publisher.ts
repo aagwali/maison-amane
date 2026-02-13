@@ -3,18 +3,18 @@
 // TEST UTILITY: Captures published events for test assertions.
 // Access emitted events via publisher.events after running the effect.
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { sync } from 'effect/Effect'
 
 import { EventPublisher } from '../ports/driven'
-
-import type { DomainEvent } from "../domain"
+import type { DomainEvent } from '../domain'
 
 export const spyEventPublisher = () => {
   const events: DomainEvent[] = []
 
   return {
     publish: (event: DomainEvent) =>
-      Effect.sync(() => {
+      sync(() => {
         events.push(event)
       }),
 
@@ -27,7 +27,7 @@ export const spyEventPublisher = () => {
       return events[events.length - 1]
     },
 
-    hasEmitted(tag: DomainEvent["_tag"]): boolean {
+    hasEmitted(tag: DomainEvent['_tag']): boolean {
       return events.some((e) => e._tag === tag)
     },
 

@@ -9,7 +9,8 @@ import { Config } from 'effect'
 // Logging → BootstrapConfig + createLoggerLayer (@maison-amane/shared-kernel)
 
 export const AppConfig = Config.all({
-  port: Config.number('PORT').pipe(Config.withDefault(3001)),
+  port: Config.number('PORT')
+    .pipe(Config.withDefault(3001)),
 })
 
 export type AppConfig = Config.Config.Success<typeof AppConfig>

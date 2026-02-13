@@ -3,7 +3,8 @@
 // Fake Shopify client for development/testing.
 // Implements the domain-oriented ShopifyClient port.
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { type Effect, gen, logInfo, annotateLogs, sleep } from 'effect/Effect'
 
 import type { PilotProduct, ShopifyProductId } from '../../../domain/pilot'
 import { ShopifyClient } from '../../../ports/driven'
@@ -15,51 +16,47 @@ import { mapToShopifyProduct } from './shopify-product.mapper'
 // ============================================
 
 const createFakeShopifyClient = () => ({
-  syncProduct: (product: PilotProduct): Effect.Effect<ShopifyProductId> =>
-    Effect.gen(function* () {
+  syncProduct: (product: PilotProduct): Effect<ShopifyProductId> =>
+    gen(function* () {
       // Map domain to Shopify format (anti-corruption layer)
       const shopifyInput = mapToShopifyProduct(product)
 
-      yield* Effect.logInfo('Fake Shopify client: syncProduct called').pipe(
-        Effect.annotateLogs({
+      yield* logInfo('Fake Shopify client: syncProduct called')
+        .pipe(annotateLogs({
           productId: product.id,
           title: shopifyInput.title,
           handle: shopifyInput.handle,
           variantsCount: shopifyInput.variants.length,
-        })
-      )
+        }))
 
       // Simulate API delay
-      yield* Effect.sleep('100 millis')
+      yield* sleep('100 millis')
 
       // Generate fake Shopify product ID (format: gid://shopify/Product/123456789)
       const fakeId = `gid://shopify/Product/${Date.now()}` as ShopifyProductId
 
-      yield* Effect.logInfo('Fake Shopify client: product synced').pipe(
-        Effect.annotateLogs({
+      yield* logInfo('Fake Shopify client: product synced')
+        .pipe(annotateLogs({
           shopifyProductId: fakeId,
-        })
-      )
+        }))
 
       return fakeId
     }),
 
-  archiveProduct: (shopifyProductId: ShopifyProductId): Effect.Effect<void> =>
-    Effect.gen(function* () {
-      yield* Effect.logInfo('Fake Shopify client: archiveProduct called').pipe(
-        Effect.annotateLogs({
+  archiveProduct: (shopifyProductId: ShopifyProductId): Effect<void> =>
+    gen(function* () {
+      yield* logInfo('Fake Shopify client: archiveProduct called')
+        .pipe(annotateLogs({
           shopifyProductId,
-        })
-      )
+        }))
 
       // Simulate API delay
-      yield* Effect.sleep('100 millis')
+      yield* sleep('100 millis')
 
-      yield* Effect.logInfo('Fake Shopify client: product archived').pipe(
-        Effect.annotateLogs({
+      yield* logInfo('Fake Shopify client: product archived')
+        .pipe(annotateLogs({
           shopifyProductId,
-        })
-      )
+        }))
     }),
 })
 

@@ -1,6 +1,7 @@
 // src/infrastructure/messaging/rabbitmq/event-publisher.ts
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { gen, tryPromise, logInfo, annotateLogs, withLogSpan } from 'effect/Effect'
 import { EXCHANGES, ROUTING_KEYS, RabbitMQConnection } from '@maison-amane/shared-kernel'
 
 import { EventPublisher, EventPublishError } from '../../../ports/driven'
@@ -36,16 +37,16 @@ const serializeEvent = (event: DomainEvent): Buffer => {
 // RABBITMQ EVENT PUBLISHER IMPLEMENTATION
 // ============================================
 
-const createRabbitMQEventPublisher = Effect.gen(function* () {
+const createRabbitMQEventPublisher = gen(function* () {
   const { channel } = yield* RabbitMQConnection
 
   return {
     publish: (event: DomainEvent) =>
-      Effect.gen(function* () {
+      gen(function* () {
         const routingKey = getRoutingKey(event)
         const message = serializeEvent(event)
 
-        yield* Effect.tryPromise({
+        yield* tryPromise({
           try: async () => {
             const published = channel.publish(EXCHANGES.PILOT_EVENTS, routingKey, message, {
               persistent: true, // Durable messages
@@ -66,8 +67,8 @@ const createRabbitMQEventPublisher = Effect.gen(function* () {
           catch: (error) => new EventPublishError({ event, cause: error }),
         })
 
-        yield* Effect.logInfo('Domain event published to RabbitMQ').pipe(
-          Effect.annotateLogs({
+        yield* logInfo('Domain event published to RabbitMQ')
+          .pipe(annotateLogs({
             eventType: event._tag,
             productId: event.productId,
             correlationId: event.correlationId,
@@ -75,8 +76,7 @@ const createRabbitMQEventPublisher = Effect.gen(function* () {
             exchange: EXCHANGES.PILOT_EVENTS,
             routingKey,
           }),
-          Effect.withLogSpan('rabbitmq.publish')
-        )
+          withLogSpan('rabbitmq.publish'))
       }),
   }
 })

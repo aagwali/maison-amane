@@ -3,6 +3,7 @@ import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
 import prettier from 'eslint-config-prettier'
 import pluginImportX from 'eslint-plugin-import-x'
+import customPlugin from './tools/eslint-plugin-custom/index.ts'
 
 export default [
   // Ignore patterns
@@ -41,6 +42,7 @@ export default [
     plugins: {
       '@typescript-eslint': tseslint,
       'import-x': pluginImportX,
+      custom: customPlugin,
     },
     rules: {
       // TypeScript recommended rules (without type-checking)
@@ -77,6 +79,8 @@ export default [
           'newlines-between': 'always',
         },
       ],
+      'custom/line-before-pipe': 'error',
+      'custom/no-namespace-import-effect': 'error',
     },
   },
 

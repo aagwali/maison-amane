@@ -13,7 +13,6 @@ import {
   ValidationErrorCodes,
 } from '@maison-amane/api'
 
-
 import type {
   ValidationError,
   PilotProductCreationError,

@@ -1,6 +1,7 @@
 // src/infrastructure/services/system-clock.ts
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { succeed } from 'effect/Effect'
 
 import { Clock } from '../../ports/driven'
 
@@ -8,9 +9,6 @@ import { Clock } from '../../ports/driven'
 // SYSTEM CLOCK
 // ============================================
 
-export const SystemClockLive = Layer.succeed(
-  Clock,
-  {
-    now: () => Effect.succeed(new Date())
-  }
-)
+export const SystemClockLive = Layer.succeed(Clock, {
+  now: () => succeed(new Date()),
+})

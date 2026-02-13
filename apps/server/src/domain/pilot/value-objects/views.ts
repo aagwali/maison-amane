@@ -3,6 +3,7 @@
 import * as S from 'effect/Schema'
 
 import { ViewTypeSchema } from '../enums'
+
 import { ImageUrlSchema } from './scalar-types'
 
 // ============================================

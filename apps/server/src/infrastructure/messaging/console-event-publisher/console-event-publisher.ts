@@ -1,6 +1,7 @@
 // src/infrastructure/services/console-event-publisher.ts
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { type Effect, logInfo, annotateLogs, withLogSpan, asVoid } from 'effect/Effect'
 
 import { EventPublisher, EventPublishError } from '../../../ports/driven'
 import type { DomainEvent } from '../../../domain'
@@ -11,15 +12,14 @@ import type { DomainEvent } from '../../../domain'
 // ============================================
 
 export const ConsoleEventPublisherLive = Layer.succeed(EventPublisher, {
-  publish: (event: DomainEvent): Effect.Effect<void, EventPublishError> =>
-    Effect.logInfo('Domain event published').pipe(
-      Effect.annotateLogs({
+  publish: (event: DomainEvent): Effect<void, EventPublishError> =>
+    logInfo('Domain event published')
+      .pipe(annotateLogs({
         eventType: event._tag,
         productId: event.productId,
         correlationId: event.correlationId,
         userId: event.userId,
       }),
-      Effect.withLogSpan('eventPublisher'),
-      Effect.asVoid
-    ),
+      withLogSpan('eventPublisher'),
+      asVoid),
 })

@@ -20,11 +20,13 @@ import {
 // ============================================
 
 // MongoDB repository layer with its database dependency
-const PilotProductLayer = MongodbPilotProductRepositoryLive.pipe(Layer.provide(MongoDatabaseLive))
+const PilotProductLayer = MongodbPilotProductRepositoryLive
+  .pipe(Layer.provide(MongoDatabaseLive))
 
 // RabbitMQ event publisher with topology setup (exchanges, queues, bindings)
 // RabbitMQSetupLayer ensures topology is created before publishing
-const RabbitMQPublisherLayer = RabbitMQEventPublisherLayer.pipe(Layer.provide(RabbitMQSetupLayer))
+const RabbitMQPublisherLayer = RabbitMQEventPublisherLayer
+  .pipe(Layer.provide(RabbitMQSetupLayer))
 
 // ============================================
 // DEVELOPMENT LAYER WITH RABBITMQ

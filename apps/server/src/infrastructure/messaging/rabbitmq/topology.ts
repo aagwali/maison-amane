@@ -1,6 +1,7 @@
 // src/infrastructure/messaging/rabbitmq/topology.ts
 
-import { Data, Effect } from 'effect'
+import { Data } from 'effect'
+import { gen, tryPromise, logInfo, annotateLogs } from 'effect/Effect'
 import { RabbitMQConnection } from '@maison-amane/shared-kernel'
 import type * as amqp from 'amqplib'
 
@@ -43,10 +44,10 @@ export class TopologySetupError extends Data.TaggedError('TopologySetupError')<{
 // Called once - creates exchanges only
 // ============================================
 
-export const setupTopology = Effect.gen(function* () {
+export const setupTopology = gen(function* () {
   const { channel } = yield* RabbitMQConnection
 
-  yield* Effect.tryPromise({
+  yield* tryPromise({
     try: async () => {
       // Dead Letter Exchange (for failed messages)
       await channel.assertExchange(Exchanges.PILOT_EVENTS_DLX, 'topic', {
@@ -61,11 +62,10 @@ export const setupTopology = Effect.gen(function* () {
     catch: (error) => new TopologySetupError({ cause: error }),
   })
 
-  yield* Effect.logInfo('RabbitMQ exchanges configured').pipe(
-    Effect.annotateLogs({
+  yield* logInfo('RabbitMQ exchanges configured')
+    .pipe(annotateLogs({
       exchanges: Object.values(Exchanges).join(', '),
-    })
-  )
+    }))
 })
 
 // ============================================
@@ -75,12 +75,12 @@ export const setupTopology = Effect.gen(function* () {
 // ============================================
 
 export const setupConsumerQueue = (consumerName: string) =>
-  Effect.gen(function* () {
+  gen(function* () {
     const { channel } = yield* RabbitMQConnection
     const config = yield* RabbitMQConfig
     const queues = buildQueueNames(consumerName)
 
-    yield* Effect.tryPromise({
+    yield* tryPromise({
       try: async () => {
         // 1. Dead Letter Queue (final destination for failed messages)
         await channel.assertQueue(queues.dlq, {
@@ -124,12 +124,11 @@ export const setupConsumerQueue = (consumerName: string) =>
       catch: (error) => new TopologySetupError({ cause: error }),
     })
 
-    yield* Effect.logInfo('Consumer queue configured').pipe(
-      Effect.annotateLogs({
+    yield* logInfo('Consumer queue configured')
+      .pipe(annotateLogs({
         consumer: consumerName,
         queues: Object.values(queues).join(', '),
-      })
-    )
+      }))
 
     return queues
   })

@@ -1,6 +1,23 @@
 // src/infrastructure/messaging/rabbitmq/consumer.ts
 
-import { Duration, Effect, Fiber, Runtime } from 'effect'
+import { Duration, Fiber, Runtime } from 'effect'
+import {
+  type Effect,
+  try as trySync,
+  gen,
+  logInfo,
+  annotateLogs,
+  withLogSpan,
+  runtime as runtimeEffect,
+  sync,
+  logDebug,
+  timeoutFail,
+  matchEffect,
+  logWarning,
+  logError,
+  catchAll,
+  runPromise,
+} from 'effect/Effect'
 import { RabbitMQConnection } from '@maison-amane/shared-kernel'
 import type * as amqp from 'amqplib'
 
@@ -22,10 +39,8 @@ export { MessageHandlerError, MessageParseError, MessageTimeoutError, type Messa
 // DESERIALIZE MESSAGE
 // ============================================
 
-const deserializeEvent = (
-  msg: amqp.ConsumeMessage
-): Effect.Effect<DomainEvent, MessageParseError> =>
-  Effect.try({
+const deserializeEvent = (msg: amqp.ConsumeMessage): Effect<DomainEvent, MessageParseError> =>
+  trySync({
     try: () => {
       const content = msg.content.toString()
       const parsed = JSON.parse(content)
@@ -48,15 +63,14 @@ const deserializeEvent = (
 // ============================================
 
 export const helloWorldHandler: MessageHandler = (event) =>
-  Effect.gen(function* () {
-    yield* Effect.logInfo('Hello from consumer! Event received').pipe(
-      Effect.annotateLogs({
+  gen(function* () {
+    yield* logInfo('Hello from consumer! Event received')
+      .pipe(annotateLogs({
         eventType: event._tag,
         productId: event.productId,
         correlationId: event.correlationId,
       }),
-      Effect.withLogSpan('consumer.helloWorld')
-    )
+      withLogSpan('consumer.helloWorld'))
   })
 
 // ============================================
@@ -68,69 +82,65 @@ export const startConsumer = <E extends DomainEvent, R>(
   consumerName: string,
   handler: MessageHandler<E, R>
 ) =>
-  Effect.gen(function* () {
+  gen(function* () {
     const { channel } = yield* RabbitMQConnection
     const config = yield* RabbitMQConfig
-    const runtime = yield* Effect.runtime<R>()
+    const runtime = yield* runtimeEffect<R>()
     const runFork = Runtime.runFork(runtime)
     const queues = buildQueueNames(consumerName)
 
-    yield* Effect.sync(() => {
+    yield* sync(() => {
       channel.consume(
         queues.main,
         async (msg) => {
           if (!msg) return
 
           const fiber = runFork(
-            Effect.gen(function* () {
+            gen(function* () {
               const event = yield* deserializeEvent(msg)
               const retryCount = getRetryCount(msg, queues.retry)
 
-              yield* Effect.logDebug('Processing message').pipe(
-                Effect.annotateLogs({
+              yield* logDebug('Processing message')
+                .pipe(annotateLogs({
                   retryCount,
                   maxAttempts: config.retry.maxAttempts,
-                })
-              )
+                }))
 
-              const handleWithTimeout = handler(event as E).pipe(
-                Effect.timeoutFail({
+              const handleWithTimeout = handler(event as E)
+                .pipe(timeoutFail({
                   duration: Duration.millis(config.handlerTimeoutMs),
                   onTimeout: () =>
                     new MessageTimeoutError({
                       event,
                       timeoutMs: config.handlerTimeoutMs,
                     }),
-                })
-              )
+                }))
 
-              yield* handleWithTimeout.pipe(
-                Effect.matchEffect({
-                  onSuccess: () => Effect.sync(() => channel.ack(msg)),
+              yield* handleWithTimeout
+                .pipe(matchEffect({
+                  onSuccess: () => sync(() => channel.ack(msg)),
                   onFailure: (error) =>
-                    Effect.gen(function* () {
+                    gen(function* () {
                       const errorMessage =
                         error._tag === 'MessageTimeoutError'
                           ? `Handler timeout after ${error.timeoutMs}ms`
                           : String(error.cause)
 
-                      yield* Effect.logWarning('Handler failed').pipe(
-                        Effect.annotateLogs({
+                      yield* logWarning('Handler failed')
+                        .pipe(annotateLogs({
                           error: errorMessage,
                           errorType: error._tag,
                           retryCount,
-                        })
-                      )
+                        }))
 
                       if (retryCount >= config.retry.maxAttempts - 1) {
                         // Max retries reached → send to DLQ
-                        yield* Effect.logError('Max retries reached, sending to DLQ').pipe(
-                          Effect.annotateLogs({
+                        yield* logError('Max retries reached, sending to DLQ')
+                          .pipe(annotateLogs({
                             queue: queues.dlq,
-                          })
-                        )
+                          }))
                         // Reject without requeue → goes to DLX → DLQ
-                        yield* Effect.sync(() => channel.nack(msg, false, false))
+                        yield* sync(() => channel.nack(msg, false, false))
                       } else {
                         // Retry with exponential backoff
                         const delay = calculateDelay(
@@ -139,16 +149,15 @@ export const startConsumer = <E extends DomainEvent, R>(
                           config.retry.multiplier
                         )
 
-                        yield* Effect.logInfo('Scheduling retry').pipe(
-                          Effect.annotateLogs({
+                        yield* logInfo('Scheduling retry')
+                          .pipe(annotateLogs({
                             nextRetryIn: `${delay}ms`,
                             attempt: retryCount + 2,
                             maxAttempts: config.retry.maxAttempts,
-                          })
-                        )
+                          }))
 
                         // Publish to retry queue with TTL
-                        yield* Effect.sync(() => {
+                        yield* sync(() => {
                           channel.publish(
                             '', // Default exchange
                             queues.retry,
@@ -166,34 +175,31 @@ export const startConsumer = <E extends DomainEvent, R>(
                         })
                       }
                     }),
-                })
-              )
-            }).pipe(
-              Effect.catchAll((parseError) =>
-                Effect.gen(function* () {
-                  yield* Effect.logError('Failed to parse message').pipe(
-                    Effect.annotateLogs({ error: String(parseError) })
-                  )
+                }))
+            })
+              .pipe(catchAll((error) =>
+                gen(function* () {
+                  yield* logError('Failed to parse message')
+                    .pipe(annotateLogs({ error: String(error) }))
                   // Invalid message → send to DLQ directly
                   channel.nack(msg, false, false)
                 })
-              )
-            )
+              ))
           )
 
-          await Fiber.await(fiber).pipe(Effect.runPromise)
+          await Fiber.await(fiber)
+            .pipe(runPromise)
         },
         { noAck: false }
       )
     })
 
-    yield* Effect.logInfo('Consumer started').pipe(
-      Effect.annotateLogs({
-        consumer: consumerName,
-        queue: queues.main,
-        maxRetries: config.retry.maxAttempts,
-        handlerTimeoutMs: config.handlerTimeoutMs,
-      }),
-      Effect.withLogSpan('consumer.start')
-    )
+    yield* logInfo('Consumer started')
+      .pipe(annotateLogs({
+          consumer: consumerName,
+          queue: queues.main,
+          maxRetries: config.retry.maxAttempts,
+          handlerTimeoutMs: config.handlerTimeoutMs,
+        }))
+      .pipe(withLogSpan('consumer.start'))
   })

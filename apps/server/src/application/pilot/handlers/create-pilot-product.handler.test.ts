@@ -3,7 +3,7 @@
 // INTEGRATION TESTS: Tests the full handler flow with TestLayer.
 // Uses real in-memory repository, deterministic IDs, fixed clock, and spy publisher.
 
-import { Effect } from 'effect'
+import { runPromise, provide, either } from 'effect/Effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -64,8 +64,9 @@ describe('handlePilotProductCreation', () => {
     it('creates a product with deterministic ID', async () => {
       const command = buildCommand()
 
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductCreation(command)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.id).toBe('test-product-1')
@@ -75,8 +76,9 @@ describe('handlePilotProductCreation', () => {
     it('creates product with correct timestamps from fixed clock', async () => {
       const command = buildCommand()
 
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductCreation(command)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.createdAt).toEqual(TEST_DATE)
@@ -86,8 +88,9 @@ describe('handlePilotProductCreation', () => {
     it('creates variants as value objects with correct sizes', async () => {
       const command = buildCommand()
 
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductCreation(command)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.variants).toHaveLength(2)
@@ -100,8 +103,9 @@ describe('handlePilotProductCreation', () => {
     it('initializes syncStatus as NotSynced', async () => {
       const command = buildCommand()
 
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductCreation(command)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.syncStatus._tag).toBe('NotSynced')
@@ -110,8 +114,9 @@ describe('handlePilotProductCreation', () => {
     it('structures views correctly', async () => {
       const command = buildCommand()
 
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductCreation(command)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.views.front.viewType).toBe(ViewType.FRONT)
@@ -132,8 +137,9 @@ describe('handlePilotProductCreation', () => {
       }
       const command = buildCommand(dataWithCustom)
 
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductCreation(command)
+          .pipe(provide(testCtx.layer))
       )
 
       expect(result.variants[0]._tag).toBe('CustomVariant')
@@ -149,9 +155,8 @@ describe('handlePilotProductCreation', () => {
     it('does NOT emit event for DRAFT status', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.DRAFT })
 
-      await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(command)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(0)
     })
@@ -159,9 +164,8 @@ describe('handlePilotProductCreation', () => {
     it('emits PilotProductPublished for PUBLISHED status', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
-      await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(command)
+        .pipe(provide(testCtx.layer)))
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(1)
       expect(testCtx.eventSpy.lastEvent?._tag).toBe('PilotProductPublished')
@@ -170,9 +174,8 @@ describe('handlePilotProductCreation', () => {
     it('includes product and correlation info in event', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
-      await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.provide(testCtx.layer))
-      )
+      await runPromise(handlePilotProductCreation(command)
+        .pipe(provide(testCtx.layer)))
 
       const event = testCtx.eventSpy.lastEvent
       expect(event?.productId).toBe('test-product-1')
@@ -186,8 +189,9 @@ describe('handlePilotProductCreation', () => {
     it('propagates ValidationError from invalid input', async () => {
       const command = buildCommand({ ...validProductData, label: '   ' })
 
-      const result = await Effect.runPromise(
-        handlePilotProductCreation(command).pipe(Effect.either, Effect.provide(testCtx.layer))
+      const result = await runPromise(
+        handlePilotProductCreation(command)
+          .pipe(either, provide(testCtx.layer))
       )
 
       expect(result._tag).toBe('Left')

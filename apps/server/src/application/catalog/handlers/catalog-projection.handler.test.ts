@@ -3,7 +3,8 @@
 // INTEGRATION TESTS: Tests the catalog projection handler flow.
 // Uses real in-memory catalog repository and spy for verification.
 
-import { Effect, Layer } from 'effect'
+import { Layer } from 'effect'
+import { runPromise, provide, gen } from 'effect/Effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -102,16 +103,18 @@ describe('catalogProjectionHandler', () => {
       const product = createPilotProduct()
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(catalogProjectionHandler(event).pipe(Effect.provide(testLayer)))
+      await runPromise(catalogProjectionHandler(event)
+        .pipe(provide(testLayer)))
 
       // Verify product was saved
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* CatalogProductRepository
-        }).pipe(Effect.provide(testLayer))
+        })
+          .pipe(provide(testLayer))
       )
 
-      const saved = await Effect.runPromise(repo.findById(product.id))
+      const saved = await runPromise(repo.findById(product.id))
 
       expect(saved._tag).toBe('Some')
       if (saved._tag === 'Some') {
@@ -125,15 +128,17 @@ describe('catalogProjectionHandler', () => {
       const product = createPilotProduct()
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(catalogProjectionHandler(event).pipe(Effect.provide(testLayer)))
+      await runPromise(catalogProjectionHandler(event)
+        .pipe(provide(testLayer)))
 
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* CatalogProductRepository
-        }).pipe(Effect.provide(testLayer))
+        })
+          .pipe(provide(testLayer))
       )
 
-      const saved = await Effect.runPromise(repo.findById(product.id))
+      const saved = await runPromise(repo.findById(product.id))
 
       if (saved._tag === 'Some') {
         expect(saved.value.images.front).toBe('https://cdn.example.com/front.jpg')
@@ -146,15 +151,17 @@ describe('catalogProjectionHandler', () => {
       const product = createPilotProduct()
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(catalogProjectionHandler(event).pipe(Effect.provide(testLayer)))
+      await runPromise(catalogProjectionHandler(event)
+        .pipe(provide(testLayer)))
 
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* CatalogProductRepository
-        }).pipe(Effect.provide(testLayer))
+        })
+          .pipe(provide(testLayer))
       )
 
-      const saved = await Effect.runPromise(repo.findById(product.id))
+      const saved = await runPromise(repo.findById(product.id))
 
       if (saved._tag === 'Some') {
         expect(saved.value.variants).toHaveLength(2)
@@ -182,15 +189,17 @@ describe('catalogProjectionHandler', () => {
       })
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(catalogProjectionHandler(event).pipe(Effect.provide(testLayer)))
+      await runPromise(catalogProjectionHandler(event)
+        .pipe(provide(testLayer)))
 
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* CatalogProductRepository
-        }).pipe(Effect.provide(testLayer))
+        })
+          .pipe(provide(testLayer))
       )
 
-      const saved = await Effect.runPromise(repo.findById(product.id))
+      const saved = await runPromise(repo.findById(product.id))
 
       if (saved._tag === 'Some') {
         const firstVariant = saved.value.variants[0]
@@ -215,15 +224,17 @@ describe('catalogProjectionHandler', () => {
         timestamp: customTimestamp,
       })
 
-      await Effect.runPromise(catalogProjectionHandler(event).pipe(Effect.provide(testLayer)))
+      await runPromise(catalogProjectionHandler(event)
+        .pipe(provide(testLayer)))
 
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* CatalogProductRepository
-        }).pipe(Effect.provide(testLayer))
+        })
+          .pipe(provide(testLayer))
       )
 
-      const saved = await Effect.runPromise(repo.findById(product.id))
+      const saved = await runPromise(repo.findById(product.id))
 
       if (saved._tag === 'Some') {
         expect(saved.value.publishedAt).toEqual(customTimestamp)
@@ -237,9 +248,8 @@ describe('catalogProjectionHandler', () => {
       const publishedEvent = buildPublishedEvent(product)
 
       // First publish
-      await Effect.runPromise(
-        catalogProjectionHandler(publishedEvent).pipe(Effect.provide(testLayer))
-      )
+      await runPromise(catalogProjectionHandler(publishedEvent)
+        .pipe(provide(testLayer)))
 
       // Then update with new label
       const updatedProduct = createPilotProduct({
@@ -247,17 +257,17 @@ describe('catalogProjectionHandler', () => {
       })
       const updatedEvent = buildUpdatedEvent(updatedProduct)
 
-      await Effect.runPromise(
-        catalogProjectionHandler(updatedEvent).pipe(Effect.provide(testLayer))
-      )
+      await runPromise(catalogProjectionHandler(updatedEvent)
+        .pipe(provide(testLayer)))
 
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* CatalogProductRepository
-        }).pipe(Effect.provide(testLayer))
+        })
+          .pipe(provide(testLayer))
       )
 
-      const saved = await Effect.runPromise(repo.findById(product.id))
+      const saved = await runPromise(repo.findById(product.id))
 
       if (saved._tag === 'Some') {
         expect(saved.value.label).toBe('Updated Label')
@@ -279,15 +289,17 @@ describe('catalogProjectionHandler', () => {
       })
       const event = buildPublishedEvent(product)
 
-      await Effect.runPromise(catalogProjectionHandler(event).pipe(Effect.provide(testLayer)))
+      await runPromise(catalogProjectionHandler(event)
+        .pipe(provide(testLayer)))
 
-      const repo = await Effect.runPromise(
-        Effect.gen(function* () {
+      const repo = await runPromise(
+        gen(function* () {
           return yield* CatalogProductRepository
-        }).pipe(Effect.provide(testLayer))
+        })
+          .pipe(provide(testLayer))
       )
 
-      const saved = await Effect.runPromise(repo.findById(product.id))
+      const saved = await runPromise(repo.findById(product.id))
 
       if (saved._tag === 'Some') {
         expect(saved.value.images.gallery).toHaveLength(0)

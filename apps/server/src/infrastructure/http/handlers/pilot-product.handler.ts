@@ -51,9 +51,8 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
             (error) => toProblemDetail(error, errorCtx)
           )
 
-          yield* logInfo('Pilot product created successfully').pipe(
-            annotateLogs({ productId: product.id })
-          )
+          yield* logInfo('Pilot product created successfully')
+            .pipe(annotateLogs({ productId: product.id }))
 
           return toResponse(product)
         })
@@ -80,9 +79,8 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
             (error) => toUpdateProblemDetail(error, errorCtx)
           )
 
-          yield* logInfo('Pilot product updated successfully').pipe(
-            annotateLogs({ productId: product.id })
-          )
+          yield* logInfo('Pilot product updated successfully')
+            .pipe(annotateLogs({ productId: product.id }))
 
           return toResponse(product)
         })

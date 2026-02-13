@@ -1,6 +1,7 @@
 // src/infrastructure/persistence/in-memory/generic.repository.ts
 
-import { Effect, Option } from 'effect'
+import { Option } from 'effect'
+import { type Effect, try as trySync } from 'effect/Effect'
 
 import { PersistenceError } from '../../../ports/driven'
 
@@ -9,10 +10,10 @@ import { PersistenceError } from '../../../ports/driven'
 // ============================================
 
 export interface InMemoryRepository<T, Id extends string> {
-  readonly save: (entity: T) => Effect.Effect<T, PersistenceError>
-  readonly findById: (id: Id) => Effect.Effect<Option.Option<T>, PersistenceError>
-  readonly update: (entity: T) => Effect.Effect<T, PersistenceError>
-  readonly upsert: (entity: T) => Effect.Effect<T, PersistenceError>
+  readonly save: (entity: T) => Effect<T, PersistenceError>
+  readonly findById: (id: Id) => Effect<Option.Option<T>, PersistenceError>
+  readonly update: (entity: T) => Effect<T, PersistenceError>
+  readonly upsert: (entity: T) => Effect<T, PersistenceError>
 }
 
 export const createInMemoryRepository = <T, Id extends string>(
@@ -22,7 +23,7 @@ export const createInMemoryRepository = <T, Id extends string>(
 
   return {
     save: (entity) =>
-      Effect.try({
+      trySync({
         try: () => {
           store.set(getId(entity), entity)
           return entity
@@ -31,7 +32,7 @@ export const createInMemoryRepository = <T, Id extends string>(
       }),
 
     findById: (id) =>
-      Effect.try({
+      trySync({
         try: () => {
           const entity = store.get(id)
           return entity ? Option.some(entity) : Option.none()
@@ -40,7 +41,7 @@ export const createInMemoryRepository = <T, Id extends string>(
       }),
 
     update: (entity) =>
-      Effect.try({
+      trySync({
         try: () => {
           store.set(getId(entity), entity)
           return entity
@@ -49,7 +50,7 @@ export const createInMemoryRepository = <T, Id extends string>(
       }),
 
     upsert: (entity) =>
-      Effect.try({
+      trySync({
         try: () => {
           store.set(getId(entity), entity)
           return entity

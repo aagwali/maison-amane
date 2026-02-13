@@ -8,13 +8,13 @@ import { Cause, FiberId, HashMap, List, Logger, LogLevel } from 'effect'
 // ============================================
 
 const logLevelToString = (level: LogLevel.LogLevel): string => {
-  if (level === LogLevel.Trace) return "trace"
-  if (level === LogLevel.Debug) return "debug"
-  if (level === LogLevel.Info) return "info"
-  if (level === LogLevel.Warning) return "warn"
-  if (level === LogLevel.Error) return "error"
-  if (level === LogLevel.Fatal) return "fatal"
-  return "info"
+  if (level === LogLevel.Trace) return 'trace'
+  if (level === LogLevel.Debug) return 'debug'
+  if (level === LogLevel.Info) return 'info'
+  if (level === LogLevel.Warning) return 'warn'
+  if (level === LogLevel.Error) return 'error'
+  if (level === LogLevel.Fatal) return 'fatal'
+  return 'info'
 }
 
 const formatCause = (cause: Cause.Cause<unknown>): string | undefined => {
@@ -23,10 +23,10 @@ const formatCause = (cause: Cause.Cause<unknown>): string | undefined => {
 }
 
 const formatFiberId = (fiberId: FiberId.FiberId): string => {
-  if (fiberId._tag === "None") return "none"
-  if (fiberId._tag === "Runtime") return `${fiberId.id}-${fiberId.startTimeMillis}`
-  if (fiberId._tag === "Composite") return "composite"
-  return "unknown"
+  if (fiberId._tag === 'None') return 'none'
+  if (fiberId._tag === 'Runtime') return `${fiberId.id}-${fiberId.startTimeMillis}`
+  if (fiberId._tag === 'Composite') return 'composite'
+  return 'unknown'
 }
 
 export const JsonLogger = Logger.make<unknown, void>(
@@ -45,10 +45,10 @@ export const JsonLogger = Logger.make<unknown, void>(
     })
 
     const logEntry: Record<string, unknown> = {
-      "@timestamp": date.toISOString(),
+      '@timestamp': date.toISOString(),
       level: logLevelToString(logLevel),
-      message: typeof message === "string" ? message : JSON.stringify(message),
-      service: "maison-amane",
+      message: typeof message === 'string' ? message : JSON.stringify(message),
+      service: 'maison-amane',
       fiberId: formatFiberId(fiberId),
     }
 

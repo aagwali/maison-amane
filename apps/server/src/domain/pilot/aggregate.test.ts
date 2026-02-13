@@ -3,7 +3,7 @@
 // UNIT TESTS: Pure aggregate methods, no Effect Layer needed.
 // Tests state transitions, sync status methods, and policies.
 
-import { Effect } from 'effect'
+import { runPromise, either } from 'effect/Effect'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -77,7 +77,7 @@ describe('publish', () => {
   it('transitions DRAFT product to PUBLISHED', async () => {
     const product = createProduct({ status: ProductStatus.DRAFT })
 
-    const result = await Effect.runPromise(publish(product, now))
+    const result = await runPromise(publish(product, now))
 
     expect(result.status).toBe(ProductStatus.PUBLISHED)
     expect(result.updatedAt).toEqual(now)
@@ -86,7 +86,7 @@ describe('publish', () => {
   it('rejects publishing an already PUBLISHED product', async () => {
     const product = createProduct({ status: ProductStatus.PUBLISHED })
 
-    const result = await Effect.runPromise(Effect.either(publish(product, now)))
+    const result = await runPromise(either(publish(product, now)))
 
     expect(result._tag).toBe('Left')
     if (result._tag === 'Left') {
@@ -98,7 +98,7 @@ describe('publish', () => {
   it('rejects publishing an ARCHIVED product', async () => {
     const product = createProduct({ status: ProductStatus.ARCHIVED })
 
-    const result = await Effect.runPromise(Effect.either(publish(product, now)))
+    const result = await runPromise(either(publish(product, now)))
 
     expect(result._tag).toBe('Left')
     if (result._tag === 'Left') {
@@ -116,7 +116,7 @@ describe('archive', () => {
   it('transitions DRAFT product to ARCHIVED', async () => {
     const product = createProduct({ status: ProductStatus.DRAFT })
 
-    const result = await Effect.runPromise(archive(product, now))
+    const result = await runPromise(archive(product, now))
 
     expect(result.status).toBe(ProductStatus.ARCHIVED)
     expect(result.updatedAt).toEqual(now)
@@ -125,7 +125,7 @@ describe('archive', () => {
   it('transitions PUBLISHED product to ARCHIVED', async () => {
     const product = createProduct({ status: ProductStatus.PUBLISHED })
 
-    const result = await Effect.runPromise(archive(product, now))
+    const result = await runPromise(archive(product, now))
 
     expect(result.status).toBe(ProductStatus.ARCHIVED)
   })
@@ -133,7 +133,7 @@ describe('archive', () => {
   it('rejects archiving an already ARCHIVED product', async () => {
     const product = createProduct({ status: ProductStatus.ARCHIVED })
 
-    const result = await Effect.runPromise(Effect.either(archive(product, now)))
+    const result = await runPromise(either(archive(product, now)))
 
     expect(result._tag).toBe('Left')
     if (result._tag === 'Left') {

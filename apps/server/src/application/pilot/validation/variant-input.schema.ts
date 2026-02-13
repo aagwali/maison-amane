@@ -1,6 +1,6 @@
 // src/application/pilot/validation/variant-input.schema.ts
 
-import { Effect } from 'effect'
+import { mapError } from 'effect/Effect'
 import * as ParseResult from 'effect/ParseResult'
 import * as S from 'effect/Schema'
 
@@ -22,7 +22,7 @@ const UnvalidatedVariantSchema = S.Struct({
     S.Struct({
       width: S.Number,
       length: S.Number,
-    }),
+    })
   ),
   price: S.optional(S.Number),
 })
@@ -34,14 +34,14 @@ type UnvalidatedVariant = typeof UnvalidatedVariantSchema.Type
 // ============================================
 
 const CustomVariantTargetSchema = S.Struct({
-  _tag: S.Literal("CustomVariant"),
+  _tag: S.Literal('CustomVariant'),
   size: S.Literal(Size.CUSTOM),
   customDimensions: CustomDimensionSchema,
   price: PriceSchema,
 })
 
 const StandardVariantTargetSchema = S.Struct({
-  _tag: S.Literal("StandardVariant"),
+  _tag: S.Literal('StandardVariant'),
   size: S.Literal(Size.REGULAR, Size.LARGE),
 })
 
@@ -49,30 +49,30 @@ const StandardVariantTargetSchema = S.Struct({
 // TRANSFORMATION: Unvalidated → Validated
 // ============================================
 
-export const ValidatedVariantSchema: S.Schema<VariantBase, UnvalidatedVariant> =
-  S.transformOrFail(UnvalidatedVariantSchema, S.typeSchema(VariantBaseSchema), {
+export const ValidatedVariantSchema: S.Schema<VariantBase, UnvalidatedVariant> = S.transformOrFail(
+  UnvalidatedVariantSchema,
+  S.typeSchema(VariantBaseSchema),
+  {
     strict: true,
     decode: (input) => {
       if (input.size === Size.CUSTOM) {
         return S.decodeUnknown(CustomVariantTargetSchema)({
-          _tag: "CustomVariant",
+          _tag: 'CustomVariant',
           size: input.size,
           customDimensions: input.customDimensions,
           price: input.price,
-        }).pipe(
-          Effect.mapError((e) => e.issue)
-        )
+        })
+          .pipe(mapError((e) => e.issue))
       }
 
       return S.decodeUnknown(StandardVariantTargetSchema)({
-        _tag: "StandardVariant",
+        _tag: 'StandardVariant',
         size: input.size,
-      }).pipe(
-        Effect.mapError((e) => e.issue)
-      )
+      })
+        .pipe(mapError((e) => e.issue))
     },
     encode: (validated) => {
-      if (validated._tag === "CustomVariant") {
+      if (validated._tag === 'CustomVariant') {
         return ParseResult.succeed({
           size: validated.size,
           customDimensions: validated.customDimensions,
@@ -83,6 +83,7 @@ export const ValidatedVariantSchema: S.Schema<VariantBase, UnvalidatedVariant> =
         size: validated.size,
       })
     },
-  })
+  }
+)
 
 export type ValidatedVariant = VariantBase

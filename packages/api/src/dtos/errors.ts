@@ -2,10 +2,7 @@
 
 import { Schema as S } from 'effect'
 
-import {
-  CustomExtensionFields,
-  ProblemDetailFields,
-} from '../errors/problem-detail'
+import { CustomExtensionFields, ProblemDetailFields } from '../errors/problem-detail'
 
 // ============================================
 // API ERROR RESPONSES - RFC 7807 COMPLIANT
@@ -35,14 +32,11 @@ const withStatus = <N extends number>(status: N) => ({
 // VALIDATION ERROR RESPONSE (400)
 // --------------------------------------------
 
-export class ApiValidationError extends S.TaggedClass<ApiValidationError>()(
-  'ApiValidationError',
-  {
-    ...withStatus(HttpStatus.BAD_REQUEST),
-    ...CustomExtensionFields,
-    errors: S.Array(S.String),
-  }
-) {
+export class ApiValidationError extends S.TaggedClass<ApiValidationError>()('ApiValidationError', {
+  ...withStatus(HttpStatus.BAD_REQUEST),
+  ...CustomExtensionFields,
+  errors: S.Array(S.String),
+}) {
   static readonly status = HttpStatus.BAD_REQUEST
 }
 
@@ -64,15 +58,12 @@ export class ApiPersistenceError extends S.TaggedClass<ApiPersistenceError>()(
 // NOT FOUND ERROR RESPONSE (404)
 // --------------------------------------------
 
-export class ApiNotFoundError extends S.TaggedClass<ApiNotFoundError>()(
-  'ApiNotFoundError',
-  {
-    ...withStatus(HttpStatus.NOT_FOUND),
-    ...CustomExtensionFields,
-    resource: S.String,
-    resourceId: S.String,
-  }
-) {
+export class ApiNotFoundError extends S.TaggedClass<ApiNotFoundError>()('ApiNotFoundError', {
+  ...withStatus(HttpStatus.NOT_FOUND),
+  ...CustomExtensionFields,
+  resource: S.String,
+  resourceId: S.String,
+}) {
   static readonly status = HttpStatus.NOT_FOUND
 }
 
@@ -80,12 +71,9 @@ export class ApiNotFoundError extends S.TaggedClass<ApiNotFoundError>()(
 // INTERNAL ERROR RESPONSE (500)
 // --------------------------------------------
 
-export class ApiInternalError extends S.TaggedClass<ApiInternalError>()(
-  'ApiInternalError',
-  {
-    ...withStatus(HttpStatus.INTERNAL_SERVER_ERROR),
-    ...CustomExtensionFields,
-  }
-) {
+export class ApiInternalError extends S.TaggedClass<ApiInternalError>()('ApiInternalError', {
+  ...withStatus(HttpStatus.INTERNAL_SERVER_ERROR),
+  ...CustomExtensionFields,
+}) {
   static readonly status = HttpStatus.INTERNAL_SERVER_ERROR
 }

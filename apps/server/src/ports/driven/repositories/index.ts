@@ -3,9 +3,9 @@
 export {
   PilotProductRepository,
   type PilotProductRepositoryService,
-} from "./pilot-product.repository"
+} from './pilot-product.repository'
 
 export {
   CatalogProductRepository,
   type CatalogProductRepositoryService,
-} from "./catalog-product.repository"
+} from './catalog-product.repository'
