@@ -13,6 +13,7 @@ import { PilotProductSchema } from './aggregate'
 // ============================================
 
 const PilotProductPublishedSchema = S.TaggedStruct('PilotProductPublished', {
+  _version: S.Literal(1),
   productId: ProductIdSchema,
   product: PilotProductSchema,
   correlationId: CorrelationIdSchema,
@@ -23,15 +24,16 @@ const PilotProductPublishedSchema = S.TaggedStruct('PilotProductPublished', {
 export type PilotProductPublished = typeof PilotProductPublishedSchema.Type
 
 export const makePilotProductPublished = (
-  params: Omit<PilotProductPublished, '_tag'>
+  params: Omit<PilotProductPublished, '_tag' | '_version'>
 ): PilotProductPublished =>
-  Data.case<PilotProductPublished>()({ _tag: 'PilotProductPublished', ...params })
+  Data.case<PilotProductPublished>()({ _tag: 'PilotProductPublished', _version: 1, ...params })
 
 // ============================================
 // PILOT PRODUCT UPDATED
 // ============================================
 
 const PilotProductUpdatedSchema = S.TaggedStruct('PilotProductUpdated', {
+  _version: S.Literal(1),
   productId: ProductIdSchema,
   product: PilotProductSchema,
   correlationId: CorrelationIdSchema,
@@ -42,9 +44,9 @@ const PilotProductUpdatedSchema = S.TaggedStruct('PilotProductUpdated', {
 export type PilotProductUpdated = typeof PilotProductUpdatedSchema.Type
 
 export const makePilotProductUpdated = (
-  params: Omit<PilotProductUpdated, '_tag'>
+  params: Omit<PilotProductUpdated, '_tag' | '_version'>
 ): PilotProductUpdated =>
-  Data.case<PilotProductUpdated>()({ _tag: 'PilotProductUpdated', ...params })
+  Data.case<PilotProductUpdated>()({ _tag: 'PilotProductUpdated', _version: 1, ...params })
 
 // ============================================
 // DOMAIN EVENTS UNION

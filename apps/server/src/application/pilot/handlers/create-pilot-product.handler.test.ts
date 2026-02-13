@@ -178,6 +178,7 @@ describe('handlePilotProductCreation', () => {
       expect(event?.productId).toBe('test-product-1')
       expect(event?.correlationId).toBe('test-correlation-id')
       expect(event?.userId).toBe('test-user')
+      expect(event?._version).toBe(1)
     })
   })
 

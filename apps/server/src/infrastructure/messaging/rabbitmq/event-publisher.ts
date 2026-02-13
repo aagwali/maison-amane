@@ -52,6 +52,7 @@ const createRabbitMQEventPublisher = Effect.gen(function* () {
               contentType: 'application/json',
               headers: {
                 eventType: event._tag,
+                eventVersion: event._version,
                 correlationId: event.correlationId,
                 userId: event.userId,
                 publishedAt: new Date().toISOString(),

@@ -29,6 +29,12 @@ const deserializeEvent = (
     try: () => {
       const content = msg.content.toString()
       const parsed = JSON.parse(content)
+
+      // Validation minimale de version
+      if (typeof parsed._version !== 'number') {
+        throw new Error(`Missing or invalid _version field in event: ${parsed._tag}`)
+      }
+
       return {
         ...parsed,
         timestamp: new Date(parsed.timestamp),
