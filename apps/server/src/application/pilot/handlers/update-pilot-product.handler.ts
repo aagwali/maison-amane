@@ -1,7 +1,7 @@
 // src/application/pilot/handlers/update-pilot-product.handler.ts
 
 import { Option } from 'effect'
-import { type Effect, gen, fail } from 'effect/Effect'
+import { type Effect, gen } from 'effect/Effect'
 
 import {
   archive,
@@ -12,7 +12,6 @@ import {
   withUpdatedFields,
   type PilotProduct,
   type PilotProductUpdateError,
-  ProductNotFoundError,
 } from '../../../domain/pilot'
 import { Clock, EventPublisher, PilotProductRepository } from '../../../ports/driven'
 import type { ArchiveNotAllowed, PublicationNotAllowed } from '../../../domain/pilot/errors'
@@ -32,13 +31,9 @@ export const handlePilotProductUpdate = (
     const validated = yield* validateUpdateData(command.data)
 
     const repo = yield* PilotProductRepository
-    const existingProduct = yield* repo.findById(command.productId)
+    const existingProduct = yield* repo.getById(command.productId)
 
-    if (Option.isNone(existingProduct)) {
-      return yield* fail(new ProductNotFoundError({ productId: command.productId }))
-    }
-
-    const updatedProduct = yield* applyUpdates(existingProduct.value, validated)
+    const updatedProduct = yield* applyUpdates(existingProduct, validated)
 
     const savedProduct = yield* repo.update(updatedProduct)
 

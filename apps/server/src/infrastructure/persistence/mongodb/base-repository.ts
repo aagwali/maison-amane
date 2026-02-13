@@ -3,7 +3,7 @@
 import type { Collection, Document } from 'mongodb'
 import { tryPromise, type Effect } from 'effect/Effect'
 import type { Option as OptionType } from 'effect/Option'
-import { Option } from 'effect'
+import { Effect as EffectModule, Option } from 'effect'
 
 import { PersistenceError } from '../../../ports/driven'
 
@@ -94,3 +94,35 @@ export const findDocumentById = <TDocument extends Document, TEntity>(
     const doc = await collection.findOne({ _id: id } as any)
     return doc ? Option.some(fromDocument(doc as TDocument)) : Option.none()
   })
+
+/**
+ * Generic getById operation for MongoDB
+ * Returns TEntity or fails with domain-specific NotFoundError
+ *
+ * Differs from findDocumentById:
+ * - Returns TEntity directly (not Option<TEntity>)
+ * - Fails with provided notFoundError if document doesn't exist
+ * - Use when entity MUST exist (updates, deletions)
+ *
+ * @param collection MongoDB collection
+ * @param id Document ID to find
+ * @param fromDocument Mapper function from MongoDB document to domain entity
+ * @param notFoundError Factory function creating domain-specific error
+ */
+export const getDocumentById = <
+  TDocument extends Document,
+  TEntity,
+  TError extends { readonly _tag: string },
+>(
+  collection: Collection<TDocument>,
+  id: string,
+  fromDocument: (doc: TDocument) => TEntity,
+  notFoundError: (id: string) => TError
+): Effect<TEntity, PersistenceError | TError> =>
+  findDocumentById(collection, id, fromDocument)
+    .pipe(EffectModule.flatMap(
+      Option.match({
+        onNone: () => EffectModule.fail(notFoundError(id)),
+        onSome: (entity) => EffectModule.succeed(entity),
+      })
+    ))

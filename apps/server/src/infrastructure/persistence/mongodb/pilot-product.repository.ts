@@ -6,9 +6,15 @@ import {
   PilotProductRepository as PilotProductRepositoryTag,
   type PilotProductRepositoryService,
 } from '../../../ports/driven'
+import { ProductNotFoundError } from '../../../domain/pilot'
 
 import { fromDocument, type PilotProductDocument, toDocument } from './mappers'
-import { findDocumentById, insertDocument, replaceDocument } from './base-repository'
+import {
+  findDocumentById,
+  getDocumentById,
+  insertDocument,
+  replaceDocument,
+} from './base-repository'
 import { createRepositoryLayer } from './repository-layer-factory'
 
 // ============================================
@@ -28,6 +34,14 @@ export const createMongodbPilotProductRepository = (db: Db): PilotProductReposit
     },
 
     findById: (id) => findDocumentById(collection, id, fromDocument),
+
+    getById: (id) =>
+      getDocumentById(
+        collection,
+        id,
+        fromDocument,
+        (productId) => new ProductNotFoundError({ productId })
+      ),
 
     update: (product) => {
       const doc = toDocument(product)

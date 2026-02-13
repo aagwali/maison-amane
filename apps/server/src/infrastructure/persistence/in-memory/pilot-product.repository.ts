@@ -2,8 +2,8 @@
 
 import { Layer } from 'effect'
 
-import { PilotProductRepository } from '../../../ports/driven'
-import type { PilotProduct } from '../../../domain/pilot'
+import { PilotProductRepository, type PilotProductRepositoryService } from '../../../ports/driven'
+import { ProductNotFoundError, type PilotProduct } from '../../../domain/pilot'
 
 import { createInMemoryRepository } from './generic.repository'
 
@@ -11,8 +11,16 @@ import { createInMemoryRepository } from './generic.repository'
 // IN-MEMORY PILOT PRODUCT REPOSITORY
 // ============================================
 
-export const createInMemoryPilotProductRepository = () =>
-  createInMemoryRepository<PilotProduct, string>((product) => product.id)
+export const createInMemoryPilotProductRepository = (): PilotProductRepositoryService => {
+  const baseRepo = createInMemoryRepository<PilotProduct, string>((product) => product.id)
+
+  return {
+    save: baseRepo.save,
+    findById: baseRepo.findById,
+    getById: (id) => baseRepo.getById(id, (productId) => new ProductNotFoundError({ productId })),
+    update: baseRepo.update,
+  }
+}
 
 export const InMemoryPilotProductRepositoryLive = Layer.succeed(
   PilotProductRepository,

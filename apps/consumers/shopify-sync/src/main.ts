@@ -41,9 +41,8 @@ const program = gen(function* () {
 
   const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLayer, RabbitMQConfigLive)
 
-  const PilotProductRepositoryLayer = MongodbPilotProductRepositoryLive.pipe(
-    Layer.provide(MongoDatabaseLive)
-  )
+  const PilotProductRepositoryLayer = MongodbPilotProductRepositoryLive
+    .pipe(Layer.provide(MongoDatabaseLive))
 
   const ShopifyClientLayer = FakeShopifyClientLive
 
@@ -71,7 +70,8 @@ const program = gen(function* () {
     )
 
     yield* never
-  }).pipe(provide(layers))
+  })
+    .pipe(provide(layers))
 })
 
 // ============================================

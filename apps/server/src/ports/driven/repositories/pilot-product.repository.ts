@@ -4,7 +4,7 @@ import { Context } from 'effect'
 import type { Effect } from 'effect/Effect'
 import type { Option } from 'effect/Option'
 
-import type { ProductId, PilotProduct } from '../../../domain/pilot'
+import type { ProductId, PilotProduct, ProductNotFoundError } from '../../../domain/pilot'
 
 import type { PersistenceError } from './errors'
 
@@ -18,6 +18,8 @@ export interface PilotProductRepositoryService {
   readonly update: (product: PilotProduct) => Effect<PilotProduct, PersistenceError>
 
   readonly findById: (id: ProductId) => Effect<Option<PilotProduct>, PersistenceError>
+
+  readonly getById: (id: ProductId) => Effect<PilotProduct, PersistenceError | ProductNotFoundError>
 }
 
 export class PilotProductRepository extends Context.Tag('PilotProductRepository')<

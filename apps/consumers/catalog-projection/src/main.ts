@@ -39,9 +39,8 @@ const program = gen(function* () {
 
   const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLayer, RabbitMQConfigLive)
 
-  const CatalogProductRepositoryLayer = MongodbCatalogProductRepositoryLive.pipe(
-    Layer.provide(MongoDatabaseLive)
-  )
+  const CatalogProductRepositoryLayer = MongodbCatalogProductRepositoryLive
+    .pipe(Layer.provide(MongoDatabaseLive))
 
   const layers = Layer.mergeAll(RabbitMQLayer, LoggerLive, CatalogProductRepositoryLayer)
 
@@ -61,7 +60,8 @@ const program = gen(function* () {
     )
 
     yield* never
-  }).pipe(provide(layers))
+  })
+    .pipe(provide(layers))
 })
 
 // ============================================
