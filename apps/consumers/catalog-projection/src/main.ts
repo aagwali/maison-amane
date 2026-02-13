@@ -1,4 +1,3 @@
-// src/main.ts
 // Catalog Projection Consumer - maintains read model for alternative UI
 
 import { Layer } from 'effect'
@@ -10,17 +9,16 @@ import {
   MongodbCatalogProductRepositoryLive,
   PrettyLogger,
   RabbitMQConfigLive,
-  RabbitMQConnectionLayer,
+  RabbitMQConnectionLive,
   startConsumer,
 } from '@maison-amane/server'
 import {
-  BootstrapConfig,
-  createLoggerLayer,
-  declareConsumerInfrastructure,
+  bootstrapConsumer,
+  createLoggerLive,
   EXCHANGES,
   ROUTING_KEYS,
 } from '@maison-amane/shared-kernel'
-import { logInfo, gen, provide, never } from 'effect/Effect'
+import { provide } from 'effect/Effect'
 
 // ============================================
 // CONSUMER IDENTITY
@@ -29,40 +27,30 @@ import { logInfo, gen, provide, never } from 'effect/Effect'
 const CONSUMER_NAME = 'catalog-projection'
 
 // ============================================
+// LAYERS
+// ============================================
+
+const LoggerLayer = createLoggerLive(PrettyLogger, JsonLogger)
+
+const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLive, RabbitMQConfigLive)
+
+const CatalogProductRepositoryLayer = MongodbCatalogProductRepositoryLive
+  .pipe(Layer.provide(MongoDatabaseLive))
+
+const layers = Layer.mergeAll(RabbitMQLayer, LoggerLayer, CatalogProductRepositoryLayer)
+
+// ============================================
 // MAIN PROGRAM
 // ============================================
 
-const program = gen(function* () {
-  const { nodeEnv, logLevel } = yield* BootstrapConfig
-
-  const LoggerLive = createLoggerLayer(nodeEnv !== 'production', logLevel, PrettyLogger, JsonLogger)
-
-  const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLayer, RabbitMQConfigLive)
-
-  const CatalogProductRepositoryLayer = MongodbCatalogProductRepositoryLive
-    .pipe(Layer.provide(MongoDatabaseLive))
-
-  const layers = Layer.mergeAll(RabbitMQLayer, LoggerLive, CatalogProductRepositoryLayer)
-
-  gen(function* () {
-    yield* logInfo(`Starting ${CONSUMER_NAME} consumer...`)
-
-    yield* declareConsumerInfrastructure({
-      queuePrefix: 'catalog-projection',
-      exchange: EXCHANGES.PILOT_EVENTS,
-      routingKeys: [ROUTING_KEYS.PRODUCT_PUBLISHED, ROUTING_KEYS.PRODUCT_UPDATED],
-    })
-
-    yield* startConsumer(CONSUMER_NAME, catalogProjectionHandler)
-
-    yield* logInfo(
-      `${CONSUMER_NAME} consumer ready - waiting for PilotProductPublished and PilotProductUpdated events...`
-    )
-
-    yield* never
-  })
-    .pipe(provide(layers))
+const program = bootstrapConsumer({
+  consumerName: CONSUMER_NAME,
+  queuePrefix: 'catalog-projection',
+  exchange: EXCHANGES.PILOT_EVENTS,
+  routingKeys: [ROUTING_KEYS.PILOT.PRODUCT_PUBLISHED, ROUTING_KEYS.PILOT.PRODUCT_UPDATED],
+  startConsumer: startConsumer(CONSUMER_NAME, catalogProjectionHandler),
 })
+  .pipe(provide(layers))
 
 // ============================================
 // RUN

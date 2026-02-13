@@ -14,9 +14,9 @@ import type { DomainEvent } from '../../../domain'
 const getRoutingKey = (event: DomainEvent): string => {
   switch (event._tag) {
     case 'PilotProductPublished':
-      return ROUTING_KEYS.PRODUCT_PUBLISHED
+      return ROUTING_KEYS.PILOT.PRODUCT_PUBLISHED
     case 'PilotProductUpdated':
-      return ROUTING_KEYS.PRODUCT_UPDATED
+      return ROUTING_KEYS.PILOT.PRODUCT_UPDATED
   }
 }
 

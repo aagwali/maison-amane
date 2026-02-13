@@ -6,7 +6,7 @@ import { Config } from 'effect'
 // APPLICATION CONFIGURATION (typed & validated)
 // ============================================
 // MongoDB → MongoConfigLive (@maison-amane/shared-kernel)
-// Logging → BootstrapConfig + createLoggerLayer (@maison-amane/shared-kernel)
+// Logging → createLoggerLive (@maison-amane/shared-kernel)
 
 export const AppConfig = Config.all({
   port: Config.number('PORT')

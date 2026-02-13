@@ -2,7 +2,7 @@
 
 import type * as amqp from 'amqplib'
 import { Context, Data } from 'effect'
-import { annotateLogs, gen, logInfo, tryPromise, type Effect } from 'effect/Effect'
+import { annotateLogs, gen, logInfo, never, tryPromise, type Effect } from 'effect/Effect'
 
 // ============================================
 // RABBITMQ CONNECTION SERVICE (Interface)
@@ -46,8 +46,10 @@ export const toDlxExchange = (exchange: string): string => `${exchange}.dlx`
 // ============================================
 
 export const ROUTING_KEYS = {
-  PRODUCT_PUBLISHED: 'product.published',
-  PRODUCT_UPDATED: 'product.updated',
+  PILOT: {
+    PRODUCT_PUBLISHED: 'product.published',
+    PRODUCT_UPDATED: 'product.updated',
+  },
 } as const
 
 // ============================================
@@ -74,7 +76,8 @@ export const declareExchange = (
       catch: (error) => new RabbitMQError({ cause: error, operation: 'declareExchange' }),
     })
 
-    yield* logInfo('RabbitMQ exchange declared').pipe(annotateLogs({ exchange, dlx }))
+    yield* logInfo('RabbitMQ exchange declared')
+      .pipe(annotateLogs({ exchange, dlx }))
   })
 
 // ============================================
@@ -150,11 +153,71 @@ export const declareConsumerInfrastructure = (
         }),
     })
 
-    yield* logInfo(`${queuePrefix} infrastructure declared`).pipe(
-      annotateLogs({
+    yield* logInfo(`${queuePrefix} infrastructure declared`)
+      .pipe(annotateLogs({
         queues: [mainName, retryName, dlqName].join(', '),
         exchange: mainExchange,
         dlx: dlxExchange,
-      })
-    )
+      }))
+  })
+
+// ============================================
+// CONSUMER BOOTSTRAP
+// ============================================
+
+/**
+ * Configuration for bootstrapping a consumer
+ */
+export interface ConsumerBootstrapConfig<R = never> {
+  consumerName: string
+  queuePrefix: string
+  exchange: string
+  routingKeys: readonly string[]
+  startConsumer: Effect<void, never, R>
+}
+
+/**
+ * Bootstraps a RabbitMQ consumer with standard lifecycle:
+ * - Logs startup
+ * - Declares infrastructure (queue, exchange, bindings)
+ * - Starts the consumer
+ * - Logs ready state
+ * - Runs forever (never completes)
+ *
+ * This function encapsulates the common pattern shared by all consumers.
+ *
+ * @param config - Consumer bootstrap configuration
+ * @returns Effect that runs the consumer forever
+ *
+ * @example
+ * ```typescript
+ * import { bootstrapConsumer, EXCHANGES, ROUTING_KEYS } from '@maison-amane/shared-kernel'
+ * import { startConsumer, catalogProjectionHandler } from '@maison-amane/server'
+ *
+ * const consumerLogic = bootstrapConsumer({
+ *   consumerName: 'catalog-projection',
+ *   queuePrefix: 'catalog-projection',
+ *   exchange: EXCHANGES.PILOT_EVENTS,
+ *   routingKeys: [ROUTING_KEYS.PRODUCT_PUBLISHED, ROUTING_KEYS.PRODUCT_UPDATED],
+ *   startConsumer: startConsumer('catalog-projection', catalogProjectionHandler),
+ * })
+ * ```
+ */
+export const bootstrapConsumer = <R>(
+  config: ConsumerBootstrapConfig<R>
+): Effect<void, RabbitMQError, R | RabbitMQConnection> =>
+  gen(function* () {
+    yield* logInfo(`Starting ${config.consumerName} consumer...`)
+
+    yield* declareConsumerInfrastructure({
+      queuePrefix: config.queuePrefix,
+      exchange: config.exchange,
+      routingKeys: config.routingKeys,
+    })
+
+    yield* config.startConsumer
+
+    yield* logInfo(`${config.consumerName} consumer ready - waiting for events...`)
+
+    yield* never
   })

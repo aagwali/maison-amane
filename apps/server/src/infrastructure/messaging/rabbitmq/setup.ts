@@ -5,7 +5,7 @@ import { provide } from 'effect/Effect'
 
 import { RabbitMQConfigLive } from '../../../composition/config'
 
-import { RabbitMQConnectionLayer } from './connection'
+import { RabbitMQConnectionLive } from './connection'
 import { helloWorldHandler, type MessageHandler, startConsumer } from './consumer'
 import { setupConsumerQueue, setupTopology } from './topology'
 
@@ -13,7 +13,7 @@ import { setupConsumerQueue, setupTopology } from './topology'
 // RABBITMQ FULL LAYER (connection + config)
 // ============================================
 
-export const RabbitMQLive = RabbitMQConnectionLayer
+export const RabbitMQLive = RabbitMQConnectionLive
   .pipe(Layer.provide(RabbitMQConfigLive))
 
 // ============================================

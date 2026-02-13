@@ -19,7 +19,7 @@ import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import { provideTestLayer, TEST_DATE } from '../../../test-utils'
 import { makePilotProductCreationCommand, type UnvalidatedProductData } from '../commands'
 
-import { handlePilotProductCreation } from './create-pilot-product.handler'
+import { pilotProductCreationHandler } from './create-pilot-product.handler'
 
 // ============================================
 // TEST FIXTURES
@@ -65,7 +65,7 @@ describe('handlePilotProductCreation', () => {
       const command = buildCommand()
 
       const result = await runPromise(
-        handlePilotProductCreation(command)
+        pilotProductCreationHandler(command)
           .pipe(provide(testCtx.layer))
       )
 
@@ -77,7 +77,7 @@ describe('handlePilotProductCreation', () => {
       const command = buildCommand()
 
       const result = await runPromise(
-        handlePilotProductCreation(command)
+        pilotProductCreationHandler(command)
           .pipe(provide(testCtx.layer))
       )
 
@@ -89,7 +89,7 @@ describe('handlePilotProductCreation', () => {
       const command = buildCommand()
 
       const result = await runPromise(
-        handlePilotProductCreation(command)
+        pilotProductCreationHandler(command)
           .pipe(provide(testCtx.layer))
       )
 
@@ -104,7 +104,7 @@ describe('handlePilotProductCreation', () => {
       const command = buildCommand()
 
       const result = await runPromise(
-        handlePilotProductCreation(command)
+        pilotProductCreationHandler(command)
           .pipe(provide(testCtx.layer))
       )
 
@@ -115,7 +115,7 @@ describe('handlePilotProductCreation', () => {
       const command = buildCommand()
 
       const result = await runPromise(
-        handlePilotProductCreation(command)
+        pilotProductCreationHandler(command)
           .pipe(provide(testCtx.layer))
       )
 
@@ -138,7 +138,7 @@ describe('handlePilotProductCreation', () => {
       const command = buildCommand(dataWithCustom)
 
       const result = await runPromise(
-        handlePilotProductCreation(command)
+        pilotProductCreationHandler(command)
           .pipe(provide(testCtx.layer))
       )
 
@@ -155,7 +155,7 @@ describe('handlePilotProductCreation', () => {
     it('does NOT emit event for DRAFT status', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.DRAFT })
 
-      await runPromise(handlePilotProductCreation(command)
+      await runPromise(pilotProductCreationHandler(command)
         .pipe(provide(testCtx.layer)))
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(0)
@@ -164,7 +164,7 @@ describe('handlePilotProductCreation', () => {
     it('emits PilotProductPublished for PUBLISHED status', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
-      await runPromise(handlePilotProductCreation(command)
+      await runPromise(pilotProductCreationHandler(command)
         .pipe(provide(testCtx.layer)))
 
       expect(testCtx.eventSpy.emittedEvents).toHaveLength(1)
@@ -174,7 +174,7 @@ describe('handlePilotProductCreation', () => {
     it('includes product and correlation info in event', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
-      await runPromise(handlePilotProductCreation(command)
+      await runPromise(pilotProductCreationHandler(command)
         .pipe(provide(testCtx.layer)))
 
       const event = testCtx.eventSpy.lastEvent
@@ -190,7 +190,7 @@ describe('handlePilotProductCreation', () => {
       const command = buildCommand({ ...validProductData, label: '   ' })
 
       const result = await runPromise(
-        handlePilotProductCreation(command)
+        pilotProductCreationHandler(command)
           .pipe(either, provide(testCtx.layer))
       )
 

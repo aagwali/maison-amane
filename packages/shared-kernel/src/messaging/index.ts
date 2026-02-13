@@ -11,7 +11,9 @@ export {
   ROUTING_KEYS,
   declareExchange,
   declareConsumerInfrastructure,
+  bootstrapConsumer,
   toDlxExchange,
   type RabbitMQConnectionValue,
   type ConsumerInfraConfig,
+  type ConsumerBootstrapConfig,
 } from './topology'

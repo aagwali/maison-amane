@@ -5,8 +5,8 @@ import { FullPaths, GroupNames, MaisonAmaneApi } from '@maison-amane/api'
 import { logInfo, gen, annotateLogs } from 'effect/Effect'
 
 import {
-  handlePilotProductCreation,
-  handlePilotProductUpdate,
+  pilotProductCreationHandler,
+  pilotProductUpdateHandler,
   makePilotProductCreationCommand,
   makePilotProductUpdateCommand,
 } from '../../../application/pilot'
@@ -47,7 +47,7 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
             ctx,
             'createPilotProduct',
             `POST ${FullPaths.PILOT_PRODUCT}`,
-            handlePilotProductCreation(command),
+            pilotProductCreationHandler(command),
             (error) => toProblemDetail(error, errorCtx)
           )
 
@@ -75,7 +75,7 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
             ctx,
             'updatePilotProduct',
             `PUT ${FullPaths.PILOT_PRODUCT}/${path.id}`,
-            handlePilotProductUpdate(command),
+            pilotProductUpdateHandler(command),
             (error) => toUpdateProblemDetail(error, errorCtx)
           )
 

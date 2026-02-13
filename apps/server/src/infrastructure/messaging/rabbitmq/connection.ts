@@ -20,7 +20,7 @@ export class RabbitMQConnectionError extends Data.TaggedError('RabbitMQConnectio
 // Requires RabbitMQConfig
 // ============================================
 
-export const RabbitMQConnectionLayer = Layer.scoped(
+export const RabbitMQConnectionLive = Layer.scoped(
   RabbitMQConnection,
   gen(function* () {
     const config = yield* RabbitMQConfig

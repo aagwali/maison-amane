@@ -1,4 +1,4 @@
 // src/application/pilot/handlers/index.ts
 
-export { handlePilotProductCreation } from './create-pilot-product.handler'
-export { handlePilotProductUpdate } from './update-pilot-product.handler'
+export { pilotProductCreationHandler } from './create-pilot-product.handler'
+export { pilotProductUpdateHandler } from './update-pilot-product.handler'

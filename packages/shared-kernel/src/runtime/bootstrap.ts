@@ -1,6 +1,7 @@
 // src/runtime/bootstrap.ts
 
 import { Config, Layer, Logger, LogLevel } from 'effect'
+import { gen } from 'effect/Effect'
 import { withDefault } from 'effect/Config'
 
 // ============================================
@@ -16,9 +17,22 @@ export const BootstrapConfig = Config.all({
     'development',
     'production',
     'test'
-  )('NODE_ENV').pipe(withDefault('development')),
-  logLevel: Config.literal('debug', 'info', 'warn', 'error')('LOG_LEVEL').pipe(withDefault('info')),
+  )('NODE_ENV')
+    .pipe(withDefault('development')),
+  logLevel: Config.literal('debug', 'info', 'warn', 'error')('LOG_LEVEL')
+    .pipe(withDefault('info')),
 })
+
+// ============================================
+// ENVIRONMENT HELPERS
+// ============================================
+
+/**
+ * Determines if the environment is development.
+ * Used to select appropriate logger and other environment-specific behavior.
+ */
+export const isDevelopment = (nodeEnv: 'development' | 'production' | 'test'): boolean =>
+  nodeEnv !== 'production'
 
 // ============================================
 // LOG LEVEL MAPPING
@@ -36,27 +50,10 @@ const logLevelMap = {
 // ============================================
 
 /**
- * Creates an environment-aware logger layer.
+ * Creates an environment-aware logger layer (low-level).
+ * Prefer using `createLoggerLive` for automatic config injection.
  *
- * - Development: Uses pretty logger with colors and formatting
- * - Production: Uses JSON logger for structured logging
- *
- * @param isDevelopment - Whether to use development logger
- * @param logLevel - Minimum log level to display
- * @param prettyLogger - Pretty logger implementation for development
- * @param jsonLogger - JSON logger implementation for production
- * @returns Logger Layer configured for the environment
- *
- * @example
- * ```typescript
- * const { nodeEnv, logLevel } = yield* BootstrapConfig
- * const LoggerLive = createLoggerLayer(
- *   nodeEnv !== 'production',
- *   logLevel,
- *   PrettyLogger,
- *   JsonLogger
- * )
- * ```
+ * @internal
  */
 export const createLoggerLayer = (
   isDevelopment: boolean,
@@ -69,3 +66,33 @@ export const createLoggerLayer = (
 
   return Layer.mergeAll(Logger.replace(Logger.defaultLogger, logger), minLevel)
 }
+
+/**
+ * Creates a complete logger layer with automatic BootstrapConfig injection.
+ *
+ * - Development: Uses pretty logger with colors and formatting
+ * - Production: Uses JSON logger for structured logging
+ * - Automatically reads NODE_ENV and LOG_LEVEL from environment
+ *
+ * @param prettyLogger - Pretty logger implementation for development
+ * @param jsonLogger - JSON logger implementation for production
+ * @returns Logger Layer configured from environment
+ *
+ * @example
+ * ```typescript
+ * import { PrettyLogger, JsonLogger } from '@maison-amane/server'
+ * import { createLoggerLive } from '@maison-amane/shared-kernel'
+ *
+ * const LoggerLive = createLoggerLive(PrettyLogger, JsonLogger)
+ * ```
+ */
+export const createLoggerLive = (
+  prettyLogger: Logger.Logger<unknown, unknown>,
+  jsonLogger: Logger.Logger<unknown, unknown>
+) =>
+  Layer.unwrapEffect(
+    gen(function* () {
+      const { nodeEnv, logLevel } = yield* BootstrapConfig
+      return createLoggerLayer(isDevelopment(nodeEnv), logLevel, prettyLogger, jsonLogger)
+    })
+  )

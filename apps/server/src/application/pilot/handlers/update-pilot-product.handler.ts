@@ -24,7 +24,7 @@ import type { PilotProductUpdateCommand } from '../commands'
 // HANDLER: UPDATE PILOT PRODUCT
 // ============================================
 
-export const handlePilotProductUpdate = (
+export const pilotProductUpdateHandler = (
   command: PilotProductUpdateCommand
 ): Effect<PilotProduct, PilotProductUpdateError, PilotProductRepository | EventPublisher | Clock> =>
   gen(function* () {

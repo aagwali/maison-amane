@@ -16,7 +16,7 @@ import type { PilotProductCreationCommand } from '../commands'
 
 // #region HANDLER: CREATE PILOT PRODUCT
 
-export const handlePilotProductCreation = (
+export const pilotProductCreationHandler = (
   command: PilotProductCreationCommand
 ): Effect<
   PilotProduct,
