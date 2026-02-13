@@ -11,7 +11,7 @@
 //   3. May coordinate between multiple aggregates (stateless)
 //
 // Current services:
-//   - SyncStatusMachine: State transitions for sync workflow
+//   - SyncStatusMachine: State transitions for sync workflow (internal to aggregate)
 //   - ViewsService: Structuring/flattening product views
 //
 // Examples of services you might add:
@@ -35,5 +35,4 @@
 //
 // ============================================
 
-export { SyncStatusMachine } from './sync-status.machine'
 export { structureViews, flattenViews, MIN_VIEWS } from './views.service'

@@ -76,6 +76,6 @@
 //
 // ============================================
 
-// Export policies here when implemented
+// Publication policy logic has been migrated into the aggregate (publish/archive methods).
+// Add future cross-aggregate policies here when needed.
 // export { canSyncProduct, SyncNotAllowed } from "./sync.policy"
-export { canPublish, PublicationNotAllowed, requiresChangeNotification } from './publication.policy'

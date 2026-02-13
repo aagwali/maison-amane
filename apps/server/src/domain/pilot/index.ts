@@ -54,7 +54,7 @@ export {
 // ============================================
 // SERVICES
 // ============================================
-export { SyncStatusMachine, structureViews, flattenViews, MIN_VIEWS } from './services'
+export { structureViews, flattenViews, MIN_VIEWS } from './services'
 
 // ============================================
 // VARIANTS (value objects)
@@ -106,8 +106,13 @@ export {
   makeStandardVariant,
   makePilotProduct,
   makeCustomVariant,
-  withSyncStatus,
   withUpdatedFields,
+  publish,
+  archive,
+  markSynced,
+  markSyncFailed,
+  resetSyncStatus,
+  requiresChangeNotification,
   type PilotProduct,
 } from './aggregate'
 
@@ -128,12 +133,8 @@ export {
 export {
   ValidationError,
   ProductNotFoundError,
+  PublicationNotAllowed,
+  ArchiveNotAllowed,
   type PilotProductCreationError,
   type PilotProductUpdateError,
 } from './errors'
-
-// ============================================
-// POLICIES
-// ============================================
-// export { canSyncProduct, SyncNotAllowed } from "./policies"
-export { canPublish, PublicationNotAllowed, requiresChangeNotification } from './policies'

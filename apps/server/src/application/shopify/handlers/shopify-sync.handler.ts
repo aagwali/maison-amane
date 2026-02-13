@@ -12,9 +12,8 @@ import {
 } from 'effect/Effect'
 
 import {
+  markSynced,
   ProductStatus,
-  SyncStatusMachine,
-  withSyncStatus,
   type PilotProduct,
   type PilotProductPublished,
   type PilotProductUpdated,
@@ -164,26 +163,13 @@ const updateSyncStatus = (
 
     const currentProduct = existingProduct.value
 
-    // Use state machine to transition, then aggregate method to update
-    if (SyncStatusMachine.canSync(currentProduct.syncStatus)) {
-      const newSyncStatus = SyncStatusMachine.markSynced(
-        currentProduct.syncStatus,
-        shopifyProductId,
-        now
-      )
+    const updatedProduct = markSynced(currentProduct, shopifyProductId, now)
 
-      const updatedProduct = withSyncStatus(currentProduct, newSyncStatus, now)
+    yield* pilotRepo
+      .update(updatedProduct)
+      .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
 
-      yield* pilotRepo
-        .update(updatedProduct)
-        .pipe(mapError((error) => new MessageHandlerError({ event, cause: error })))
-
-      yield* logInfo('Updated product syncStatus to Synced').pipe(
-        annotateLogs({ productId, shopifyProductId, syncedAt: now.toISOString() })
-      )
-    } else {
-      yield* logInfo('Product already synced, skipping syncStatus update').pipe(
-        annotateLogs({ currentSyncStatus: currentProduct.syncStatus._tag })
-      )
-    }
+    yield* logInfo('Updated product syncStatus to Synced').pipe(
+      annotateLogs({ productId, shopifyProductId, syncedAt: now.toISOString() })
+    )
   })

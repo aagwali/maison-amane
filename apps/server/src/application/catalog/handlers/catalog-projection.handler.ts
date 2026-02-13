@@ -1,6 +1,6 @@
 // src/application/catalog/handlers/catalog-projection.handler.ts
 
-import { Effect } from 'effect'
+import { annotateLogs, gen, logInfo, mapError, withLogSpan } from 'effect/Effect'
 
 import { type ProjectionEvent, projectToCatalog } from '../projectors/catalog-product.projector'
 import {
@@ -25,26 +25,25 @@ import {
 export const catalogProjectionHandler: MessageHandler<ProjectionEvent, CatalogProductRepository> = (
   event
 ) =>
-  Effect.gen(function* () {
+  gen(function* () {
     const { productId, correlationId, userId } = event
 
-    yield* Effect.logInfo('Processing product publication for catalog projection').pipe(
-      Effect.annotateLogs({
-        productId,
-        correlationId,
-        userId,
-      }),
-      Effect.withLogSpan('catalog-projection.process')
-    )
+    yield* logInfo('Processing product publication for catalog projection')
+      .pipe(
+        annotateLogs({
+          productId,
+          correlationId,
+          userId,
+        })
+      )
+      .pipe(withLogSpan('catalog-projection.process'))
 
     const catalogProduct = yield* projectToCatalog(event).pipe(
-      Effect.mapError(
-        (projectionError) => new MessageHandlerError({ event, cause: projectionError.cause })
-      )
+      mapError((error) => new MessageHandlerError({ event, cause: error.cause }))
     )
 
-    yield* Effect.logInfo('Successfully projected product to catalog').pipe(
-      Effect.annotateLogs({
+    yield* logInfo('Successfully projected product to catalog').pipe(
+      annotateLogs({
         catalogProductId: catalogProduct.id,
         publishedAt: catalogProduct.publishedAt.toISOString(),
       })

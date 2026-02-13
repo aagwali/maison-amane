@@ -7,12 +7,14 @@ import { Effect } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
+  ArchiveNotAllowed,
   makeProductId,
   PriceRange,
   ProductCategory,
   ProductNotFoundError,
   ProductStatus,
   ProductType,
+  PublicationNotAllowed,
   Size,
   ValidationError,
   ViewType,
@@ -350,6 +352,60 @@ describe('handlePilotProductUpdate', () => {
       expect(result._tag).toBe('Left')
       if (result._tag === 'Left') {
         expect(result.left).toBeInstanceOf(ValidationError)
+      }
+    })
+
+    it('fails with PublicationNotAllowed when publishing an ARCHIVED product', async () => {
+      // Create and archive a product
+      const createCommand = buildCreateCommand()
+      await Effect.runPromise(
+        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
+      )
+      await Effect.runPromise(
+        handlePilotProductUpdate(
+          buildUpdateCommand('test-product-1', { status: ProductStatus.ARCHIVED })
+        ).pipe(Effect.provide(testCtx.layer))
+      )
+
+      // Try to publish the archived product
+      const updateCommand = buildUpdateCommand('test-product-1', {
+        status: ProductStatus.PUBLISHED,
+      })
+
+      const result = await Effect.runPromise(
+        handlePilotProductUpdate(updateCommand).pipe(Effect.either, Effect.provide(testCtx.layer))
+      )
+
+      expect(result._tag).toBe('Left')
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(PublicationNotAllowed)
+      }
+    })
+
+    it('fails with ArchiveNotAllowed when archiving an already ARCHIVED product', async () => {
+      // Create and archive a product
+      const createCommand = buildCreateCommand()
+      await Effect.runPromise(
+        handlePilotProductCreation(createCommand).pipe(Effect.provide(testCtx.layer))
+      )
+      await Effect.runPromise(
+        handlePilotProductUpdate(
+          buildUpdateCommand('test-product-1', { status: ProductStatus.ARCHIVED })
+        ).pipe(Effect.provide(testCtx.layer))
+      )
+
+      // Try to archive again
+      const updateCommand = buildUpdateCommand('test-product-1', {
+        status: ProductStatus.ARCHIVED,
+      })
+
+      const result = await Effect.runPromise(
+        handlePilotProductUpdate(updateCommand).pipe(Effect.either, Effect.provide(testCtx.layer))
+      )
+
+      expect(result._tag).toBe('Left')
+      if (result._tag === 'Left') {
+        expect(result.left).toBeInstanceOf(ArchiveNotAllowed)
       }
     })
   })

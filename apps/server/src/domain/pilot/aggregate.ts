@@ -11,30 +11,21 @@
 //   2. Apply the change
 //   3. Return the new state or fail with a domain error
 //
-// Examples of invariants you might add here:
-//
-//   - "A PUBLISHED product cannot return to DRAFT"
-//   - "variants must contain at least one item" (already enforced by NonEmptyArray)
-//   - "syncStatus can only be Synced if status is PUBLISHED"
-//
-// Pattern for adding behavior:
-//
-//   export const publishProduct = (
-//     product: PilotProduct
-//   ): Effect.Effect<PilotProduct, InvariantViolation> =>
-//     product.views.additional.length < 2
-//       ? Effect.fail(new InvariantViolation("Min 2 additional views to publish"))
-//       : Effect.succeed({ ...product, status: ProductStatus.PUBLISHED })
+// Invariants enforced:
+//   - State transitions: DRAFT → PUBLISHED, DRAFT|PUBLISHED → ARCHIVED
+//   - Cannot re-publish or un-archive
+//   - Sync status managed through SyncStatusMachine (internal detail)
 //
 // ============================================
 
-import { Data } from 'effect'
+import { Data, Effect } from 'effect'
 import * as S from 'effect/Schema'
 
 import { type CustomVariant, ProductVariantSchema, type StandardVariant } from './value-objects'
 import {
   PriceRangeSchema,
   ProductCategorySchema,
+  ProductStatus,
   ProductStatusSchema,
   ProductTypeSchema,
 } from './enums'
@@ -44,7 +35,11 @@ import {
   ProductLabelSchema,
   ProductViewsSchema,
   SyncStatusSchema,
+  type ShopifyProductId,
+  type SyncError,
 } from './value-objects'
+import { ArchiveNotAllowed, PublicationNotAllowed } from './errors'
+import { SyncStatusMachine } from './services/sync-status.machine'
 
 // ============================================
 // VARIANT CONSTRUCTORS
@@ -85,23 +80,6 @@ export const makePilotProduct = (params: Omit<PilotProduct, '_tag'>): PilotProdu
 // ============================================
 // AGGREGATE METHODS
 // ============================================
-
-/**
- * Creates a new PilotProduct with updated syncStatus.
- * This is the proper way to update aggregate state - through a method
- * that returns a new instance rather than mutating externally.
- */
-export const withSyncStatus = (
-  product: PilotProduct,
-  syncStatus: PilotProduct['syncStatus'],
-  updatedAt: Date
-): PilotProduct =>
-  makePilotProduct({
-    ...product,
-    syncStatus,
-    updatedAt,
-  })
-
 /**
  * Creates a new PilotProduct with updated fields.
  * Only the provided fields are updated; others remain unchanged.
@@ -111,7 +89,7 @@ export const withUpdatedFields = (
   updates: Partial<
     Pick<
       PilotProduct,
-      'label' | 'type' | 'category' | 'description' | 'priceRange' | 'variants' | 'views' | 'status'
+      'label' | 'type' | 'category' | 'description' | 'priceRange' | 'variants' | 'views'
     >
   >,
   updatedAt: Date
@@ -121,3 +99,69 @@ export const withUpdatedFields = (
     ...updates,
     updatedAt,
   })
+
+// ============================================
+// STATE TRANSITIONS
+// ============================================
+
+export const publish = (
+  product: PilotProduct,
+  updatedAt: Date
+): Effect.Effect<PilotProduct, PublicationNotAllowed> => {
+  if (product.status === ProductStatus.ARCHIVED) {
+    return Effect.fail(new PublicationNotAllowed({ reason: 'Cannot publish an archived product' }))
+  }
+  if (product.status === ProductStatus.PUBLISHED) {
+    return Effect.fail(new PublicationNotAllowed({ reason: 'Product is already published' }))
+  }
+  return Effect.succeed(
+    makePilotProduct({ ...product, status: ProductStatus.PUBLISHED, updatedAt })
+  )
+}
+
+export const archive = (
+  product: PilotProduct,
+  updatedAt: Date
+): Effect.Effect<PilotProduct, ArchiveNotAllowed> => {
+  if (product.status === ProductStatus.ARCHIVED) {
+    return Effect.fail(new ArchiveNotAllowed({ reason: 'Product is already archived' }))
+  }
+  return Effect.succeed(makePilotProduct({ ...product, status: ProductStatus.ARCHIVED, updatedAt }))
+}
+
+// ============================================
+// SYNC STATUS METHODS
+// ============================================
+
+export const markSynced = (
+  product: PilotProduct,
+  shopifyProductId: ShopifyProductId,
+  syncedAt: Date
+): PilotProduct => {
+  const newSyncStatus = SyncStatusMachine.markSynced(product.syncStatus, shopifyProductId, syncedAt)
+  return makePilotProduct({ ...product, syncStatus: newSyncStatus, updatedAt: syncedAt })
+}
+
+export const markSyncFailed = (
+  product: PilotProduct,
+  error: SyncError,
+  failedAt: Date
+): PilotProduct => {
+  const newSyncStatus = SyncStatusMachine.markFailed(product.syncStatus, error, failedAt)
+  return makePilotProduct({ ...product, syncStatus: newSyncStatus, updatedAt: failedAt })
+}
+
+export const resetSyncStatus = (product: PilotProduct, updatedAt: Date): PilotProduct => {
+  if (!SyncStatusMachine.canReset(product.syncStatus)) {
+    return product
+  }
+  const newSyncStatus = SyncStatusMachine.reset(product.syncStatus)
+  return makePilotProduct({ ...product, syncStatus: newSyncStatus, updatedAt })
+}
+
+// ============================================
+// POLICIES (aggregate knowledge)
+// ============================================
+
+export const requiresChangeNotification = (product: PilotProduct): boolean =>
+  product.status === ProductStatus.PUBLISHED || product.status === ProductStatus.ARCHIVED

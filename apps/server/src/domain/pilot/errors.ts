@@ -26,9 +26,26 @@ export class ProductNotFoundError extends Data.TaggedError('ProductNotFoundError
 }> {}
 
 // ============================================
+// PUBLICATION / ARCHIVE ERRORS
+// ============================================
+
+export class PublicationNotAllowed extends Data.TaggedError('PublicationNotAllowed')<{
+  readonly reason: string
+}> {}
+
+export class ArchiveNotAllowed extends Data.TaggedError('ArchiveNotAllowed')<{
+  readonly reason: string
+}> {}
+
+// ============================================
 // AGGREGATE ERROR TYPES
 // ============================================
 
 export type PilotProductCreationError = ValidationError | PersistenceError
 
-export type PilotProductUpdateError = ValidationError | PersistenceError | ProductNotFoundError
+export type PilotProductUpdateError =
+  | ValidationError
+  | PersistenceError
+  | ProductNotFoundError
+  | PublicationNotAllowed
+  | ArchiveNotAllowed
