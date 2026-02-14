@@ -2,3 +2,4 @@
 
 export { pilotProductCreationHandler } from './create-pilot-product.handler'
 export { pilotProductUpdateHandler } from './update-pilot-product.handler'
+export { getPilotProductHandler } from './get-pilot-product.handler'

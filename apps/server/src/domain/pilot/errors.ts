@@ -49,3 +49,5 @@ export type PilotProductUpdateError =
   | ProductNotFoundError
   | PublicationNotAllowed
   | ArchiveNotAllowed
+
+export type PilotProductQueryError = PersistenceError | ProductNotFoundError

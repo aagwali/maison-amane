@@ -7,8 +7,10 @@ import { logInfo, gen, annotateLogs } from 'effect/Effect'
 import {
   pilotProductCreationHandler,
   pilotProductUpdateHandler,
+  getPilotProductHandler,
   makePilotProductCreationCommand,
   makePilotProductUpdateCommand,
+  makeGetPilotProductQuery,
 } from '../../../application/pilot'
 import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import { makeProductId } from '../../../domain/pilot'
@@ -18,6 +20,7 @@ import {
   toUnvalidatedProductData,
   toUnvalidatedUpdateData,
   toUpdateProblemDetail,
+  toQueryProblemDetail,
 } from '../mappers'
 import { executeWithObservability, generateCommandContext } from '../helpers'
 
@@ -80,6 +83,28 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
           )
 
           yield* logInfo('Pilot product updated successfully')
+            .pipe(annotateLogs({ productId: product.id }))
+
+          return toResponse(product)
+        })
+      )
+      .handle('getById', ({ path }) =>
+        gen(function* () {
+          const { ctx, errorCtx } = yield* generateCommandContext(
+            `${FullPaths.PILOT_PRODUCT}/${path.id}`
+          )
+
+          const query = makeGetPilotProductQuery(makeProductId(path.id))
+
+          const product = yield* executeWithObservability(
+            ctx,
+            'getPilotProduct',
+            `GET ${FullPaths.PILOT_PRODUCT}/${path.id}`,
+            getPilotProductHandler(query),
+            (error) => toQueryProblemDetail(error, errorCtx)
+          )
+
+          yield* logInfo('Pilot product retrieved successfully')
             .pipe(annotateLogs({ productId: product.id }))
 
           return toResponse(product)

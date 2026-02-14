@@ -17,6 +17,7 @@ import type {
   ValidationError,
   PilotProductCreationError,
   PilotProductUpdateError,
+  PilotProductQueryError,
   ProductNotFoundError,
 } from '../../../domain/pilot'
 import type { PersistenceError } from '../../../ports/driven'
@@ -162,6 +163,22 @@ export const toUpdateProblemDetail = (
 
   if (isPersistenceError(error)) {
     return toPersistenceProblemDetail(error, ctx)
+  }
+
+  // Fallback for unexpected errors
+  return toInternalProblemDetail(ctx)
+}
+
+export const toQueryProblemDetail = (
+  error: PilotProductQueryError,
+  ctx: ErrorContext
+): ApiNotFoundError | ApiPersistenceError | ApiInternalError => {
+  if (isProductNotFoundError(error as PilotProductUpdateError)) {
+    return toNotFoundProblemDetail('PilotProduct', (error as ProductNotFoundError).productId, ctx)
+  }
+
+  if (isPersistenceError(error as PilotProductUpdateError)) {
+    return toPersistenceProblemDetail(error as PersistenceError, ctx)
   }
 
   // Fallback for unexpected errors

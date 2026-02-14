@@ -46,6 +46,14 @@ export class PilotProductGroup extends HttpApiGroup.make(GroupNames.PILOT_PRODUC
       .addError(ApiPersistenceError, { status: ApiPersistenceError.status })
       .addError(ApiInternalError, { status: ApiInternalError.status })
   )
+  .add(
+    HttpApiEndpoint.get('getById', Endpoints.PILOT_PRODUCT_BY_ID)
+      .setPath(S.Struct({ id: S.String }))
+      .addSuccess(PilotProductResponse)
+      .addError(ApiNotFoundError, { status: ApiNotFoundError.status })
+      .addError(ApiPersistenceError, { status: ApiPersistenceError.status })
+      .addError(ApiInternalError, { status: ApiInternalError.status })
+  )
   .prefix(ApiPrefix) {}
 
 // ============================================

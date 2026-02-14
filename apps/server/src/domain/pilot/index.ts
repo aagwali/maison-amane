@@ -137,4 +137,5 @@ export {
   ArchiveNotAllowed,
   type PilotProductCreationError,
   type PilotProductUpdateError,
+  type PilotProductQueryError,
 } from './errors'
