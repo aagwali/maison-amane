@@ -1,5 +1,6 @@
 import Layout from '@theme/Layout'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
+
 import styles from './index.module.css'
 
 export default function Home() {

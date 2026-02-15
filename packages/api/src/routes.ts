@@ -10,8 +10,10 @@ import {
   ApiValidationError,
   CreatePilotProductRequest,
   HealthCheckResponse,
+  MediaRegistrationResponse,
   PilotProductResponse,
   UpdatePilotProductRequest,
+  RegisterMediaRequest,
 } from './dtos'
 import { ApiPrefix, Endpoints, GroupNames } from './endpoints'
 
@@ -57,9 +59,28 @@ export class PilotProductGroup extends HttpApiGroup.make(GroupNames.PILOT_PRODUC
   .prefix(ApiPrefix) {}
 
 // ============================================
+// MEDIA API GROUP
+// ============================================
+//
+// NOTE: Expects externalUrl from CDN (Cloudinary, S3, etc.)
+// Frontend uploads directly to media server, then calls this endpoint with the URL
+
+export class MediaGroup extends HttpApiGroup.make(GroupNames.MEDIA)
+  .add(
+    HttpApiEndpoint.post('register', Endpoints.MEDIA)
+      .setPayload(RegisterMediaRequest)
+      .addSuccess(MediaRegistrationResponse)
+      .addError(ApiValidationError, { status: ApiValidationError.status })
+      .addError(ApiPersistenceError, { status: ApiPersistenceError.status })
+      .addError(ApiInternalError, { status: ApiInternalError.status })
+  )
+  .prefix(ApiPrefix) {}
+
+// ============================================
 // MAIN API
 // ============================================
 
 export class MaisonAmaneApi extends HttpApi.make('maison-amane-api')
   .add(SystemGroup)
-  .add(PilotProductGroup) {}
+  .add(PilotProductGroup)
+  .add(MediaGroup) {}

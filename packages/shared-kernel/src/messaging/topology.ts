@@ -49,6 +49,7 @@ export const ROUTING_KEYS = {
   PILOT: {
     PRODUCT_PUBLISHED: 'product.published',
     PRODUCT_UPDATED: 'product.updated',
+    PRODUCT_CREATED: 'product.created',
   },
 } as const
 
@@ -91,7 +92,6 @@ export interface ConsumerInfraConfig {
   readonly queuePrefix: string
   readonly exchange: string // Main exchange (DLX sera automatiquement {exchange}.dlx)
   readonly routingKeys: readonly string[]
-  readonly retryTtl?: number
 }
 
 /**
@@ -107,7 +107,7 @@ export const declareConsumerInfrastructure = (
 ): Effect<void, RabbitMQError, RabbitMQConnection> =>
   gen(function* () {
     const { channel } = yield* RabbitMQConnection
-    const { queuePrefix, exchange, routingKeys, retryTtl = 5000 } = config
+    const { queuePrefix, exchange, routingKeys } = config
 
     const mainExchange = exchange
     const dlxExchange = toDlxExchange(exchange)
@@ -131,7 +131,8 @@ export const declareConsumerInfrastructure = (
           durable: true,
           arguments: {
             'x-dead-letter-exchange': mainExchange,
-            'x-message-ttl': retryTtl,
+            // No x-message-ttl here - TTL comes from message expiration field
+            // This allows per-message TTL for exponential backoff
           },
         })
 

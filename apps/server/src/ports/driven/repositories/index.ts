@@ -9,3 +9,5 @@ export {
   CatalogProductRepository,
   type CatalogProductRepositoryService,
 } from './catalog-product.repository'
+
+export { MediaRepository, type MediaRepositoryService } from './media.repository'

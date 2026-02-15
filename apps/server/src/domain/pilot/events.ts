@@ -29,6 +29,26 @@ export const makePilotProductPublished = (
   Data.case<PilotProductPublished>()({ _tag: 'PilotProductPublished', _version: 1, ...params })
 
 // ============================================
+// PILOT PRODUCT CREATED
+// ============================================
+
+const PilotProductCreatedSchema = S.TaggedStruct('PilotProductCreated', {
+  _version: S.Literal(1),
+  productId: ProductIdSchema,
+  product: PilotProductSchema,
+  correlationId: CorrelationIdSchema,
+  userId: UserIdSchema,
+  timestamp: S.Date,
+})
+
+export type PilotProductCreated = typeof PilotProductCreatedSchema.Type
+
+export const makePilotProductCreated = (
+  params: Omit<PilotProductCreated, '_tag' | '_version'>
+): PilotProductCreated =>
+  Data.case<PilotProductCreated>()({ _tag: 'PilotProductCreated', _version: 1, ...params })
+
+// ============================================
 // PILOT PRODUCT UPDATED
 // ============================================
 
@@ -52,4 +72,4 @@ export const makePilotProductUpdated = (
 // DOMAIN EVENTS UNION
 // ============================================
 
-export type PilotDomainEvent = PilotProductPublished | PilotProductUpdated
+export type PilotDomainEvent = PilotProductPublished | PilotProductCreated | PilotProductUpdated

@@ -121,8 +121,10 @@ export {
 // ============================================
 export {
   makePilotProductPublished,
+  makePilotProductCreated,
   makePilotProductUpdated,
   type PilotProductPublished,
+  type PilotProductCreated,
   type PilotProductUpdated,
   type PilotDomainEvent,
 } from './events'

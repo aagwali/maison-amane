@@ -4,6 +4,7 @@ import {
   makeNotSynced,
   makePilotProduct,
   makePilotProductPublished,
+  makePilotProductCreated,
   type PilotProductCreationError,
   requiresChangeNotification,
 } from '../../../domain/pilot'
@@ -31,8 +32,10 @@ export const pilotProductCreationHandler = (
     const repo = yield* PilotProductRepository
     const savedProduct = yield* repo.save(product)
 
+    yield* emitCreatedEvent(savedProduct, command)
+
     if (requiresChangeNotification(savedProduct)) {
-      yield* emitEvent(savedProduct, command)
+      yield* emitPublishedEvent(savedProduct, command)
     }
 
     return savedProduct
@@ -73,7 +76,26 @@ const createAggregate = (
 
 // #region EVENT EMISSION
 
-const emitEvent = (
+const emitCreatedEvent = (
+  product: PilotProduct,
+  command: PilotProductCreationCommand
+): Effect<void, never, EventPublisher | Clock> =>
+  gen(function* () {
+    const clock = yield* Clock
+    const now = yield* clock.now()
+
+    const event = makePilotProductCreated({
+      productId: product.id,
+      product,
+      correlationId: command.correlationId,
+      userId: command.userId,
+      timestamp: now,
+    })
+
+    yield* publishEvent(event)
+  })
+
+const emitPublishedEvent = (
   product: PilotProduct,
   command: PilotProductCreationCommand
 ): Effect<void, never, EventPublisher | Clock> =>

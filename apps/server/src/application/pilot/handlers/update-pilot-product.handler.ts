@@ -8,7 +8,6 @@ import {
   makePilotProductUpdated,
   ProductStatus,
   publish,
-  requiresChangeNotification,
   withUpdatedFields,
   type PilotProduct,
   type PilotProductUpdateError,
@@ -37,9 +36,7 @@ export const pilotProductUpdateHandler = (
 
     const savedProduct = yield* repo.update(updatedProduct)
 
-    if (requiresChangeNotification(savedProduct)) {
-      yield* emitEvent(savedProduct, command)
-    }
+    yield* emitEvent(savedProduct, command)
 
     return savedProduct
   })

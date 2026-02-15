@@ -7,10 +7,12 @@ import { Layer } from 'effect'
 import { sync } from 'effect/Effect'
 
 import { makeProductId } from '../domain/pilot'
+import { makeMediaId } from '../domain/media'
 import { IdGenerator } from '../ports/driven'
 
 export const stubIdGenerator = (prefix = 'test') => {
   let productCounter = 0
+  let mediaCounter = 0
   let correlationCounter = 0
 
   return {
@@ -18,6 +20,12 @@ export const stubIdGenerator = (prefix = 'test') => {
       sync(() => {
         productCounter++
         return makeProductId(`${prefix}-product-${productCounter}`)
+      }),
+
+    generateMediaId: () =>
+      sync(() => {
+        mediaCounter++
+        return makeMediaId(`${prefix}-media-${mediaCounter}`)
       }),
 
     generateCorrelationId: () =>
@@ -29,6 +37,7 @@ export const stubIdGenerator = (prefix = 'test') => {
     // Reset counters between tests
     reset: () => {
       productCounter = 0
+      mediaCounter = 0
       correlationCounter = 0
     },
   }

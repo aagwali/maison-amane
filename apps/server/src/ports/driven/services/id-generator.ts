@@ -4,6 +4,7 @@ import { Context } from 'effect'
 import type { Effect } from 'effect/Effect'
 
 import type { ProductId } from '../../../domain/pilot'
+import type { MediaId } from '../../../domain/media'
 
 // ============================================
 // ID GENERATOR
@@ -11,6 +12,7 @@ import type { ProductId } from '../../../domain/pilot'
 
 export interface IdGeneratorService {
   readonly generateProductId: () => Effect<ProductId>
+  readonly generateMediaId: () => Effect<MediaId>
   readonly generateCorrelationId: () => Effect<string>
 }
 

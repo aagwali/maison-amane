@@ -18,5 +18,7 @@ export {
   MongodbCatalogProductRepositoryLive,
 } from './catalog-product.repository'
 
+export { createMongodbMediaRepository, MongodbMediaRepositoryLive } from './media.repository'
+
 export * from './mappers'
 export * from './base-repository'

@@ -218,7 +218,7 @@ describe('handlePilotProductUpdateHandler', () => {
   })
 
   describe('event emission', () => {
-    it('does NOT emit event for DRAFT status', async () => {
+    it('emits PilotProductUpdated for DRAFT product', async () => {
       const createCommand = buildCreateCommand()
       await runPromise(pilotProductCreationHandler(createCommand)
         .pipe(provide(testCtx.layer)))
@@ -228,10 +228,11 @@ describe('handlePilotProductUpdateHandler', () => {
         label: 'Nouveau Label',
       })
 
-      runPromise(pilotProductUpdateHandler(updateCommand)
+      await runPromise(pilotProductUpdateHandler(updateCommand)
         .pipe(provide(testCtx.layer)))
 
-      expect(testCtx.eventSpy.emittedEvents).toHaveLength(0)
+      expect(testCtx.eventSpy.hasEmitted('PilotProductUpdated')).toBe(true)
+      expect(testCtx.eventSpy.emittedEvents).toHaveLength(1)
     })
 
     it('emits PilotProductUpdated for PUBLISHED status', async () => {

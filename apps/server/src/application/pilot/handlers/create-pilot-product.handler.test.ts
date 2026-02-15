@@ -152,32 +152,35 @@ describe('handlePilotProductCreation', () => {
   })
 
   describe('event emission', () => {
-    it('does NOT emit event for DRAFT status', async () => {
+    it('emits PilotProductCreated for DRAFT product', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.DRAFT })
 
       await runPromise(pilotProductCreationHandler(command)
         .pipe(provide(testCtx.layer)))
 
-      expect(testCtx.eventSpy.emittedEvents).toHaveLength(0)
+      expect(testCtx.eventSpy.hasEmitted('PilotProductCreated')).toBe(true)
+      expect(testCtx.eventSpy.emittedEvents).toHaveLength(1) // seulement Created, pas Published
     })
 
-    it('emits PilotProductPublished for PUBLISHED status', async () => {
+    it('emits both PilotProductCreated and PilotProductPublished for PUBLISHED product', async () => {
       const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
 
       await runPromise(pilotProductCreationHandler(command)
         .pipe(provide(testCtx.layer)))
 
-      expect(testCtx.eventSpy.emittedEvents).toHaveLength(1)
-      expect(testCtx.eventSpy.lastEvent?._tag).toBe('PilotProductPublished')
+      expect(testCtx.eventSpy.emittedEvents).toHaveLength(2)
+      expect(testCtx.eventSpy.emittedEvents[0]?._tag).toBe('PilotProductCreated')
+      expect(testCtx.eventSpy.emittedEvents[1]?._tag).toBe('PilotProductPublished')
     })
 
-    it('includes product and correlation info in event', async () => {
-      const command = buildCommand({ ...validProductData, status: ProductStatus.PUBLISHED })
+    it('includes product and correlation info in PilotProductCreated event', async () => {
+      const command = buildCommand({ ...validProductData, status: ProductStatus.DRAFT })
 
       await runPromise(pilotProductCreationHandler(command)
         .pipe(provide(testCtx.layer)))
 
       const event = testCtx.eventSpy.lastEvent
+      expect(event?._tag).toBe('PilotProductCreated')
       expect(event?.productId).toBe('test-product-1')
       expect(event?.correlationId).toBe('test-correlation-id')
       expect(event?.userId).toBe('test-user')

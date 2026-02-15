@@ -49,10 +49,12 @@ export type PositiveCm = typeof PositiveCmSchema.Type
 export const makePositiveCm = S.decodeUnknownSync(PositiveCmSchema)
 
 // ============================================
-// IMAGE URL
+// IMAGE URL (env-aware)
 // ============================================
 
+const IMAGE_URL_PATTERN = process.env.NODE_ENV === 'production' ? /^https:\/\/.+/ : /^https?:\/\/.+/
+
 export const ImageUrlSchema = S.String
-  .pipe(S.pattern(/^https:\/\/.+/), S.brand('ImageUrl'))
+  .pipe(S.pattern(IMAGE_URL_PATTERN), S.brand('ImageUrl'))
 export type ImageUrl = typeof ImageUrlSchema.Type
 export const makeImageUrl = S.decodeUnknownSync(ImageUrlSchema)

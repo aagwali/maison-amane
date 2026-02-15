@@ -11,3 +11,5 @@ export {
   createInMemoryCatalogProductRepository,
   InMemoryCatalogProductRepositoryLive,
 } from './catalog-product.repository'
+
+export { createInMemoryMediaRepository, InMemoryMediaRepositoryLive } from './media.repository'

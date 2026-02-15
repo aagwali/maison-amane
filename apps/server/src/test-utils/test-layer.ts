@@ -27,7 +27,14 @@
 import { Layer } from 'effect'
 
 import { InMemoryPilotProductRepositoryLive } from '../infrastructure/persistence/in-memory/pilot-product.repository'
-import { Clock, EventPublisher, IdGenerator, PilotProductRepository } from '../ports/driven'
+import { InMemoryMediaRepositoryLive } from '../infrastructure/persistence/in-memory/media.repository'
+import {
+  Clock,
+  EventPublisher,
+  IdGenerator,
+  MediaRepository,
+  PilotProductRepository,
+} from '../ports/driven'
 
 import { StubIdGeneratorLive } from './deterministic-id-generator'
 import { StubClockLive, TEST_DATE } from './fixed-clock'
@@ -36,7 +43,12 @@ import { type SpyEventPublisher, SpyEventPublisherLive } from './spy-event-publi
 export { TEST_DATE }
 
 // The layer provides all dependencies needed by handlers
-type TestLayerServices = PilotProductRepository | IdGenerator | Clock | EventPublisher
+type TestLayerServices =
+  | PilotProductRepository
+  | MediaRepository
+  | IdGenerator
+  | Clock
+  | EventPublisher
 
 export interface TestContext {
   layer: Layer.Layer<TestLayerServices, never, never>
@@ -48,6 +60,7 @@ export const provideTestLayer = (): TestContext => {
 
   const layer = Layer.mergeAll(
     InMemoryPilotProductRepositoryLive,
+    InMemoryMediaRepositoryLive,
     StubIdGeneratorLive(),
     StubClockLive(),
     eventPublisherLayer

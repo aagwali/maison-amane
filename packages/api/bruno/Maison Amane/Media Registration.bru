@@ -1,0 +1,29 @@
+meta {
+  name: Media Registration
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3001/api/media
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "externalUrl": "https://cdn.example.com/images/tapis-front.jpg",
+    "filename": "tapis-front.jpg",
+    "mimeType": "image/jpeg",
+    "fileSize": 204800,
+    "tags": ["tapis", "front"]
+  }
+}
+
+settings {
+  encodeUrl: false
+}

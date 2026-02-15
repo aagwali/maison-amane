@@ -4,8 +4,10 @@ import { Layer } from 'effect'
 
 import {
   ConsoleEventPublisherLive,
+  InMemoryMediaRepositoryLive,
   InMemoryPilotProductRepositoryLive,
   MongoDatabaseLive,
+  MongodbMediaRepositoryLive,
   MongodbPilotProductRepositoryLive,
   RabbitMQEventPublisherLayer,
   RabbitMQSetupLayer,
@@ -23,6 +25,9 @@ import {
 const PilotProductLayer = MongodbPilotProductRepositoryLive
   .pipe(Layer.provide(MongoDatabaseLive))
 
+const MediaRepositoryLayer = MongodbMediaRepositoryLive
+  .pipe(Layer.provide(MongoDatabaseLive))
+
 // RabbitMQ event publisher with topology setup (exchanges, queues, bindings)
 // RabbitMQSetupLayer ensures topology is created before publishing
 const RabbitMQPublisherLayer = RabbitMQEventPublisherLayer
@@ -34,6 +39,7 @@ const RabbitMQPublisherLayer = RabbitMQEventPublisherLayer
 
 export const DevelopmentLayer = Layer.mergeAll(
   PilotProductLayer,
+  MediaRepositoryLayer,
   UuidIdGeneratorLive,
   SystemClockLive,
   RabbitMQPublisherLayer
@@ -45,6 +51,7 @@ export const DevelopmentLayer = Layer.mergeAll(
 
 export const DevelopmentLayerWithConsole = Layer.mergeAll(
   InMemoryPilotProductRepositoryLive,
+  InMemoryMediaRepositoryLive,
   UuidIdGeneratorLive,
   SystemClockLive,
   ConsoleEventPublisherLive

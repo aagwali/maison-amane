@@ -11,3 +11,5 @@ export {
   catalogFromDocument,
   type CatalogProductDocument,
 } from './catalog-product.mapper'
+
+export { mediaToDocument, mediaFromDocument, type MediaDocument } from './media.mapper'

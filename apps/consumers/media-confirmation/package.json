@@ -1,0 +1,23 @@
+{
+  "name": "@maison-amane/consumer-media-confirmation",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx --env-file=.env src/main.ts",
+    "dev": "tsx watch --env-file=.env src/main.ts",
+    "build": "tsc",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform-node": "^0.73.1",
+    "@maison-amane/server": "workspace:*",
+    "@maison-amane/shared-kernel": "workspace:*",
+    "effect": "^3.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

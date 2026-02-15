@@ -6,6 +6,8 @@ export { UserIdSchema, makeUserId, type UserId } from './user-id'
 
 export { ProductIdSchema, makeProductId, type ProductId } from './product-id'
 
+export { MediaIdSchema, makeMediaId, type MediaId } from './media-id'
+
 export {
   ProductCategory,
   ProductCategorySchema,
