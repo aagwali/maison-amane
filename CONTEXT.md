@@ -129,9 +129,13 @@ src/
 │   └── shared/                      # Types partagés entre contexts
 ├── application/                     # ══════ COUCHE APPLICATION ══════
 │   ├── pilot/
-│   │   ├── commands/                # DTOs de commande
-│   │   ├── handlers/                # Command handlers (CQRS)
+│   │   ├── commands/                # DTOs de commande (creation, update)
+│   │   ├── queries/                 # DTOs de query (Data.case direct)
+│   │   ├── handlers/                # Command + Query handlers (CQRS)
+│   │   ├── mappers/                 # Validated → Domain mappers
 │   │   └── validation/              # Schemas de validation
+│   ├── shared/
+│   │   └── event-helpers.ts         # publishEvent avec retry
 │   ├── catalog/
 │   │   ├── handlers/                # Projection handlers
 │   │   ├── projectors/              # Logique de transformation
@@ -143,7 +147,8 @@ src/
 ├── infrastructure/                  # ══════ COUCHE INFRASTRUCTURE ══════
 │   ├── http/
 │   │   ├── handlers/                # HTTP route handlers (Driving adapters)
-│   │   └── mappers/                 # Error/Response mappers
+│   │   ├── mappers/                 # Error/Response mappers (RFC 7807)
+│   │   └── helpers/                 # Observability, command context
 │   ├── messaging/
 │   │   └── rabbitmq/                # RabbitMQ publisher (Driven adapter)
 │   ├── persistence/
@@ -187,10 +192,11 @@ src/
 // apps/server/src/domain/pilot/aggregate.ts
 
 import { Data } from 'effect'
+import { type Effect, fail, succeed } from 'effect/Effect'
 import * as S from 'effect/Schema'
 
 // Schema définit la structure et les contraintes
-const PilotProductSchema = S.TaggedStruct('PilotProduct', {
+export const PilotProductSchema = S.TaggedStruct('PilotProduct', {
   id: ProductIdSchema,
   label: ProductLabelSchema,
   type: ProductTypeSchema,
@@ -207,9 +213,57 @@ const PilotProductSchema = S.TaggedStruct('PilotProduct', {
 
 export type PilotProduct = typeof PilotProductSchema.Type
 
-// Constructeur immuable via Data.case
-export const MakePilotProduct = (params: Omit<PilotProduct, '_tag'>): PilotProduct =>
+// Constructeur immuable via Data.case (camelCase)
+export const makePilotProduct = (params: Omit<PilotProduct, '_tag'>): PilotProduct =>
   Data.case<PilotProduct>()({ _tag: 'PilotProduct', ...params })
+
+// ============================================
+// AGGREGATE METHODS (fonctions pures)
+// ============================================
+
+// Mise à jour partielle de champs — retourne un nouveau PilotProduct
+export const withUpdatedFields = (
+  product: PilotProduct,
+  updates: Partial<
+    Pick<
+      PilotProduct,
+      'label' | 'type' | 'category' | 'description' | 'priceRange' | 'variants' | 'views'
+    >
+  >,
+  updatedAt: Date
+): PilotProduct => makePilotProduct({ ...product, ...updates, updatedAt })
+
+// Transition d'état : DRAFT → PUBLISHED (Effect car peut échouer)
+export const publish = (
+  product: PilotProduct,
+  updatedAt: Date
+): Effect<PilotProduct, PublicationNotAllowed> => {
+  if (product.status === ProductStatus.ARCHIVED) {
+    return fail(new PublicationNotAllowed({ reason: 'Cannot publish an archived product' }))
+  }
+  if (product.status === ProductStatus.PUBLISHED) {
+    return fail(new PublicationNotAllowed({ reason: 'Product is already published' }))
+  }
+  return succeed(makePilotProduct({ ...product, status: ProductStatus.PUBLISHED, updatedAt }))
+}
+
+// Transition d'état : DRAFT|PUBLISHED → ARCHIVED (Effect car peut échouer)
+export const archive = (
+  product: PilotProduct,
+  updatedAt: Date
+): Effect<PilotProduct, ArchiveNotAllowed> => {
+  if (product.status === ProductStatus.ARCHIVED) {
+    return fail(new ArchiveNotAllowed({ reason: 'Product is already archived' }))
+  }
+  return succeed(makePilotProduct({ ...product, status: ProductStatus.ARCHIVED, updatedAt }))
+}
+
+// ============================================
+// POLICIES (aggregate knowledge)
+// ============================================
+
+export const requiresChangeNotification = (product: PilotProduct): boolean =>
+  product.status === ProductStatus.PUBLISHED || product.status === ProductStatus.ARCHIVED
 ```
 
 ### 3.2 Value Object avec Schema
@@ -235,11 +289,14 @@ const SyncFailedSchema = S.TaggedStruct('SyncFailed', {
 export const SyncStatusSchema = S.Union(NotSyncedSchema, SyncedSchema, SyncFailedSchema)
 export type SyncStatus = typeof SyncStatusSchema.Type
 
-// Constructeurs
-export const MakeNotSynced = (): NotSynced => Data.case<NotSynced>()({ _tag: 'NotSynced' })
+// Constructeurs (camelCase)
+export const makeNotSynced = (): NotSynced => Data.case<NotSynced>()({ _tag: 'NotSynced' })
 
-export const MakeSynced = (params: Omit<Synced, '_tag'>): Synced =>
+export const makeSynced = (params: Omit<Synced, '_tag'>): Synced =>
   Data.case<Synced>()({ _tag: 'Synced', ...params })
+
+export const makeSyncFailed = (params: Omit<SyncFailed, '_tag'>): SyncFailed =>
+  Data.case<SyncFailed>()({ _tag: 'SyncFailed', ...params })
 ```
 
 ### 3.3 Branded Types (IDs)
@@ -249,12 +306,13 @@ export const MakeSynced = (params: Omit<Synced, '_tag'>): Synced =>
 
 import * as S from 'effect/Schema'
 
-// Brand garantit l'unicité du type au compile-time
-export const ProductIdSchema = S.String.pipe(S.brand('ProductId'))
-export type ProductId = typeof ProductIdSchema.Type
+// ProductId est défini dans shared-kernel et ré-exporté
+export { ProductIdSchema, makeProductId, type ProductId } from '@maison-amane/shared-kernel'
 
+// Brand garantit l'unicité du type au compile-time
 export const ShopifyProductIdSchema = S.String.pipe(S.brand('ShopifyProductId'))
 export type ShopifyProductId = typeof ShopifyProductIdSchema.Type
+export const makeShopifyProductId = S.decodeUnknownSync(ShopifyProductIdSchema)
 ```
 
 ### 3.4 Port (Interface Repository)
@@ -262,13 +320,16 @@ export type ShopifyProductId = typeof ShopifyProductIdSchema.Type
 ```typescript
 // apps/server/src/ports/driven/repositories/pilot-product.repository.ts
 
-import { Context, Effect, Option } from 'effect'
+import { Context } from 'effect'
+import type { Effect } from 'effect/Effect'
+import type { Option } from 'effect/Option'
 
-// Interface du service
+// Interface du service — avec distinction findById (Option) vs getById (fail)
 export interface PilotProductRepositoryService {
-  readonly save: (product: PilotProduct) => Effect.Effect<PilotProduct, PersistenceError>
-  readonly findById: (id: ProductId) => Effect.Effect<Option.Option<PilotProduct>, PersistenceError>
-  readonly update: (product: PilotProduct) => Effect.Effect<PilotProduct, PersistenceError>
+  readonly save: (product: PilotProduct) => Effect<PilotProduct, PersistenceError>
+  readonly update: (product: PilotProduct) => Effect<PilotProduct, PersistenceError>
+  readonly findById: (id: ProductId) => Effect<Option<PilotProduct>, PersistenceError>
+  readonly getById: (id: ProductId) => Effect<PilotProduct, PersistenceError | ProductNotFoundError>
 }
 
 // Context.Tag pour l'injection de dépendance
@@ -278,30 +339,104 @@ export class PilotProductRepository extends Context.Tag('PilotProductRepository'
 >() {}
 ```
 
+**Pattern `findById` vs `getById`:**
+
+| Méthode    | Retour                                         | Usage                                 |
+| ---------- | ---------------------------------------------- | ------------------------------------- |
+| `findById` | `Effect<Option<Entity>, PersistenceError>`     | Quand l'absence est un cas normal     |
+| `getById`  | `Effect<Entity, PersistenceError \| NotFound>` | Quand l'entité DOIT exister (updates) |
+
+**Erreur PersistenceError simplifiée:**
+
+```typescript
+// apps/server/src/ports/driven/repositories/errors.ts
+
+import { Data } from 'effect'
+
+export class PersistenceError extends Data.TaggedError('PersistenceError')<{
+  readonly cause: unknown
+}> {}
+```
+
 ### 3.5 Adapter (Implémentation Repository)
 
 ```typescript
 // apps/server/src/infrastructure/persistence/mongodb/pilot-product.repository.ts
 
-import { Effect, Layer } from 'effect'
+import type { Collection, Db } from 'mongodb'
+
+import { ProductNotFoundError } from '../../../domain/pilot'
+import { PilotProductRepository as PilotProductRepositoryTag } from '../../../ports/driven'
+import {
+  findDocumentById,
+  getDocumentById,
+  insertDocument,
+  replaceDocument,
+} from './base-repository'
+import { createRepositoryLayer } from './repository-layer-factory'
 
 const COLLECTION_NAME = 'pilot_products'
 
 export const createMongodbPilotProductRepository = (db: Db): PilotProductRepositoryService => {
-  const collection = db.collection<PilotProductDocument>(COLLECTION_NAME)
+  const collection: Collection<PilotProductDocument> = db.collection(COLLECTION_NAME)
 
   return {
     save: (product) => insertDocument(collection, toDocument(product), product),
+
     findById: (id) => findDocumentById(collection, id, fromDocument),
+
+    // getById utilise le helper getDocumentById avec factory currifié pour l'erreur NotFound
+    getById: (id) =>
+      getDocumentById(
+        collection,
+        id,
+        fromDocument,
+        (productId) => new ProductNotFoundError({ productId })
+      ),
+
     update: (product) => replaceDocument(collection, product.id, toDocument(product), product),
   }
 }
 
-// Layer Effect pour fournir l'implémentation
-export const MongodbPilotProductRepositoryLive = Layer.effect(
+// Layer via factory générique (élimine le boilerplate)
+export const MongodbPilotProductRepositoryLive = createRepositoryLayer(
   PilotProductRepositoryTag,
-  Effect.map(MongoDatabase, (db) => createMongodbPilotProductRepository(db))
+  createMongodbPilotProductRepository
 )
+```
+
+**Base Repository Helpers** (`base-repository.ts`):
+
+```typescript
+// apps/server/src/infrastructure/persistence/mongodb/base-repository.ts
+
+// Wrap MongoDB Promise en Effect avec PersistenceError automatique
+export const tryMongoOperation = <A>(operation: () => Promise<A>): Effect<A, PersistenceError> =>
+  tryPromise({ try: operation, catch: (error) => new PersistenceError({ cause: error }) })
+
+// CRUD generics: insertDocument, replaceDocument, findDocumentById, getDocumentById
+// getDocumentById = findDocumentById + Option.match → fail(notFoundError(id))
+export const getDocumentById = <TDocument, TEntity, TError>(
+  collection: Collection<TDocument>,
+  id: string,
+  fromDocument: (doc: TDocument) => TEntity,
+  notFoundError: (id: string) => TError  // Factory currifié
+): Effect<TEntity, PersistenceError | TError> => /* ... */
+```
+
+**Repository Layer Factory** (`repository-layer-factory.ts`):
+
+```typescript
+// apps/server/src/infrastructure/persistence/mongodb/repository-layer-factory.ts
+
+import { Context, Layer } from 'effect'
+import { map } from 'effect/Effect'
+
+export const createRepositoryLayer = <TService, TTag extends Context.Tag<...>>(
+  tag: TTag,
+  createRepository: (db: Db) => TService
+): Layer.Layer<Tag.Identifier<TTag>, never, MongoDatabase> =>
+  Layer.effect(tag, map(MongoDatabase, createRepository))
 ```
 
 ### 3.6 Command Handler (CQRS)
@@ -309,16 +444,28 @@ export const MongodbPilotProductRepositoryLive = Layer.effect(
 ```typescript
 // apps/server/src/application/pilot/handlers/create-pilot-product.handler.ts
 
-import { Effect } from 'effect'
+// Imports sélectifs Effect (PAS import { Effect } from 'effect')
+import { type Effect, gen } from 'effect/Effect'
 
-export const handlePilotProductCreation = (
+import {
+  makeNotSynced,
+  makePilotProduct,
+  makePilotProductPublished,
+  type PilotProductCreationError,
+  requiresChangeNotification,
+} from '../../../domain/pilot'
+import { Clock, EventPublisher, IdGenerator, PilotProductRepository } from '../../../ports/driven'
+import { publishEvent } from '../../shared/event-helpers'
+
+// Naming: pilotProductCreationHandler (PAS handlePilotProductCreation)
+export const pilotProductCreationHandler = (
   command: PilotProductCreationCommand
-): Effect.Effect<
+): Effect<
   PilotProduct,
   PilotProductCreationError,
   PilotProductRepository | IdGenerator | EventPublisher | Clock
 > =>
-  Effect.gen(function* () {
+  gen(function* () {
     // 1. Validation
     const validated = yield* validateProductData(command.data)
 
@@ -329,8 +476,8 @@ export const handlePilotProductCreation = (
     const repo = yield* PilotProductRepository
     const savedProduct = yield* repo.save(product)
 
-    // 4. Émission d'événement (si publié)
-    if (savedProduct.status === ProductStatus.PUBLISHED) {
+    // 4. Émission d'événement (policy: requiresChangeNotification)
+    if (requiresChangeNotification(savedProduct)) {
       yield* emitEvent(savedProduct, command)
     }
 
@@ -346,9 +493,11 @@ export const handlePilotProductCreation = (
 import { Data } from 'effect'
 import * as S from 'effect/Schema'
 
+// CRITIQUE: chaque event DOIT avoir _version: S.Literal(1)
 const PilotProductPublishedSchema = S.TaggedStruct('PilotProductPublished', {
+  _version: S.Literal(1),
   productId: ProductIdSchema,
-  product: S.Any as S.Schema<PilotProduct>,
+  product: PilotProductSchema,
   correlationId: CorrelationIdSchema,
   userId: UserIdSchema,
   timestamp: S.Date,
@@ -356,10 +505,31 @@ const PilotProductPublishedSchema = S.TaggedStruct('PilotProductPublished', {
 
 export type PilotProductPublished = typeof PilotProductPublishedSchema.Type
 
-export const MakePilotProductPublished = (
-  params: Omit<PilotProductPublished, '_tag'>
+// Constructeur camelCase — omit '_tag' ET '_version'
+export const makePilotProductPublished = (
+  params: Omit<PilotProductPublished, '_tag' | '_version'>
 ): PilotProductPublished =>
-  Data.case<PilotProductPublished>()({ _tag: 'PilotProductPublished', ...params })
+  Data.case<PilotProductPublished>()({ _tag: 'PilotProductPublished', _version: 1, ...params })
+
+// Deuxième event: PilotProductUpdated (même pattern)
+const PilotProductUpdatedSchema = S.TaggedStruct('PilotProductUpdated', {
+  _version: S.Literal(1),
+  productId: ProductIdSchema,
+  product: PilotProductSchema,
+  correlationId: CorrelationIdSchema,
+  userId: UserIdSchema,
+  timestamp: S.Date,
+})
+
+export type PilotProductUpdated = typeof PilotProductUpdatedSchema.Type
+
+export const makePilotProductUpdated = (
+  params: Omit<PilotProductUpdated, '_tag' | '_version'>
+): PilotProductUpdated =>
+  Data.case<PilotProductUpdated>()({ _tag: 'PilotProductUpdated', _version: 1, ...params })
+
+// Union de tous les events du bounded context
+export type PilotDomainEvent = PilotProductPublished | PilotProductUpdated
 ```
 
 ### 3.8 Composition Layer (DI)
@@ -369,7 +539,8 @@ export const MakePilotProductPublished = (
 
 import { Layer } from 'effect'
 
-// Composition des layers avec leurs dépendances
+// Les repository layers sont créés via createRepositoryLayer (voir 3.5)
+// MongodbPilotProductRepositoryLive requiert MongoDatabase en dépendance
 const PilotProductLayer = MongodbPilotProductRepositoryLive.pipe(Layer.provide(MongoDatabaseLive))
 
 const RabbitMQPublisherLayer = RabbitMQEventPublisherLayer.pipe(Layer.provide(RabbitMQSetupLayer))
@@ -417,24 +588,268 @@ export const ValidatedVariantSchema: S.Schema<VariantBase, UnvalidatedVariant> =
 )
 ```
 
+### 3.10 Query DTO (CQRS Read)
+
+```typescript
+// apps/server/src/application/pilot/queries/get-pilot-product.query.ts
+
+import { Data } from 'effect'
+import type { ProductId } from '../../../domain/pilot'
+
+// Query DTO: Data.case direct (pas de Schema, pas de validation)
+const GetPilotProductQuery = Data.case<{
+  readonly _tag: 'GetPilotProductQuery'
+  readonly productId: ProductId
+}>()
+
+export type GetPilotProductQuery = ReturnType<typeof GetPilotProductQuery>
+
+export const makeGetPilotProductQuery = (productId: ProductId): GetPilotProductQuery =>
+  GetPilotProductQuery({ _tag: 'GetPilotProductQuery', productId })
+```
+
+### 3.11 Query Handler
+
+```typescript
+// apps/server/src/application/pilot/handlers/get-pilot-product.handler.ts
+
+import { type Effect, gen } from 'effect/Effect'
+
+import type { PilotProduct, PilotProductQueryError } from '../../../domain/pilot'
+import { PilotProductRepository } from '../../../ports/driven'
+import type { GetPilotProductQuery } from '../queries'
+
+export const getPilotProductHandler = (
+  query: GetPilotProductQuery
+): Effect<PilotProduct, PilotProductQueryError, PilotProductRepository> =>
+  gen(function* () {
+    const repo = yield* PilotProductRepository
+    return yield* repo.getById(query.productId)
+  })
+```
+
+### 3.12 Update Handler (Option partials + aggregate methods)
+
+```typescript
+// apps/server/src/application/pilot/handlers/update-pilot-product.handler.ts
+
+import { Option } from 'effect'
+import { type Effect, gen } from 'effect/Effect'
+
+import {
+  archive,
+  makePilotProductUpdated,
+  ProductStatus,
+  publish,
+  requiresChangeNotification,
+  withUpdatedFields,
+  type PilotProduct,
+  type PilotProductUpdateError,
+} from '../../../domain/pilot'
+import { Clock, EventPublisher, PilotProductRepository } from '../../../ports/driven'
+import { publishEvent } from '../../shared/event-helpers'
+
+export const pilotProductUpdateHandler = (
+  command: PilotProductUpdateCommand
+): Effect<PilotProduct, PilotProductUpdateError, PilotProductRepository | EventPublisher | Clock> =>
+  gen(function* () {
+    const validated = yield* validateUpdateData(command.data)
+
+    const repo = yield* PilotProductRepository
+    const existingProduct = yield* repo.getById(command.productId) // fail si absent
+
+    const updatedProduct = yield* applyUpdates(existingProduct, validated)
+    const savedProduct = yield* repo.update(updatedProduct)
+
+    if (requiresChangeNotification(savedProduct)) {
+      yield* emitEvent(savedProduct, command)
+    }
+
+    return savedProduct
+  })
+
+// Option partials: champs optionnels wrappés dans Option
+// Option.getOrElse pour conserver la valeur existante si non fournie
+const applyUpdates = (product: PilotProduct, validated: ValidatedUpdateData) =>
+  gen(function* () {
+    const clock = yield* Clock
+    const now = yield* clock.now()
+
+    const updated = withUpdatedFields(
+      product,
+      {
+        label: Option.getOrElse(validated.label, () => product.label),
+        type: Option.getOrElse(validated.type, () => product.type),
+        // ... autres champs optionnels
+      },
+      now
+    )
+
+    // Transition d'état via aggregate methods (publish, archive)
+    if (Option.isSome(validated.status)) {
+      if (validated.status.value === ProductStatus.PUBLISHED) return yield* publish(updated, now)
+      if (validated.status.value === ProductStatus.ARCHIVED) return yield* archive(updated, now)
+    }
+
+    return updated
+  })
+```
+
+### 3.13 Event Helpers (publishEvent + retry)
+
+```typescript
+// apps/server/src/application/shared/event-helpers.ts
+
+import { Schedule } from 'effect'
+import { type Effect, gen, retry, catchAll, logError, annotateLogs } from 'effect/Effect'
+
+import type { DomainEvent } from '../../domain'
+import { EventPublisher } from '../../ports/driven'
+
+// Retry strategy: 500ms → 1s → 2s (3 attempts, ~3.5s max latency)
+// Si tous les retries échouent: log CRITICAL pour intervention manuelle
+export const publishEvent = (event: DomainEvent): Effect<void, never, EventPublisher> =>
+  gen(function* () {
+    const publisher = yield* EventPublisher
+
+    yield* publisher.publish(event).pipe(
+      retry(Schedule.exponential('500 millis').pipe(Schedule.intersect(Schedule.recurs(3)))),
+      catchAll((error) =>
+        logError('EVENT_PUBLISH_FAILED_CRITICAL').pipe(
+          annotateLogs({
+            error: String(error.cause),
+            eventType: event._tag,
+            productId: event.productId,
+            correlationId: event.correlationId,
+            action: 'MANUAL_REPLAY_REQUIRED',
+          })
+        )
+      )
+    )
+  })
+```
+
+### 3.14 RFC 7807 Problem Detail (Error Mapping)
+
+```typescript
+// apps/server/src/infrastructure/http/mappers/problem-detail.mapper.ts
+
+// Chaque type d'erreur domaine est mappé vers un format RFC 7807
+
+export interface ErrorContext {
+  readonly correlationId: string
+  readonly instance: string // e.g., "/api/v1/pilot-products"
+}
+
+// Mapper unifié pour création (ValidationError | PersistenceError)
+export const toProblemDetail = (
+  error: PilotProductCreationError,
+  ctx: ErrorContext
+): ApiValidationError | ApiPersistenceError | ApiInternalError => {
+  if (isValidationError(error)) return toValidationProblemDetail(error, ctx)
+  if (isPersistenceError(error)) return toPersistenceProblemDetail(error, ctx)
+  return toInternalProblemDetail(ctx)
+}
+
+// Mapper pour update (ajoute NotFound)
+export const toUpdateProblemDetail = (error: PilotProductUpdateError, ctx: ErrorContext) => {
+  /* ValidationError | NotFound | PersistenceError | InternalError */
+}
+
+// Mapper pour query (NotFound | PersistenceError)
+export const toQueryProblemDetail = (error: PilotProductQueryError, ctx: ErrorContext) => {
+  /* NotFound | PersistenceError | InternalError */
+}
+```
+
+### 3.15 Observability (HTTP Helpers)
+
+```typescript
+// apps/server/src/infrastructure/http/helpers/command-context.ts
+
+// Génère le contexte standard pour chaque requête HTTP
+export const generateCommandContext = (
+  instance: string
+): Effect<GeneratedContext, never, IdGenerator> =>
+  gen(function* () {
+    const idGen = yield* IdGenerator
+    const correlationId = yield* idGen.generateCorrelationId()
+    const userId = 'system' // TODO: Extract from auth context
+    return {
+      correlationId,
+      userId,
+      ctx: { correlationId, userId, startTime: new Date() },
+      errorCtx: { correlationId, instance },
+    }
+  })
+
+// apps/server/src/infrastructure/http/helpers/observability-wrapper.ts
+
+// Wrap handler avec tracing, timing et error mapping RFC 7807
+export const executeWithObservability = <A, E, EM, R>(
+  ctx: CommandContext,
+  operationName: string,
+  httpOperation: string,
+  handler: Effect<A, E, R>,
+  errorMapper: (error: E) => EM
+): Effect<A, EM, R> =>
+  withObservability(ctx, operationName, httpOperation, handler).pipe(mapError(errorMapper))
+```
+
+### 3.16 Test Layer
+
+```typescript
+// apps/server/src/test-utils/test-layer.ts
+
+import { Layer } from 'effect'
+
+// Compose tous les stubs de test en un seul layer
+export interface TestContext {
+  layer: Layer.Layer<TestLayerServices, never, never>
+  eventSpy: SpyEventPublisher
+}
+
+export const provideTestLayer = (): TestContext => {
+  const { layer: eventPublisherLayer, spy: eventSpy } = SpyEventPublisherLive()
+
+  const layer = Layer.mergeAll(
+    InMemoryPilotProductRepositoryLive, // Real in-memory repo (not mocked)
+    StubIdGeneratorLive(), // Deterministic ID generator
+    StubClockLive(), // Fixed clock (TEST_DATE)
+    eventPublisherLayer // Spy event publisher
+  )
+
+  return { layer, eventSpy }
+}
+```
+
 ---
 
 ## 4. Navigation par fonctionnalité
 
 ### 4.1 Bounded Context: Pilot Product
 
-| Élément             | Path                                                                             | Responsabilité                      |
-| ------------------- | -------------------------------------------------------------------------------- | ----------------------------------- |
-| **Aggregate**       | `apps/server/src/domain/pilot/aggregate.ts`                                      | Définition PilotProduct             |
-| **Value Objects**   | `apps/server/src/domain/pilot/value-objects/`                                    | IDs, SyncStatus, Dimensions         |
-| **Events**          | `apps/server/src/domain/pilot/events.ts`                                         | PilotProductPublished, Synced       |
-| **Enums**           | `apps/server/src/domain/pilot/enums.ts`                                          | ProductType, Category, Size, Status |
-| **Command**         | `apps/server/src/application/pilot/commands/`                                    | CreatePilotProductCommand           |
-| **Handler**         | `apps/server/src/application/pilot/handlers/`                                    | handlePilotProductCreation          |
-| **Validation**      | `apps/server/src/application/pilot/validation/`                                  | Schemas de validation               |
-| **Repository Port** | `apps/server/src/ports/driven/repositories/pilot-product.repository.ts`          | Interface                           |
-| **Repository Impl** | `apps/server/src/infrastructure/persistence/mongodb/pilot-product.repository.ts` | MongoDB adapter (driven)            |
-| **HTTP Handler**    | `apps/server/src/infrastructure/http/handlers/pilot-product.handler.ts`          | POST /api/pilot-product (driving)   |
+| Élément              | Path                                                                             | Responsabilité                                   |
+| -------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **Aggregate**        | `apps/server/src/domain/pilot/aggregate.ts`                                      | PilotProduct, aggregate methods, policies        |
+| **Value Objects**    | `apps/server/src/domain/pilot/value-objects/`                                    | IDs, SyncStatus, Dimensions                      |
+| **Events**           | `apps/server/src/domain/pilot/events.ts`                                         | PilotProductPublished, PilotProductUpdated       |
+| **Errors**           | `apps/server/src/domain/pilot/errors.ts`                                         | ValidationError, ProductNotFoundError, etc.      |
+| **Enums**            | `apps/server/src/domain/pilot/enums.ts`                                          | ProductType, Category, Size, Status              |
+| **Commands**         | `apps/server/src/application/pilot/commands/`                                    | Creation + Update commands                       |
+| **Queries**          | `apps/server/src/application/pilot/queries/`                                     | GetPilotProductQuery                             |
+| **Creation Handler** | `apps/server/src/application/pilot/handlers/create-pilot-product.handler.ts`     | pilotProductCreationHandler                      |
+| **Update Handler**   | `apps/server/src/application/pilot/handlers/update-pilot-product.handler.ts`     | pilotProductUpdateHandler                        |
+| **Query Handler**    | `apps/server/src/application/pilot/handlers/get-pilot-product.handler.ts`        | getPilotProductHandler                           |
+| **Variant Mapper**   | `apps/server/src/application/pilot/mappers/variant.mapper.ts`                    | Validated → Domain variant mapping               |
+| **Validation**       | `apps/server/src/application/pilot/validation/`                                  | Schemas de validation                            |
+| **Event Helpers**    | `apps/server/src/application/shared/event-helpers.ts`                            | publishEvent avec retry                          |
+| **Repository Port**  | `apps/server/src/ports/driven/repositories/pilot-product.repository.ts`          | Interface (findById, getById)                    |
+| **Repository Impl**  | `apps/server/src/infrastructure/persistence/mongodb/pilot-product.repository.ts` | MongoDB adapter (driven)                         |
+| **Base Repository**  | `apps/server/src/infrastructure/persistence/mongodb/base-repository.ts`          | Generic MongoDB helpers                          |
+| **HTTP Handler**     | `apps/server/src/infrastructure/http/handlers/pilot-product.handler.ts`          | POST, PUT, GET /api/v1/pilot-products (driving)  |
+| **Problem Detail**   | `apps/server/src/infrastructure/http/mappers/problem-detail.mapper.ts`           | RFC 7807 error mapping                           |
+| **HTTP Helpers**     | `apps/server/src/infrastructure/http/helpers/`                                   | generateCommandContext, executeWithObservability |
 
 **Dépendances inter-modules:**
 
@@ -578,6 +993,120 @@ DRIVEN (appelés par l'application):
 - ✅ Cohérent avec les patterns Effect-TS courants
 - ⚠️ Dépendance directe sur @effect/platform (acceptable)
 
+### ADR-7: Communication inter-Bounded Contexts
+
+**Contexte:** Les bounded contexts communiquent via RabbitMQ. Il faut définir les patterns de communication supportés et quand les utiliser.
+
+**Décision:** Trois patterns supportés, par ordre de complexité croissante :
+
+**Pattern 1 — Choreography (fire-and-forget)**
+
+- Le BC source publie un event, le BC cible réagit de manière autonome
+- Le BC source ne sait pas et ne se soucie pas du résultat
+- Cas d'usage : Pilot → Catalog (projection read model)
+
+**Pattern 2 — Choreography avec suivi (request-response via events)**
+
+- Le BC source publie un event et maintient un état de suivi (ex: SyncStatus)
+- Le BC cible réagit, puis publie un event de résultat (success/failure)
+- Le BC source réagit au résultat et met à jour son état
+- Cas d'usage : Pilot ↔ Shopify (sync + retour de statut)
+
+**Pattern 3 — Saga / Process Manager**
+
+- Un composant coordinateur orchestre un workflow multi-BC
+- Gère les compensations en cas d'échec (rollback distribué)
+- Cas d'usage futur : Custom Product → Production → Livraison (si compensation nécessaire)
+
+**Critère de choix :**
+
+- Pas besoin de résultat → Pattern 1
+- Besoin de connaître le résultat mais pas de compensation → Pattern 2
+- Besoin de compensation transactionnelle cross-BC → Pattern 3
+
+**Mapping actuel :**
+
+| Interaction                         | Pattern             | Implémentation                                            |
+| ----------------------------------- | ------------------- | --------------------------------------------------------- |
+| Pilot → Catalog                     | 1 (fire-and-forget) | Event PilotProductPublished → consumer catalog-projection |
+| Pilot ↔ Shopify                     | 2 (avec suivi)      | Event → consumer shopify-sync → SyncStatus update         |
+| Pilot → AI Content (futur)          | 1 (fire-and-forget) | Event → consumer enrichissement                           |
+| Custom Product → Production (futur) | 2 ou 3 (à décider)  | Dépend du besoin de compensation                          |
+
+**Conséquences :**
+
+- ✅ Pattern par défaut = choreography (simple, découplé)
+- ✅ Le pattern 2 est déjà implémenté avec SyncStatus
+- ⚠️ Le pattern 3 n'est pas encore nécessaire — à implémenter quand un workflow multi-BC requiert des compensations
+
+### ADR-8: Stratégie d'évolution de schéma
+
+**Contexte:** Les domain events et documents MongoDB évoluent avec le temps. Il faut une stratégie pour ne pas casser les consumers et les lectures existantes.
+
+**Décision:**
+
+**Events (RabbitMQ) — Upcasting au consumer :**
+
+- Le publisher envoie TOUJOURS la dernière version de l'event
+- Le `_version` field permet aux consumers de détecter la version
+- Pour une évolution non-breaking (ajout de champ) : incrémenter `_version`, ajouter le champ optionnel
+- Pour une évolution breaking : créer un nouvel event (ex: `PilotProductPublishedV2`) et déprécier l'ancien
+- Le consumer gère les anciennes versions via un upcaster qui transforme vN → vN+1
+- Règle : **jamais de suppression de champ** sur un event publié, toujours additif
+
+**Documents MongoDB — Migration lazy :**
+
+- Lire l'ancien format, écrire le nouveau (lazy migration)
+- Le mapper `fromDocument` gère les deux formats avec un fallback
+- Pour les migrations massives : script one-shot si nécessaire
+
+**Règles :**
+
+1. Un event publié ne doit JAMAIS avoir de breaking change (suppression/renommage de champ)
+2. Les ajouts de champs sont optionnels (avec valeur par défaut)
+3. Le `_version` est incrémenté à chaque modification de la structure de l'event
+4. Les consumers doivent supporter la version courante ET la version N-1 minimum
+
+**Conséquences :**
+
+- ✅ Pas de downtime lors des déploiements
+- ✅ Les consumers peuvent être déployés indépendamment
+- ⚠️ Le code des consumers peut accumuler de la dette technique (upcasters à nettoyer périodiquement)
+
+### ADR-9: Politique du Shared Kernel
+
+**Contexte:** Le package `@maison-amane/shared-kernel` contient des types et services partagés entre bounded contexts. Il faut définir ce qui y va et ce qui n'y va pas pour éviter le couplage.
+
+**Décision:**
+
+**Ce qui va dans shared-kernel :**
+
+- IDs cross-context (ProductId, CorrelationId, UserId) — branded types réutilisés par plusieurs BC
+- Enums partagés (ProductCategory, Size, PriceRange) — référentiels communs
+- Configuration infrastructure (MongoDB, RabbitMQ, Shopify) — configs techniques
+- Messaging topology (EXCHANGES, ROUTING_KEYS, bootstrapConsumer) — contrats d'intégration
+- Runtime bootstrap — helpers de démarrage
+
+**Ce qui n'y va PAS :**
+
+- Types métier spécifiques à un BC (PilotProduct, CatalogProduct, SyncStatus)
+- Errors spécifiques à un BC (ProductNotFoundError, PublicationNotAllowed)
+- Logique métier (aggregate methods, domain services)
+- Schemas de validation applicatifs
+
+**Règles :**
+
+1. Un type dans shared-kernel ne doit JAMAIS dépendre d'un BC
+2. L'ajout d'un type dans shared-kernel nécessite une justification : il est utilisé par 2+ BC
+3. Les routing keys et exchanges sont dans shared-kernel car ils sont le contrat entre publisher et consumer
+4. Préférer la duplication à un couplage inadéquat — si deux BC ont un concept similaire mais pas identique, dupliquer
+
+**Conséquences :**
+
+- ✅ Couplage minimal entre BC
+- ✅ Shared-kernel reste stable et change rarement
+- ⚠️ Certains types peuvent sembler dupliqués (intentionnel — chaque BC évolue indépendamment)
+
 ### Anti-patterns à éviter
 
 | ❌ Ne pas faire                             | ✅ Faire plutôt                      |
@@ -684,44 +1213,80 @@ pnpm commit                 # Commitizen wizard
 
 ## 7. Référence rapide
 
-### Imports courants
+### Imports sélectifs Effect
 
 ```typescript
-// Effect core
-import { Effect, Layer, Context, Data, Option } from 'effect'
+// CONVENTION: imports sélectifs depuis les sous-modules (PAS `import { Effect } from 'effect'`)
+import { type Effect, gen, fail, succeed } from 'effect/Effect'
+import { Data, Option } from 'effect'
 import * as S from 'effect/Schema'
 
 // Domain
-import { PilotProduct, MakePilotProduct } from '../domain/pilot'
-import { ProductId, SyncStatus } from '../domain/pilot/value-objects'
+import { makePilotProduct, type PilotProduct } from '../domain/pilot'
+import { makeProductId, type ProductId } from '../domain/pilot/value-objects'
 
 // Ports
 import { PilotProductRepository, IdGenerator, Clock, EventPublisher } from '../ports/driven'
-
-// Infrastructure
-import { MongodbPilotProductRepositoryLive } from '../infrastructure/persistence/mongodb'
 ```
 
-### Structure d'un handler Effect
+### Conventions de nommage
+
+| Pattern              | Convention                                       | Exemple                             |
+| -------------------- | ------------------------------------------------ | ----------------------------------- |
+| Constructeur         | `make{Entity}` (camelCase)                       | `makePilotProduct`, `makeNotSynced` |
+| Handler creation     | `{entity}CreationHandler`                        | `pilotProductCreationHandler`       |
+| Handler update       | `{entity}UpdateHandler`                          | `pilotProductUpdateHandler`         |
+| Handler query        | `get{Entity}Handler`                             | `getPilotProductHandler`            |
+| Event constructor    | `make{EventName}`                                | `makePilotProductPublished`         |
+| Command constructor  | `make{CommandName}`                              | `makePilotProductCreationCommand`   |
+| Query constructor    | `make{QueryName}`                                | `makeGetPilotProductQuery`          |
+| Aggregate method     | Fonction pure `(product, ...args) => Product`    | `withUpdatedFields`, `markSynced`   |
+| Aggregate transition | Fonction Effect `(product, ...) => Effect<P, E>` | `publish`, `archive`                |
+| Policy               | `requires{Something}` retourne boolean           | `requiresChangeNotification`        |
+
+### Structure d'un command handler
 
 ```typescript
-export const handleSomething = (
-  command: SomeCommand
-): Effect.Effect<ReturnType, ErrorType, Dependency1 | Dependency2> =>
-  Effect.gen(function* () {
-    const dep1 = yield* Dependency1
-    const result = yield* dep1.operation()
-    return result
+// Imports sélectifs
+import { type Effect, gen } from 'effect/Effect'
+
+// Naming: pilotProductCreationHandler (PAS handlePilotProductCreation)
+export const pilotProductCreationHandler = (
+  command: PilotProductCreationCommand
+): Effect<PilotProduct, PilotProductCreationError, Dependencies> =>
+  gen(function* () {
+    const validated = yield* validateProductData(command.data)
+    const product = yield* createAggregate(validated)
+    const repo = yield* PilotProductRepository
+    const savedProduct = yield* repo.save(product)
+    if (requiresChangeNotification(savedProduct)) {
+      yield* emitEvent(savedProduct, command)
+    }
+    return savedProduct
+  })
+```
+
+### Structure d'un query handler
+
+```typescript
+export const getPilotProductHandler = (
+  query: GetPilotProductQuery
+): Effect<PilotProduct, PilotProductQueryError, PilotProductRepository> =>
+  gen(function* () {
+    const repo = yield* PilotProductRepository
+    return yield* repo.getById(query.productId)
   })
 ```
 
 ### Structure d'un repository
 
 ```typescript
-// Port
+// Port — avec findById (Option) ET getById (fail si absent)
 export interface SomeRepositoryService {
-  readonly save: (entity: E) => Effect.Effect<E, PersistenceError>
-  readonly findById: (id: Id) => Effect.Effect<Option.Option<E>, PersistenceError>
+  readonly save: (entity: E) => Effect<E, PersistenceError>
+  readonly findById: (id: Id) => Effect<Option<E>, PersistenceError>
+  readonly getById: (id: Id) => Effect<E, PersistenceError | NotFoundError>
+  readonly update: (entity: E) => Effect<E, PersistenceError>
 }
 
 export class SomeRepository extends Context.Tag('SomeRepository')<
@@ -729,11 +1294,22 @@ export class SomeRepository extends Context.Tag('SomeRepository')<
   SomeRepositoryService
 >() {}
 
-// Adapter
-export const SomeRepositoryLive = Layer.effect(
-  SomeRepository,
-  Effect.map(MongoDatabase, (db) => createRepository(db))
-)
+// Adapter — via createRepositoryLayer factory
+export const SomeRepositoryLive = createRepositoryLayer(SomeRepository, createMongodbRepository)
+```
+
+### Structure d'un domain event
+
+```typescript
+// CRITIQUE: _version: S.Literal(1) obligatoire
+const SomeEventSchema = S.TaggedStruct('SomeEvent', {
+  _version: S.Literal(1),
+  // ... autres champs
+})
+
+// Constructeur: omit '_tag' ET '_version'
+export const makeSomeEvent = (params: Omit<SomeEvent, '_tag' | '_version'>): SomeEvent =>
+  Data.case<SomeEvent>()({ _tag: 'SomeEvent', _version: 1, ...params })
 ```
 
 ### Topology RabbitMQ
@@ -741,6 +1317,9 @@ export const SomeRepositoryLive = Layer.effect(
 ```
 Exchange: pilot_events (topic, durable)
 ├── Routing: pilot.product.published
+│   ├── Queue: catalog-projection → CatalogProduct update
+│   └── Queue: shopify-sync → Shopify API call
+├── Routing: pilot.product.updated
 │   ├── Queue: catalog-projection → CatalogProduct update
 │   └── Queue: shopify-sync → Shopify API call
 └── Routing: pilot.product.synced

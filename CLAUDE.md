@@ -55,51 +55,15 @@ Composition Layer (Effect Layers for DI)
 | **Catalog** | Read Model  | UI-optimized projection |
 | **Shopify** | Integration | External sync           |
 
-### Key Patterns
+### Key Patterns (quick rules — see [CONTEXT.md](CONTEXT.md) for full examples)
 
-**Aggregate with Schema** - Domain models use Effect Schema with `Data.case()` for immutability:
-
-```typescript
-const PilotProductSchema = S.TaggedStruct("PilotProduct", { ... })
-export const MakePilotProduct = (params) => Data.case<PilotProduct>()({ _tag: "PilotProduct", ...params })
-```
-
-**Port as Context.Tag**:
-
-```typescript
-export class PilotProductRepository extends Context.Tag('PilotProductRepository')<
-  PilotProductRepository,
-  PilotProductRepositoryService
->() {}
-```
-
-**Adapter as Layer**:
-
-```typescript
-export const MongodbPilotProductRepositoryLive = Layer.effect(
-  PilotProductRepository,
-  Effect.map(MongoDatabase, (db) => createRepository(db))
-)
-```
-
-**Command Handler with Effect.gen**:
-
-```typescript
-export const handleSomething = (command) =>
-  Effect.gen(function* () {
-    const repo = yield* SomeRepository
-    const result = yield* repo.save(entity)
-    return result
-  })
-```
-
-### 3-Level Validation Flow
-
-```
-API Request → [API Schema] → Command DTO
-→ [Application Schema] → Validated Data (branded types)
-→ [Domain Schema] → Aggregate (full invariants)
-```
+- **Aggregate**: `S.TaggedStruct` + `Data.case()` constructor in camelCase (`makePilotProduct`, NOT `MakePilotProduct`)
+- **Aggregate Methods**: Pure functions `(aggregate, ...args) => Effect<Aggregate, Error>`
+- **Domain Events**: Must include `_version: S.Literal(N)`, constructor omits `_tag` and `_version`
+- **Ports**: `Context.Tag` interfaces — `getById` (fails if absent) vs `findById` (returns Option)
+- **Adapters**: Implemented as `Layer` — MongoDB via `createRepositoryLayer`, in-memory via `Layer.succeed`
+- **Handlers**: Named `{entity}{Action}Handler` (e.g. `pilotProductCreationHandler`), use selective imports (`import { gen } from 'effect/Effect'`)
+- **Validation**: 3 levels — API Schema → Application Schema (branded types) → Domain Schema (full invariants)
 
 ## File Naming Conventions
 
@@ -109,6 +73,7 @@ API Request → [API Schema] → Command DTO
 | Value Object    | `value-objects/{name}.ts`                                         |
 | Command         | `{action}-{entity}.command.ts`                                    |
 | Handler         | `{action}-{entity}.handler.ts`                                    |
+| Query           | `{action}-{entity}.query.ts`                                      |
 | Repository Port | `{entity}.repository.ts` in `ports/driven/`                       |
 | Repository Impl | `{entity}.repository.ts` in `infrastructure/persistence/mongodb/` |
 | Layer           | `{name}.layer.ts`                                                 |
@@ -131,16 +96,9 @@ Uses Conventional Commits. Valid scopes:
 
 ## Development Workflow: Adding a Feature
 
-Order: **Domain → Application → Infrastructure → Composition**
+Order: **Domain → Application → Infrastructure → Composition → Tests**
 
-1. `domain/{context}/` - Define aggregate, value objects, events
-2. `application/{context}/commands/` - Create command DTO
-3. `application/{context}/handlers/` - Implement handler
-4. `application/{context}/validation/` - Add validation schemas
-5. `ports/driven/` - Add interface if new service needed
-6. `infrastructure/` - Implement adapter (HTTP handler, repository)
-7. `composition/layers/` - Wire in appropriate layer
-8. Write tests
+See [CONTEXT.md §6](CONTEXT.md#6-workflows-de-développement) for detailed step-by-step with file paths.
 
 ## Infrastructure
 
@@ -149,6 +107,45 @@ Order: **Domain → Application → Infrastructure → Composition**
 - **Server**: port `3001`
 
 Collections: `pilot_products` (write), `catalog_products` (read)
+
+## Utilisation des Skills
+
+Avant de commencer une tâche de développement, **vérifiez si un skill peut vous assister**. Les skills contiennent les workflows, règles et références pour les tâches récurrentes.
+
+### Skills disponibles
+
+- **`domain-model`** -- Modélisation domaine DDD (aggregates, VOs, events, errors, services)
+- **`use-case`** -- Use cases applicatifs CQRS (commands, queries, handlers, validation)
+- **`infra-adapter`** -- Adapters infrastructure (repositories, services, messaging)
+- **`api-endpoint`** -- Endpoints HTTP + contrats API (routes, DTOs, error mapping)
+- **`test-suite`** -- Tests (test doubles, fixtures, tests intégration/unitaires)
+- **`bounded-context`** -- Scaffolding complet d'un nouveau Bounded Context
+- **`consumer`** -- Consumer RabbitMQ (apps/consumers/)
+- **`shared-kernel`** -- Types partagés cross-context (IDs, enums, messaging topology, configs infrastructure)
+
+### Workflow recommandé
+
+```
+Vous : "Je veux [décrire la tâche complète]. Quels skills utiliser ?"
+Claude : "Je recommande [liste des skills]. Je vais les lire et les appliquer."
+[Claude lit les SKILL.md pertinents et suit leurs instructions]
+```
+
+**Exemples** :
+
+- "Ajouter un champ `priority` à PilotProduct" -> `domain-model`, `use-case`, `api-endpoint`, `test-suite`
+- "Créer le bounded context Production" -> `bounded-context` (orchestre tous les autres)
+- "Ajouter un endpoint GET /products/:id" -> `use-case`, `api-endpoint`, `test-suite`
+
+## Maintenance des artefacts de documentation
+
+### Mise à jour des Skills
+
+Lors d'un refacto modifiant les conventions (naming, patterns transversaux), vérifier si les skills dans `.claude/skills/` référencent des règles impactées et les mettre à jour.
+
+### Mise à jour de CONTEXT.md
+
+Lors d'un changement architectural majeur (nouveau pattern, nouvelle couche, nouveau BC), mettre à jour `CONTEXT.md` pour refléter l'état actuel.
 
 ## Reference Documentation
 
