@@ -1,28 +1,28 @@
 ---
 sidebar_position: 2
 title: Glossaire
-description: Definitions du langage metier (Ubiquitous Language) utilise dans Maison Amane
+description: Définitions du langage métier (Ubiquitous Language) utilisé dans Maison Amane
 ---
 
 # Glossaire
 
-Ce glossaire definit le vocabulaire metier commun a toutes les equipes (developpeurs, PO, QA). Ces termes sont utilises de maniere coherente dans le code source, la documentation et les echanges.
+Ce glossaire définit le vocabulaire métier commun à toutes les équipes (développeurs, PO, QA). Ces termes sont utilisés de manière cohérente dans le code source, la documentation et les échanges.
 
 ---
 
-## Entites metier
+## Entités métier
 
 ### PilotProduct
 
-**Definition** : Produit gere par l'equipe Pilote, representant la source de verite pour les informations produit.
+**Définition** : Produit géré par l'équipe Pilote, représentant la source de vérité pour les informations produit.
 
-Le PilotProduct est l'**agregat racine** du domaine Pilot. Il contient toutes les informations necessaires a la creation et la gestion d'un produit : label, description, variantes, vues (images), et statut de synchronisation.
+Le PilotProduct est l'**agrégat racine** du domaine Pilot. Il contient toutes les informations nécessaires à la création et la gestion d'un produit : label, description, variantes, vues (images), et statut de synchronisation.
 
 **Cycle de vie** :
 
-1. Creation en statut `DRAFT`
-2. Publication (`PUBLISHED`) declenchant les projections
-3. Archivage (`ARCHIVED`) si necessaire
+1. Création en statut `DRAFT`
+2. Publication (`PUBLISHED`) déclenchant les projections
+3. Archivage (`ARCHIVED`) si nécessaire
 
 **Fichier source** : [`apps/server/src/domain/pilot/aggregate.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/pilot/aggregate.ts)
 
@@ -30,15 +30,15 @@ Le PilotProduct est l'**agregat racine** du domaine Pilot. Il contient toutes le
 
 ### CatalogProduct
 
-**Definition** : Projection simplifiee d'un PilotProduct, optimisee pour l'affichage dans le catalogue client.
+**Définition** : Projection simplifiée d'un PilotProduct, optimisée pour l'affichage dans le catalogue client.
 
-Le CatalogProduct est un **read model** derive du PilotProduct lors de sa publication. Il contient uniquement les informations necessaires a l'affichage : pas de statut de synchronisation, structure d'images simplifiee.
+Le CatalogProduct est un **read model** dérivé du PilotProduct lors de sa publication. Il contient uniquement les informations nécessaires à l'affichage : pas de statut de synchronisation, structure d'images simplifiée.
 
-**Caracteristiques** :
+**Caractéristiques** :
 
 - Lecture seule (pas de modification directe)
-- Mis a jour automatiquement lors de la publication d'un PilotProduct
-- Optimise pour les requetes de consultation
+- Mis à jour automatiquement lors de la publication d'un PilotProduct
+- Optimisé pour les requêtes de consultation
 
 **Fichier source** : [`apps/server/src/domain/catalog/projections/catalog-product.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/catalog/projections/catalog-product.ts)
 
@@ -48,31 +48,31 @@ Le CatalogProduct est un **read model** derive du PilotProduct lors de sa public
 
 ### Variant
 
-**Definition** : Declinaison d'un produit selon ses dimensions.
+**Définition** : Déclinaison d'un produit selon ses dimensions.
 
-Chaque produit possede une ou plusieurs variantes. Une variante definit une taille disponible pour le produit.
+Chaque produit possède une ou plusieurs variantes. Une variante définit une taille disponible pour le produit.
 
 ### StandardVariant
 
-**Definition** : Variante avec une taille predefinies dans le referentiel.
+**Définition** : Variante avec une taille prédéfinie dans le référentiel.
 
 Les tailles standards sont :
 
-- `REGULAR` : Dimensions standard selon la categorie du produit
-- `LARGE` : Dimensions plus grandes selon la categorie
+- `REGULAR` : Dimensions standard selon la catégorie du produit
+- `LARGE` : Dimensions plus grandes selon la catégorie
 
-Le prix est determine automatiquement par la combinaison `PriceRange + Size`.
+Le prix est déterminé automatiquement par la combinaison `PriceRange + Size`.
 
 **Fichier source** : [`apps/server/src/domain/pilot/entities/variant.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/pilot/entities/variant.ts)
 
 ### CustomVariant
 
-**Definition** : Variante avec des dimensions personnalisees definies par le client.
+**Définition** : Variante avec des dimensions personnalisées définies par le client.
 
 Contrairement aux StandardVariant, les CustomVariant ont :
 
-- Des dimensions specifiques (largeur x longueur en cm)
-- Un prix defini manuellement
+- Des dimensions spécifiques (largeur x longueur en cm)
+- Un prix défini manuellement
 
 **Fichier source** : [`apps/server/src/domain/pilot/entities/variant.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/pilot/entities/variant.ts)
 
@@ -82,9 +82,9 @@ Contrairement aux StandardVariant, les CustomVariant ont :
 
 ### View
 
-**Definition** : Image associee a un produit, identifiee par son type.
+**Définition** : Image associée à un produit, identifiée par son type.
 
-Chaque vue represente une photo du produit sous un angle ou contexte particulier.
+Chaque vue représente une photo du produit sous un angle ou contexte particulier. L'URL de l'image (`imageUrl`) référence un [Media](#media) préalablement enregistré.
 
 ### ViewType
 
@@ -93,7 +93,7 @@ Types de vues disponibles :
 | Type       | Description                    | Obligatoire |
 | ---------- | ------------------------------ | ----------- |
 | `FRONT`    | Vue de face principale         | Oui         |
-| `DETAIL`   | Vue de detail (texture, motif) | Oui         |
+| `DETAIL`   | Vue de détail (texture, motif) | Oui         |
 | `BACK`     | Vue de dos                     | Non         |
 | `AMBIANCE` | Photo d'ambiance en situation  | Non         |
 
@@ -101,46 +101,78 @@ Types de vues disponibles :
 
 ---
 
+## Media
+
+### Media (agrégat)
+
+**Définition** : Fichier media (image) enregistré dans le système, avec un cycle de vie à deux états.
+
+Le Media est l'**agrégat racine** du bounded context Media. Il représente une image uploadée vers un CDN externe dont la référence est enregistrée dans le système. Le media est découplé des produits : ce sont les produits qui référencent les médias via les `imageUrl` de leurs views.
+
+**Cycle de vie** :
+
+1. Enregistrement en statut `PENDING` (via `POST /api/media`)
+2. Confirmation automatique (`CONFIRMED`) quand un produit référence ce media
+
+Voir [Flux d'enregistrement Media](./data-flows/media-upload) pour le flux complet.
+
+**Fichier source** : [`apps/server/src/domain/media/aggregate.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/media/aggregate.ts)
+
+### MediaStatus
+
+**Définition** : État du media dans son cycle de vie.
+
+| Statut      | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| `PENDING`   | Media enregistré, pas encore référencé par un produit |
+| `CONFIRMED` | Media référencé par au moins un produit               |
+
+### MediaUrl
+
+**Définition** : URL du media sur le CDN externe (ex: Cloudinary, S3). Utilise le protocole `http://` en développement et `https://` en production.
+
+---
+
 ## Statuts
 
 ### ProductStatus
 
-**Definition** : Etat du produit dans son cycle de vie.
+**Définition** : État du produit dans son cycle de vie.
 
-| Statut      | Description            | Declencheur de projection |
+| Statut      | Description            | Déclencheur de projection |
 | ----------- | ---------------------- | ------------------------- |
 | `DRAFT`     | Brouillon, non visible | Non                       |
-| `PUBLISHED` | Publie et visible      | Oui                       |
-| `ARCHIVED`  | Archive, non visible   | Non                       |
+| `PUBLISHED` | Publié et visible      | Oui                       |
+| `ARCHIVED`  | Archivé, non visible   | Non                       |
 
 ### SyncStatus
 
-**Definition** : Etat de synchronisation avec Shopify.
+**Définition** : État de synchronisation avec Shopify.
 
 | Statut       | Description                                                |
 | ------------ | ---------------------------------------------------------- |
-| `NotSynced`  | Non synchronise (etat initial)                             |
-| `Synced`     | Synchronisation reussie, contient l'ID Shopify             |
-| `SyncFailed` | Echec de synchronisation, contient les details de l'erreur |
+| `NotSynced`  | Non synchronisé (état initial)                             |
+| `Synced`     | Synchronisation réussie, contient l'ID Shopify             |
+| `SyncFailed` | Échec de synchronisation, contient les détails de l'erreur |
 
-**Machine a etats** :
+**Machine à états** :
 
 ```
-NotSynced --> Synced (succes sync)
-NotSynced --> SyncFailed (echec sync)
-SyncFailed --> Synced (retry reussi)
-SyncFailed --> SyncFailed (retry echoue)
+NotSynced --> Synced (succès sync)
+NotSynced --> SyncFailed (échec sync)
+SyncFailed --> Synced (retry réussi)
+SyncFailed --> SyncFailed (retry échoué)
 ```
 
 **Fichier source** : [`apps/server/src/domain/pilot/value-objects/sync-status.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/pilot/value-objects/sync-status.ts)
 
 ---
 
-## Categories et types
+## Catégories et types
 
 ### ProductType
 
-**Definition** : Type de produit commercialise.
+**Définition** : Type de produit commercialisé.
 
 Actuellement : `TAPIS` (tapis artisanaux).
 
@@ -148,56 +180,51 @@ Extensible pour : `COUSSIN`, `PLAID`, etc.
 
 ### ProductCategory
 
-**Definition** : Categorie de produit, determinant les dimensions de reference.
+**Définition** : Catégorie de produit, déterminant les dimensions de référence.
 
-| Categorie  | Description                            |
+| Catégorie  | Description                            |
 | ---------- | -------------------------------------- |
-| `RUNNER`   | Tapis de couloir (format allonge)      |
+| `RUNNER`   | Tapis de couloir (format allongé)      |
 | `STANDARD` | Tapis classique (format rectangulaire) |
 
 ### PriceRange
 
-**Definition** : Gamme de prix du produit, influencant le tarif des variantes standards.
+**Définition** : Gamme de prix du produit, influençant le tarif des variantes standards.
 
 | Gamme      | Description      |
 | ---------- | ---------------- |
-| `DISCOUNT` | Entree de gamme  |
+| `DISCOUNT` | Entrée de gamme  |
 | `STANDARD` | Gamme principale |
 | `PREMIUM`  | Haut de gamme    |
 
 ---
 
-## Evenements
+## Événements
+
+Tous les événements domaine portent le snapshot complet de l'agrégat (`product`), un `correlationId` de traçabilité, un `userId`, un `timestamp`, et une `_version`.
+
+### PilotProductCreated
+
+**Définition** : Événement émis à chaque création d'un PilotProduct, quel que soit son statut.
+
+Cet événement déclenche la [confirmation des médias](./data-flows/media-upload) référencés par le produit (consumer `media-confirmation`).
 
 ### PilotProductPublished
 
-**Definition** : Evenement emis lors de la publication d'un PilotProduct.
+**Définition** : Événement émis lors de la publication d'un PilotProduct (statut `PUBLISHED`).
 
-Cet evenement declenche :
+Cet événement déclenche :
 
 1. La projection vers CatalogProduct (consumer `catalog-projection`)
 2. La synchronisation vers Shopify (consumer `shopify-sync`)
 
-**Contenu** :
+### PilotProductUpdated
 
-- `productId` : Identifiant du produit
-- `product` : Donnees completes du PilotProduct
-- `correlationId` : Identifiant de tracabilite
-- `userId` : Utilisateur ayant declenche la publication
-- `timestamp` : Date/heure de l'evenement
+**Définition** : Événement émis lors de toute mise à jour d'un PilotProduct existant, quel que soit son statut.
+
+Cet événement déclenche la mise à jour des projections (catalog, shopify).
 
 **Fichier source** : [`apps/server/src/domain/pilot/events.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/pilot/events.ts)
-
-### PilotProductSynced
-
-**Definition** : Evenement emis apres une synchronisation reussie avec Shopify.
-
-**Contenu** :
-
-- `productId` : Identifiant du produit
-- `shopifyProductId` : Identifiant retourne par Shopify
-- `correlationId` : Identifiant de tracabilite
-- `timestamp` : Date/heure de la synchronisation
 
 ---
 
@@ -205,24 +232,25 @@ Cet evenement declenche :
 
 ### Consumer
 
-**Definition** : Processus independant ecoutant les evenements RabbitMQ.
+**Définition** : Processus indépendant écoutant les événements RabbitMQ.
 
-Deux consumers existent :
+Trois consumers existent :
 
 - `catalog-projection` : Projette les PilotProduct vers CatalogProduct
 - `shopify-sync` : Synchronise les produits vers Shopify
+- `media-confirmation` : Confirme les médias référencés par un produit nouvellement créé
 
 ### DLQ (Dead Letter Queue)
 
-**Definition** : File d'attente pour les messages en echec apres toutes les tentatives de retry.
+**Définition** : File d'attente pour les messages en échec après toutes les tentatives de retry.
 
-Les messages en DLQ necessitent une intervention manuelle ou une analyse. Voir [Gestion des erreurs](./data-flows/error-handling).
+Les messages en DLQ nécessitent une intervention manuelle ou une analyse. Voir [Gestion des erreurs](./data-flows/error-handling).
 
 ### Retry Queue
 
-**Definition** : File d'attente temporaire pour les messages en attente de nouvelle tentative.
+**Définition** : File d'attente temporaire pour les messages en attente de nouvelle tentative.
 
-Les messages restent dans la retry queue pendant un delai (TTL) avant d'etre retraites avec un backoff exponentiel.
+Les messages restent dans la retry queue pendant un délai (TTL) avant d'être retraités avec un backoff exponentiel.
 
 ---
 
@@ -232,10 +260,14 @@ Les messages restent dans la retry queue pendant un delai (TTL) avant d'etre ret
 
 Identifiant unique d'un produit (UUID v4).
 
+### MediaId
+
+Identifiant unique d'un media (UUID v4).
+
 ### CorrelationId
 
-Identifiant de tracabilite permettant de suivre une requete a travers tous les composants du systeme (API, consumers, logs).
+Identifiant de traçabilité permettant de suivre une requête à travers tous les composants du système (API, consumers, logs).
 
 ### ShopifyProductId
 
-Identifiant du produit dans Shopify, retourne apres une synchronisation reussie.
+Identifiant du produit dans Shopify, retourné après une synchronisation réussie.

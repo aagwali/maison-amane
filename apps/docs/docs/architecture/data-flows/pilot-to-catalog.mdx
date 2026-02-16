@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Pilot vers Catalog
-description: Flux de transformation des donnees de PilotProduct vers CatalogProduct et Shopify
+description: Flux de transformation des données de PilotProduct vers CatalogProduct et Shopify
 ---
 
 import Tabs from '@theme/Tabs'
@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem'
 
 # Flux Pilot vers Catalog
 
-Ce document decrit le parcours complet des donnees depuis la creation d'un produit via l'API jusqu'a sa projection dans le catalogue et sa synchronisation avec Shopify.
+Ce document décrit le parcours complet des données depuis la création d'un produit via l'API jusqu'à sa projection dans le catalogue et sa synchronisation avec Shopify.
 
 ## Vue globale du flux
 
@@ -22,8 +22,8 @@ sequenceDiagram
     participant Repo as PilotProductRepository
     participant DB as MongoDB
     participant MQ as RabbitMQ
+    participant MediaConsumer as Media Confirmation
     participant CatConsumer as Catalog Consumer
-    participant CatRepo as CatalogProductRepository
     participant ShopConsumer as Shopify Consumer
     participant Shopify as Shopify API
 
@@ -31,9 +31,16 @@ sequenceDiagram
     API->>API: Validation HTTP (Schema)
     API->>Handler: CreatePilotProductCommand
 
-    Handler->>Handler: Validation metier
+    Handler->>Handler: Validation métier
     Handler->>Repo: save(PilotProduct)
     Repo->>DB: Insert pilot_products
+
+    Handler->>MQ: PilotProductCreated
+
+    par Confirmation Media
+        MQ->>MediaConsumer: product.created
+        MediaConsumer->>DB: Confirm médias référencés
+    end
 
     alt status = PUBLISHED
         Handler->>MQ: PilotProductPublished
@@ -41,48 +48,48 @@ sequenceDiagram
         par Projection Catalog
             MQ->>CatConsumer: product.published
             CatConsumer->>CatConsumer: Project to CatalogProduct
-            CatConsumer->>CatRepo: upsert(CatalogProduct)
-            CatRepo->>DB: Upsert catalog_products
+            CatConsumer->>DB: Upsert catalog_products
         and Sync Shopify
             MQ->>ShopConsumer: product.published
             ShopConsumer->>ShopConsumer: Map to ShopifyProduct
             ShopConsumer->>Shopify: productSet mutation
             Shopify-->>ShopConsumer: ShopifyProductId
-            ShopConsumer->>Repo: update syncStatus
-            Repo->>DB: Update pilot_products
+            ShopConsumer->>DB: Update syncStatus
         end
     end
 
     API-->>Client: 201 Created (PilotProductResponse)
 ```
 
-## Etapes de transformation
+## Étapes de transformation
 
-Le tableau ci-dessous recapitule chaque etape de transformation des donnees.
+Le tableau ci-dessous récapitule chaque étape de transformation des données.
 
-| Etape | Source | Cible | Fichier | Description |
-|-------|--------|-------|---------|-------------|
-| 1 | `CreatePilotProductRequest` | `UnvalidatedProductData` | [`pilot-product.mapper.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/infrastructure/http/mappers/pilot-product.mapper.ts#L18) | Extraction des donnees HTTP brutes |
-| 2 | `UnvalidatedProductData` | `ValidatedProductData` | [`product-data.schema.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/pilot/validation/product-data.schema.ts) | Validation des regles metier |
-| 3 | `ValidatedProductData` | `PilotProduct` | [`create-pilot-product.handler.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/pilot/handlers/create-pilot-product.handler.ts) | Construction de l'agregat |
-| 4 | `PilotProduct` | `PilotProductPublished` | [`events.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/pilot/events.ts) | Emission de l'evenement domaine |
-| 5 | `PilotProductPublished` | `CatalogProduct` | [`catalog-product.projector.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/catalog/projectors/catalog-product.projector.ts) | Projection vers le read model |
-| 6 | `PilotProduct` | `ShopifyProductSetInput` | [`shopify-product.mapper.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/shopify/mappers/shopify-product.mapper.ts) | Mapping vers le format Shopify |
-| 7 | `PilotProduct` | `PilotProductResponse` | [`pilot-product.mapper.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/infrastructure/http/mappers/pilot-product.mapper.ts#L99) | Serialisation de la reponse API |
+| Étape | Source | Cible | Description |
+|-------|--------|-------|-------------|
+| 1 | `CreatePilotProductRequest` | `UnvalidatedProductData` | Extraction des données HTTP brutes |
+| 2 | `UnvalidatedProductData` | `ValidatedProductData` | Validation des règles métier |
+| 3 | `ValidatedProductData` | `PilotProduct` | Construction de l'agrégat |
+| 4a | `PilotProduct` | `PilotProductCreated` | Émission (toujours) |
+| 4b | `PilotProduct` | `PilotProductPublished` | Émission (si statut PUBLISHED) |
+| 5 | `PilotProductCreated` | Media `CONFIRMED` | Confirmation des médias référencés |
+| 6 | `PilotProductPublished` | `CatalogProduct` | Projection vers le read model |
+| 7 | `PilotProductPublished` | `ShopifyProductSetInput` | Mapping Shopify (voir [détails](./shopify-sync)) |
+| 8 | `PilotProduct` | `PilotProductResponse` | Sérialisation de la réponse API |
 
 ---
 
-## Details par etape
+## Détails par étape
 
 <Tabs>
   <TabItem value="step1" label="1. HTTP -> Command" default>
 
-### Etape 1 : Request vers UnvalidatedProductData
+### Étape 1 : Request vers UnvalidatedProductData
 
-**Objectif** : Extraire les donnees de la requete HTTP sans validation metier.
+**Objectif** : Extraire les données de la requête HTTP sans validation métier.
 
 ```typescript
-// Entree: CreatePilotProductRequest (DTO HTTP)
+// Entrée: CreatePilotProductRequest (DTO HTTP)
 {
   label: "Tapis Berbere Atlas",
   type: "TAPIS",
@@ -102,8 +109,8 @@ Le tableau ci-dessous recapitule chaque etape de transformation des donnees.
 }
 
 // Sortie: UnvalidatedProductData
-// Structure identique mais typee differemment pour indiquer
-// que la validation metier n'a pas encore ete effectuee
+// Structure identique mais typée différemment pour indiquer
+// que la validation métier n'a pas encore été effectuée
 ```
 
 **Transformation** : Mapping direct des champs sans modification.
@@ -113,19 +120,19 @@ Le tableau ci-dessous recapitule chaque etape de transformation des donnees.
   </TabItem>
   <TabItem value="step2" label="2. Validation">
 
-### Etape 2 : Validation metier
+### Étape 2 : Validation métier
 
-**Objectif** : Valider les regles metier avant creation de l'agregat.
+**Objectif** : Valider les règles métier avant création de l'agrégat.
 
-**Regles validees** :
+**Règles validées** :
 - Label non vide, longueur maximale
 - Au moins une variante
-- Vues obligatoires presentes (FRONT, DETAIL)
+- Vues obligatoires présentes (FRONT, DETAIL)
 - Dimensions custom valides (positives)
 - Prix custom valide (positif)
 
 ```typescript
-// Schema de validation Effect-TS
+// Schéma de validation Effect-TS
 const ProductDataSchema = S.Struct({
   label: ProductLabelSchema,        // String non vide, max 100 chars
   type: ProductTypeSchema,          // Enum: TAPIS
@@ -141,15 +148,15 @@ const ProductDataSchema = S.Struct({
 **Fichier** : [`application/pilot/validation/product-data.schema.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/pilot/validation/product-data.schema.ts)
 
   </TabItem>
-  <TabItem value="step3" label="3. Agregat">
+  <TabItem value="step3" label="3. Agrégat">
 
-### Etape 3 : Construction de PilotProduct
+### Étape 3 : Construction de PilotProduct
 
-**Objectif** : Creer l'agregat racine avec ses invariants.
+**Objectif** : Créer l'agrégat racine avec ses invariants.
 
 ```typescript
-// Construction de l'agregat
-const pilotProduct = MakePilotProduct({
+// Construction de l'agrégat
+const pilotProduct = makePilotProduct({
   id: generatedProductId,
   label: validatedData.label,
   type: validatedData.type,
@@ -163,54 +170,43 @@ const pilotProduct = MakePilotProduct({
     additional: otherViews,
   },
   status: validatedData.status,
-  syncStatus: MakeNotSynced(),    // Etat initial
+  syncStatus: makeNotSynced(),    // État initial
   createdAt: now,
   updatedAt: now,
 })
 ```
 
-**Invariants de l'agregat** :
-- `variants` ne peut pas etre vide (NonEmptyArray)
+**Invariants de l'agrégat** :
+- `variants` ne peut pas être vide (NonEmptyArray)
 - `views` doit contenir `front` et `detail`
-- `syncStatus` demarre toujours a `NotSynced`
+- `syncStatus` démarre toujours à `NotSynced`
 
 **Fichier** : [`application/pilot/handlers/create-pilot-product.handler.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/pilot/handlers/create-pilot-product.handler.ts)
 
   </TabItem>
-  <TabItem value="step4" label="4. Evenement">
+  <TabItem value="step4" label="4. Événements">
 
-### Etape 4 : Emission de PilotProductPublished
+### Étape 4 : Émission des événements domaine
 
-**Objectif** : Notifier le systeme qu'un produit a ete publie.
+La création d'un produit émet **toujours** `PilotProductCreated`, et **conditionnellement** `PilotProductPublished` si le statut est `PUBLISHED`.
 
-**Condition** : L'evenement n'est emis que si `status === PUBLISHED`.
+| Événement | Condition | Routing key | Consumers |
+|-----------|-----------|-------------|-----------|
+| `PilotProductCreated` | Toujours | `product.created` | `media-confirmation` |
+| `PilotProductPublished` | `status === PUBLISHED` | `product.published` | `catalog-projection`, `shopify-sync` |
 
-```typescript
-// Structure de l'evenement
-const event = MakePilotProductPublished({
-  productId: product.id,
-  product: product,           // Snapshot complet du PilotProduct
-  correlationId: command.correlationId,
-  userId: command.userId,
-  timestamp: command.timestamp,
-})
-
-// Publication vers RabbitMQ
-await eventPublisher.publish(event)
-// Routing key: "product.published"
-// Exchange: "pilot.events"
-```
+Chaque événement porte le **snapshot complet** du PilotProduct, un `correlationId`, `userId` et `timestamp`.
 
 **Fichier** : [`domain/pilot/events.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/domain/pilot/events.ts)
 
   </TabItem>
-  <TabItem value="step5" label="5. Projection Catalog">
+  <TabItem value="step5" label="6. Projection Catalog">
 
-### Etape 5 : Projection vers CatalogProduct
+### Étape 6 : Projection vers CatalogProduct
 
-**Objectif** : Creer une vue optimisee pour l'affichage catalogue.
+**Objectif** : Créer une vue optimisée pour l'affichage catalogue.
 
-**Transformations effectuees** :
+**Transformations effectuées** :
 
 | Champ PilotProduct | Champ CatalogProduct | Transformation |
 |--------------------|---------------------|----------------|
@@ -219,10 +215,10 @@ await eventPublisher.publish(event)
 | `description` | `description` | Direct |
 | `category` | `category` | Direct |
 | `priceRange` | `priceRange` | Direct |
-| `variants` | `variants` | Simplifie (voir ci-dessous) |
-| `views` | `images` | Restructure (voir ci-dessous) |
+| `variants` | `variants` | Simplifié (voir ci-dessous) |
+| `views` | `images` | Restructuré (voir ci-dessous) |
 | `timestamp` (event) | `publishedAt` | Date de projection |
-| - | `shopifyUrl` | Non defini initialement |
+| - | `shopifyUrl` | Non défini initialement |
 
 **Transformation des variants** :
 
@@ -231,7 +227,7 @@ await eventPublisher.publish(event)
 { _tag: "StandardVariant", size: "REGULAR" }
 
 // CatalogProduct variant
-{ _tag: "StandardVariant", size: "REGULAR" }  // Simplifie: pas de CUSTOM size
+{ _tag: "StandardVariant", size: "REGULAR" }  // Simplifié: pas de CUSTOM size
 
 // PilotProduct variant (CustomVariant)
 { _tag: "CustomVariant", size: "CUSTOM", customDimensions: { width: 200, length: 300 }, price: 1500 }
@@ -264,64 +260,29 @@ await eventPublisher.publish(event)
 **Fichier** : [`application/catalog/projectors/catalog-product.projector.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/catalog/projectors/catalog-product.projector.ts)
 
   </TabItem>
-  <TabItem value="step6" label="6. Sync Shopify">
+  <TabItem value="step6" label="7. Sync Shopify">
 
-### Etape 6 : Mapping vers Shopify
+### Étape 7 : Mapping vers Shopify
 
-**Objectif** : Transformer le PilotProduct en format compatible Shopify API.
+**Objectif** : Transformer le PilotProduct en format compatible Shopify API (mutation `productSet`).
 
-**Transformations effectuees** :
+Le mapping convertit les champs du PilotProduct (label, variantes, views, prix) vers le format Shopify (title, handle, productOptions, variants, files). Les prix des StandardVariant sont calculés selon une matrice PriceRange x Size.
 
-| Champ PilotProduct | Champ Shopify | Transformation |
-|--------------------|---------------|----------------|
-| `label` | `title` | Direct |
-| `description` | `descriptionHtml` | Direct |
-| `label` | `handle` | Slugifie (ex: "Tapis Berbere" -> "tapis-berbere") |
-| `type` + `category` | `productType` | Concatene (ex: "TAPIS - STANDARD") |
-| - | `vendor` | "Maison Amane" (constante) |
-| - | `status` | "ACTIVE" (produit publie) |
-| `priceRange`, `category` | `tags` | Array de tags |
-| `variants` | `productOptions` | Option "Dimensions" avec valeurs |
-| `variants` | `variants` | Prix + dimensions formatees |
-| `views` | `files` | URLs des images |
-
-**Calcul des prix** :
-
-Pour les StandardVariant, le prix est calcule selon la matrice :
-
-| PriceRange | REGULAR | LARGE |
-|------------|---------|-------|
-| DISCOUNT | 400 | 600 |
-| STANDARD | 600 | 900 |
-| PREMIUM | 900 | 1400 |
-
-Pour les CustomVariant, le prix est celui defini manuellement.
-
-**Format des dimensions** :
-
-```typescript
-// StandardVariant: utilise les dimensions de reference
-// Ex: STANDARD + REGULAR -> "140x200"
-
-// CustomVariant: dimensions personnalisees
-// Ex: width=200, length=300 -> "200x300"
-```
-
-**Fichier** : [`application/shopify/mappers/shopify-product.mapper.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/application/shopify/mappers/shopify-product.mapper.ts)
+Pour le détail complet du mapping, la matrice de prix et la logique du handler, voir [Synchronisation Shopify](./shopify-sync).
 
   </TabItem>
-  <TabItem value="step7" label="7. Response API">
+  <TabItem value="step7" label="8. Response API">
 
-### Etape 7 : Serialisation de la reponse
+### Étape 8 : Sérialisation de la réponse
 
-**Objectif** : Formater le PilotProduct pour la reponse HTTP.
+**Objectif** : Formater le PilotProduct pour la réponse HTTP.
 
 **Transformations** :
 - Dates converties en ISO 8601
-- SyncStatus serialise selon son tag
+- SyncStatus sérialisé selon son tag
 
 ```typescript
-// Reponse API
+// Réponse API
 {
   id: "550e8400-e29b-41d4-a716-446655440000",
   label: "Tapis Berbere Atlas",
@@ -340,14 +301,14 @@ Pour les CustomVariant, le prix est celui defini manuellement.
     additional: [...]
   },
   status: "PUBLISHED",
-  syncStatus: { _tag: "NotSynced" },  // Sync asynchrone, pas encore effectue
+  syncStatus: { _tag: "NotSynced" },  // Sync asynchrone, pas encore effectué
   createdAt: "2025-01-25T10:30:00.000Z",
   updatedAt: "2025-01-25T10:30:00.000Z"
 }
 ```
 
 :::info Note sur syncStatus
-La reponse API retourne immediatement avec `syncStatus: NotSynced`. La synchronisation Shopify s'effectue de maniere asynchrone via le consumer. Pour connaitre le statut de synchronisation, il faut re-interroger l'API.
+La réponse API retourne immédiatement avec `syncStatus: NotSynced`. La synchronisation Shopify s'effectue de manière asynchrone via le consumer. Pour connaître le statut de synchronisation, il faut ré-interroger l'API.
 :::
 
 **Fichier** : [`infrastructure/http/mappers/pilot-product.mapper.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/infrastructure/http/mappers/pilot-product.mapper.ts) - fonction `toResponse()`
@@ -357,7 +318,7 @@ La reponse API retourne immediatement avec `syncStatus: NotSynced`. La synchroni
 
 ---
 
-## Diagramme de transformation des donnees
+## Diagramme de transformation des données
 
 ```mermaid
 flowchart LR
@@ -374,49 +335,48 @@ flowchart LR
 
     subgraph Domain["Couche Domaine"]
         Pilot["PilotProduct<br/>(Aggregate)"]
-        Event["PilotProductPublished<br/>(Event)"]
+        EventCreated["PilotProductCreated"]
+        EventPublished["PilotProductPublished"]
     end
 
-    subgraph ReadModel["Read Model"]
-        Catalog["CatalogProduct<br/>(Projection)"]
-    end
-
-    subgraph External["Integration"]
-        Shopify["ShopifyProductSetInput"]
+    subgraph Downstream["Consumers"]
+        Media["Media Confirmation"]
+        Catalog["Catalog Projection"]
+        Shopify["Shopify Sync"]
     end
 
     Request -->|"toUnvalidatedProductData()"| Unvalidated
     Unvalidated -->|"validate()"| Validated
     Validated -->|"+ correlationId, userId"| Command
-    Command -->|"MakePilotProduct()"| Pilot
-    Pilot -->|"if PUBLISHED"| Event
-    Event -->|"projectToCatalog()"| Catalog
-    Event -->|"mapToShopifyProduct()"| Shopify
+    Command -->|"makePilotProduct()"| Pilot
+    Pilot -->|"toujours"| EventCreated
+    Pilot -->|"si PUBLISHED"| EventPublished
+    EventCreated --> Media
+    EventPublished --> Catalog
+    EventPublished --> Shopify
     Pilot -->|"toResponse()"| Response
 
     classDef http fill:#e3f2fd,stroke:#1976d2
     classDef app fill:#fff3e0,stroke:#f57c00
     classDef domain fill:#e8f5e9,stroke:#388e3c
-    classDef read fill:#fce4ec,stroke:#c2185b
-    classDef external fill:#f3e5f5,stroke:#7b1fa2
+    classDef downstream fill:#f3e5f5,stroke:#7b1fa2
 
     class Request,Response http
     class Unvalidated,Validated,Command app
-    class Pilot,Event domain
-    class Catalog read
-    class Shopify external
+    class Pilot,EventCreated,EventPublished domain
+    class Media,Catalog,Shopify downstream
 ```
 
-## Tracabilite
+## Traçabilité
 
-Chaque flux est trace grace au **CorrelationId** :
+Chaque flux est tracé grâce au **CorrelationId** :
 
-1. Genere a la reception de la requete HTTP
-2. Propage dans la commande
-3. Inclus dans l'evenement publie
-4. Log par chaque consumer
+1. Généré à la réception de la requête HTTP
+2. Propagé dans la commande
+3. Inclus dans l'événement publié
+4. Loggé par chaque consumer
 
-Cela permet de suivre une requete complete dans les logs :
+Cela permet de suivre une requête complète dans les logs :
 
 ```json
 {

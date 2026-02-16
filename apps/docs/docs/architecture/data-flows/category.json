@@ -1,8 +1,8 @@
 {
-  "label": "Flux de donnees",
+  "label": "Flux de données",
   "position": 3,
   "link": {
     "type": "generated-index",
-    "description": "Documentation des flux de transformation de donnees dans le systeme Maison Amane."
+    "description": "Documentation des flux de transformation de données dans le système Maison Amane."
   }
 }

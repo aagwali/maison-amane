@@ -18,9 +18,6 @@ export default function Home() {
             <a className={styles.button} href="/docs/intro">
               Commencer
             </a>
-            <a className={styles.buttonSecondary} href="/docs/architecture/overview">
-              Vue d'ensemble
-            </a>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: Gestion des erreurs
-description: Mecanisme de retry et Dead Letter Queue pour les messages en echec
+description: Mécanisme de retry et Dead Letter Queue pour les messages en échec
 ---
 
 import Tabs from '@theme/Tabs'
@@ -9,44 +9,44 @@ import TabItem from '@theme/TabItem'
 
 # Gestion des erreurs
 
-Ce document explique comment le systeme gere les erreurs lors du traitement des messages. Il est concu pour etre accessible aux equipes non-techniques (PO, QA) tout en fournissant les details techniques necessaires aux developpeurs.
+Ce document explique comment le système gère les erreurs lors du traitement des messages. Il est conçu pour être accessible aux équipes non-techniques (PO, QA) tout en fournissant les détails techniques nécessaires aux développeurs.
 
-## Principe general
+## Principe général
 
-Quand un produit est publie, des messages sont envoyes aux consumers (Catalog, Shopify). Parfois, le traitement peut echouer :
+Quand un produit est publié, des messages sont envoyés aux consumers (Catalog, Shopify). Parfois, le traitement peut échouer :
 - Shopify temporairement indisponible
 - Erreur de validation inattendue
-- Timeout reseau
+- Timeout réseau
 
-Le systeme est concu pour **ne pas perdre de donnees** grace a un mecanisme de retry automatique.
+Le système est conçu pour **ne pas perdre de données** grâce à un mécanisme de retry automatique.
 
 ## Le cycle de vie d'un message
 
 ```mermaid
 stateDiagram-v2
-    [*] --> EnTraitement: Message recu
+    [*] --> EnTraitement: Message reçu
 
     EnTraitement --> Succes: Traitement OK
     EnTraitement --> EnEchec: Erreur
 
-    Succes --> [*]: Message acquitte
+    Succes --> [*]: Message acquitté
 
     EnEchec --> AttenteRetry: Tentatives restantes
     EnEchec --> DLQ: Max tentatives atteint
 
-    AttenteRetry --> EnTraitement: Apres delai
+    AttenteRetry --> EnTraitement: Après délai
 
     DLQ --> [*]: Intervention requise
 
     note right of AttenteRetry
-        Delai exponentiel:
+        Délai exponentiel:
         1s -> 2s -> 4s -> 8s...
     end note
 
     note right of DLQ
         Dead Letter Queue
-        Conservation indefinie
-        Alerte operateur
+        Conservation indéfinie
+        Alerte opérateur
     end note
 ```
 
@@ -55,30 +55,30 @@ stateDiagram-v2
 <Tabs>
   <TabItem value="simple" label="Version simple" default>
 
-### Comment ca marche ?
+### Comment ça marche ?
 
-Imaginez un systeme postal avec plusieurs niveaux de service :
+Imaginez un système postal avec plusieurs niveaux de service :
 
-1. **Premiere tentative** : Le facteur essaie de livrer le colis (le message)
-2. **Echec** : Le destinataire n'est pas la (Shopify indisponible)
-3. **Retry automatique** : Le colis retourne au depot et sera reessaye plus tard
-4. **Delai croissant** : A chaque echec, on attend plus longtemps (1s, 2s, 4s, 8s...)
-5. **Abandon** : Apres 3 tentatives, le colis va aux "objets non delivres" (DLQ)
+1. **Première tentative** : Le facteur essaie de livrer le colis (le message)
+2. **Échec** : Le destinataire n'est pas là (Shopify indisponible)
+3. **Retry automatique** : Le colis retourne au dépôt et sera réessayé plus tard
+4. **Délai croissant** : À chaque échec, on attend plus longtemps (1s, 2s, 4s, 8s...)
+5. **Abandon** : Après 3 tentatives, le colis va aux "objets non délivrés" (DLQ)
 
 ### Que se passe-t-il en DLQ ?
 
 Les messages en DLQ ne sont **pas perdus**. Ils attendent une intervention :
-- Un developpeur peut les analyser
-- Une fois le probleme corrige, les messages peuvent etre re-traites
-- Des alertes sont configurables pour notifier l'equipe
+- Un développeur peut les analyser
+- Une fois le problème corrigé, les messages peuvent être re-traités
+- Des alertes sont configurables pour notifier l'équipe
 
 ### Impact utilisateur
 
-| Scenario | Impact client | Action requise |
+| Scénario | Impact client | Action requise |
 |----------|--------------|----------------|
-| Retry reussi | Aucun (transparent) | Aucune |
-| Message en DLQ | Produit non visible sur Shopify | Intervention equipe technique |
-| Projection Catalog echouee | Produit non visible dans le catalogue | Intervention equipe technique |
+| Retry réussi | Aucun (transparent) | Aucune |
+| Message en DLQ | Produit non visible sur Shopify | Intervention équipe technique |
+| Projection Catalog échouée | Produit non visible dans le catalogue | Intervention équipe technique |
 
   </TabItem>
   <TabItem value="technique" label="Version technique">
@@ -87,11 +87,11 @@ Les messages en DLQ ne sont **pas perdus**. Ils attendent une intervention :
 
 Chaque consumer dispose de 3 queues :
 
-| Queue | Role | Duree de retention |
+| Queue | Rôle | Durée de rétention |
 |-------|------|-------------------|
-| `{consumer}.queue` | Queue principale de traitement | Jusqu'a acquittement |
-| `{consumer}.retry` | Queue temporaire avec TTL | Delai du retry |
-| `{consumer}.dlq` | Dead Letter Queue | Indefinie |
+| `{consumer}.queue` | Queue principale de traitement | Jusqu'à acquittement |
+| `{consumer}.retry` | Queue temporaire avec TTL | Délai du retry |
+| `{consumer}.dlq` | Dead Letter Queue | Indéfinie |
 
 ### Flux de retry
 
@@ -104,7 +104,7 @@ sequenceDiagram
     participant DLQ
 
     Main->>Consumer: Message (attempt 1)
-    Consumer->>Consumer: Traitement echoue
+    Consumer->>Consumer: Traitement échoué
     Consumer->>Retry: Publish + TTL 1000ms
     Consumer->>Main: ACK original
 
@@ -112,7 +112,7 @@ sequenceDiagram
     Retry->>Main: Re-route via DLX
 
     Main->>Consumer: Message (attempt 2)
-    Consumer->>Consumer: Traitement echoue
+    Consumer->>Consumer: Traitement échoué
     Consumer->>Retry: Publish + TTL 2000ms
     Consumer->>Main: ACK original
 
@@ -120,26 +120,26 @@ sequenceDiagram
     Retry->>Main: Re-route via DLX
 
     Main->>Consumer: Message (attempt 3)
-    Consumer->>Consumer: Traitement echoue
+    Consumer->>Consumer: Traitement échoué
     Consumer->>DLQ: NACK (no requeue)
 
-    Note over DLQ: Message conserve indefiniment
+    Note over DLQ: Message conservé indéfiniment
 ```
 
 ### Configuration du retry
 
-| Parametre | Valeur par defaut | Description |
+| Paramètre | Valeur par défaut | Description |
 |-----------|-------------------|-------------|
 | `maxAttempts` | 3 | Nombre maximum de tentatives |
-| `initialDelayMs` | 1000 | Delai initial (1 seconde) |
+| `initialDelayMs` | 1000 | Délai initial (1 seconde) |
 | `multiplier` | 2 | Facteur multiplicatif |
 | `handlerTimeoutMs` | 30000 | Timeout du handler (30s) |
 
-**Calcul du delai** : `delay = initialDelayMs * (multiplier ^ retryCount)`
+**Calcul du délai** : `delay = initialDelayMs * (multiplier ^ retryCount)`
 
-| Tentative | Delai |
+| Tentative | Délai |
 |-----------|-------|
-| 1 | 0ms (immediate) |
+| 1 | 0ms (immédiate) |
 | 2 | 1000ms (1s) |
 | 3 | 2000ms (2s) |
 
@@ -152,42 +152,42 @@ sequenceDiagram
 
 ## Types d'erreurs
 
-### Erreurs recuperables (retry)
+### Erreurs récupérables (retry)
 
-Ces erreurs justifient un retry car elles peuvent se resoudre d'elles-memes :
+Ces erreurs justifient un retry car elles peuvent se résoudre d'elles-mêmes :
 
 | Erreur | Cause probable | Action |
 |--------|----------------|--------|
-| `MessageTimeoutError` | Shopify lent, reseau congestionne | Retry avec backoff |
+| `MessageTimeoutError` | Shopify lent, réseau congestionné | Retry avec backoff |
 | Erreur HTTP 503 | Service temporairement indisponible | Retry avec backoff |
 | Erreur HTTP 429 | Rate limiting | Retry avec backoff |
-| Erreur reseau | Connexion interrompue | Retry avec backoff |
+| Erreur réseau | Connexion interrompue | Retry avec backoff |
 
-### Erreurs non-recuperables (DLQ)
+### Erreurs non-récupérables (DLQ)
 
-Ces erreurs necessitent une intervention car le retry ne les resoudra pas :
+Ces erreurs nécessitent une intervention car le retry ne les résoudra pas :
 
 | Erreur | Cause probable | Action |
 |--------|----------------|--------|
-| `MessageParseError` | Message mal forme | Analyse + correction |
-| Erreur HTTP 400 | Donnees invalides | Correction des donnees |
-| Erreur HTTP 401/403 | Authentification invalide | Verifier les credentials |
+| `MessageParseError` | Message mal formé | Analyse + correction |
+| Erreur HTTP 400 | Données invalides | Correction des données |
+| Erreur HTTP 401/403 | Authentification invalide | Vérifier les credentials |
 
 ---
 
 ## Supervision et alertes
 
-### Metriques a surveiller
+### Métriques à surveiller
 
-| Metrique | Seuil d'alerte | Signification |
+| Métrique | Seuil d'alerte | Signification |
 |----------|----------------|---------------|
 | Messages en DLQ | > 0 | Intervention requise |
-| Taux de retry | > 10% | Probleme potentiel |
-| Latence moyenne | > 5s | Performance degradee |
+| Taux de retry | > 10% | Problème potentiel |
+| Latence moyenne | > 5s | Performance dégradée |
 
-### Acces aux messages DLQ
+### Accès aux messages DLQ
 
-Les messages en DLQ peuvent etre consultes via :
+Les messages en DLQ peuvent être consultés via :
 1. **RabbitMQ Management UI** : Interface web de RabbitMQ
 2. **Logs applicatifs** : Recherche par correlationId
 3. **Scripts de monitoring** : Alertes automatiques
@@ -241,24 +241,24 @@ flowchart TB
 
 ---
 
-## Procedures operationnelles
+## Procédures opérationnelles
 
 ### Que faire quand un message arrive en DLQ ?
 
 1. **Identifier le message** : Utiliser le correlationId dans les logs
 2. **Analyser l'erreur** : Consulter les headers du message (x-death)
-3. **Corriger le probleme** : Selon la nature de l'erreur
-4. **Re-traiter si necessaire** : Republier le message manuellement
+3. **Corriger le problème** : Selon la nature de l'erreur
+4. **Re-traiter si nécessaire** : Republier le message manuellement
 
 ### Headers utiles dans les messages DLQ
 
 | Header | Description |
 |--------|-------------|
-| `x-death` | Historique des echecs (count, reason, queue) |
-| `x-first-death-reason` | Raison du premier echec |
+| `x-death` | Historique des échecs (count, reason, queue) |
+| `x-first-death-reason` | Raison du premier échec |
 | `x-first-death-queue` | Queue d'origine |
-| `correlationId` | ID de tracabilite |
-| `eventType` | Type d'evenement (ex: PilotProductPublished) |
+| `correlationId` | ID de traçabilité |
+| `eventType` | Type d'événement (ex: PilotProductPublished) |
 
 ### Exemple de message x-death
 
@@ -282,23 +282,23 @@ flowchart TB
 ## FAQ
 
 <details>
-<summary>Un message peut-il etre traite plusieurs fois ?</summary>
+<summary>Un message peut-il être traité plusieurs fois ?</summary>
 
-Oui, si le consumer crash apres avoir traite le message mais avant de l'acquitter. Les handlers doivent donc etre **idempotents** : traiter le meme message deux fois doit produire le meme resultat.
+Oui, si le consumer crash après avoir traité le message mais avant de l'acquitter. Les handlers doivent donc être **idempotents** : traiter le même message deux fois doit produire le même résultat.
 
 </details>
 
 <details>
 <summary>Combien de temps un message reste-t-il en DLQ ?</summary>
 
-Indefiniment. Les messages ne sont jamais supprimes automatiquement. C'est une decision operationnelle de les purger apres analyse.
+Indéfiniment. Les messages ne sont jamais supprimés automatiquement. C'est une décision opérationnelle de les purger après analyse.
 
 </details>
 
 <details>
-<summary>Peut-on changer les parametres de retry ?</summary>
+<summary>Peut-on changer les paramètres de retry ?</summary>
 
-Oui, via la configuration du consumer. Les parametres sont definis dans le fichier de configuration RabbitMQ.
+Oui, via la configuration du consumer. Les paramètres sont définis dans le fichier de configuration RabbitMQ.
 
 **Fichier** : [`composition/config/rabbitmq.config.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/server/src/composition/config/rabbitmq.config.ts)
 
@@ -310,6 +310,6 @@ Oui, via la configuration du consumer. Les parametres sont definis dans le fichi
 En environnement de dev, vous pouvez :
 1. Utiliser le `FakeShopifyClient` qui peut simuler des erreurs
 2. Couper temporairement la connexion Shopify
-3. Injecter un delai artificiel pour declencher le timeout
+3. Injecter un délai artificiel pour déclencher le timeout
 
 </details>
