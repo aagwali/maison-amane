@@ -26,11 +26,11 @@ export const rabbitmqConfigFromEnv = Config.all({
   url: Config.redacted('RABBITMQ_URL'),
   retry: Config.all({
     maxAttempts: Config.number('RABBITMQ_RETRY_MAX_ATTEMPTS')
-      .pipe(withDefault(3)),
+      .pipe(withDefault(5)),
     initialDelayMs: Config.number('RABBITMQ_RETRY_INITIAL_DELAY_MS')
       .pipe(withDefault(1000)),
     multiplier: Config.number('RABBITMQ_RETRY_MULTIPLIER')
-      .pipe(withDefault(5)),
+      .pipe(withDefault(2)),
   }),
   handlerTimeoutMs: Config.number('RABBITMQ_HANDLER_TIMEOUT_MS')
     .pipe(withDefault(30000)),

@@ -17,6 +17,8 @@ import {
   logError,
   catchAll,
   runPromise,
+  suspend,
+  catchAllDefect,
 } from 'effect/Effect'
 import { RabbitMQConnection } from '@maison-amane/shared-kernel'
 import type * as amqp from 'amqplib'
@@ -106,15 +108,27 @@ export const startConsumer = <E extends DomainEvent, R>(
                   maxAttempts: config.retry.maxAttempts,
                 }))
 
-              const handleWithTimeout = handler(event as E)
+              // Suspend handler execution to catch synchronous errors during Effect construction
+              // catchAllDefect transforms defects (like raw throws) into typed errors
+              const handleWithTimeout = suspend(() => handler(event as E))
+                .pipe(catchAllDefect((defect) =>
+                    gen(function* () {
+                      yield* logError('Handler defect (uncaught error)')
+                        .pipe(annotateLogs({ defect: String(defect) }))
+                      return yield* new MessageHandlerError({
+                        event,
+                        cause: defect instanceof Error ? defect : new Error(String(defect)),
+                      })
+                    })
+                  ))
                 .pipe(timeoutFail({
-                  duration: Duration.millis(config.handlerTimeoutMs),
-                  onTimeout: () =>
-                    new MessageTimeoutError({
-                      event,
-                      timeoutMs: config.handlerTimeoutMs,
-                    }),
-                }))
+                    duration: Duration.millis(config.handlerTimeoutMs),
+                    onTimeout: () =>
+                      new MessageTimeoutError({
+                        event,
+                        timeoutMs: config.handlerTimeoutMs,
+                      }),
+                  }))
 
               yield* handleWithTimeout
                 .pipe(matchEffect({
@@ -134,13 +148,30 @@ export const startConsumer = <E extends DomainEvent, R>(
                         }))
 
                       if (retryCount >= config.retry.maxAttempts - 1) {
-                        // Max retries reached → send to DLQ
+                        // Max retries reached → publish to DLQ with error context
                         yield* logError('Max retries reached, sending to DLQ')
                           .pipe(annotateLogs({
                             queue: queues.dlq,
                           }))
-                        // Reject without requeue → goes to DLX → DLQ
-                        yield* sync(() => channel.nack(msg, false, false))
+                        yield* sync(() => {
+                          channel.publish(
+                            '', // Default exchange
+                            queues.dlq,
+                            msg.content,
+                            {
+                              persistent: true,
+                              headers: {
+                                ...msg.properties.headers,
+                                'x-error-type': error._tag,
+                                'x-error-message': errorMessage,
+                                'x-retry-count': retryCount,
+                                'x-consumer': consumerName,
+                                'x-failed-at': new Date().toISOString(),
+                              },
+                            }
+                          )
+                          channel.ack(msg)
+                        })
                       } else {
                         // Retry with exponential backoff
                         const delay = calculateDelay(
@@ -181,8 +212,24 @@ export const startConsumer = <E extends DomainEvent, R>(
                 gen(function* () {
                   yield* logError('Failed to parse message')
                     .pipe(annotateLogs({ error: String(error) }))
-                  // Invalid message → send to DLQ directly
-                  channel.nack(msg, false, false)
+                  // Invalid message → publish to DLQ with error context
+                  channel.publish(
+                    '', // Default exchange
+                    queues.dlq,
+                    msg.content,
+                    {
+                      persistent: true,
+                      headers: {
+                        ...msg.properties.headers,
+                        'x-error-type': error._tag,
+                        'x-error-message': String(error.cause),
+                        'x-retry-count': 0,
+                        'x-consumer': consumerName,
+                        'x-failed-at': new Date().toISOString(),
+                      },
+                    }
+                  )
+                  channel.ack(msg)
                 })
               ))
           )

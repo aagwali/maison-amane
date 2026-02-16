@@ -126,11 +126,15 @@ export const declareConsumerInfrastructure = (
         for (const routingKey of routingKeys) {
           await channel.bindQueue(dlqName, dlxExchange, routingKey)
         }
+        // Bind DLQ for messages that went through retry cycle
+        // (their routing key becomes mainName due to retry queue's x-dead-letter-routing-key)
+        await channel.bindQueue(dlqName, dlxExchange, mainName)
 
         await channel.assertQueue(retryName, {
           durable: true,
           arguments: {
-            'x-dead-letter-exchange': mainExchange,
+            'x-dead-letter-exchange': '', // Default exchange → routes directly by queue name
+            'x-dead-letter-routing-key': mainName, // Route expired messages back to main queue
             // No x-message-ttl here - TTL comes from message expiration field
             // This allows per-message TTL for exponential backoff
           },
