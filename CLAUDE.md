@@ -122,6 +122,7 @@ Avant de commencer une tâche de développement, **vérifiez si un skill peut vo
 - **`bounded-context`** -- Scaffolding complet d'un nouveau Bounded Context
 - **`consumer`** -- Consumer RabbitMQ (apps/consumers/)
 - **`shared-kernel`** -- Types partagés cross-context (IDs, enums, messaging topology, configs infrastructure)
+- **`documentation`** -- Pages Docusaurus (data-flows, architecture, glossaire)
 
 ### Workflow recommandé
 
@@ -136,6 +137,7 @@ Claude : "Je recommande [liste des skills]. Je vais les lire et les appliquer."
 - "Ajouter un champ `priority` à PilotProduct" -> `domain-model`, `use-case`, `api-endpoint`, `test-suite`
 - "Créer le bounded context Production" -> `bounded-context` (orchestre tous les autres)
 - "Ajouter un endpoint GET /products/:id" -> `use-case`, `api-endpoint`, `test-suite`
+- "Documenter le flux de paiement" -> `documentation`
 
 ## Maintenance des artefacts de documentation
 
