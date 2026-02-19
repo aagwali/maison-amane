@@ -1,14 +1,14 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 
-export default function HomePage() {
+export default function ProductsPage() {
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Dashboard
+        Products
       </Typography>
       <Typography variant="body1" color="text.secondary">
-        Contenu à venir
+        Liste produits à venir
       </Typography>
     </Box>
   )

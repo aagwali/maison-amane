@@ -31,9 +31,16 @@ export const MongoDatabaseLive = Layer.scoped(
     const { client: _client, db } = yield* acquireRelease(
       tryPromise({
         try: async () => {
-          const mongoClient = new MongoClient(uri)
+          const mongoClient = new MongoClient(uri, {
+            serverSelectionTimeoutMS: 5_000,
+          })
+          mongoClient.on('error', () => {
+            // Prevent unhandled error events from crashing the process
+          })
           await mongoClient.connect()
-          return { client: mongoClient, db: mongoClient.db(config.database) }
+          const db = mongoClient.db(config.database)
+          await db.command({ ping: 1 })
+          return { client: mongoClient, db }
         },
         catch: (error) => new MongoDatabaseError({ cause: error }),
       }),

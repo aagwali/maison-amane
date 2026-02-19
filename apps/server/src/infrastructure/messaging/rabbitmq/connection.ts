@@ -29,8 +29,14 @@ export const RabbitMQConnectionLive = Layer.scoped(
     const { connection, channel } = yield* acquireRelease(
       tryPromise({
         try: async () => {
-          const conn = await amqp.connect(url)
+          const conn = await amqp.connect(url, { timeout: 5_000 })
+          conn.on('error', () => {
+            // Prevent unhandled error events from crashing the process
+          })
           const ch = await conn.createChannel()
+          ch.on('error', () => {
+            // Prevent unhandled error events from crashing the process
+          })
           return { connection: conn, channel: ch }
         },
         catch: (error) => new RabbitMQConnectionError({ cause: error }),
