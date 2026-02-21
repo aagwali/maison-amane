@@ -68,6 +68,10 @@ export default [
       // Effect generators pattern
       'require-yield': 'off',
 
+      // TypeScript handles undefined variable checking via the compiler — no-undef is redundant
+      // and incorrectly flags browser globals (HTMLInputElement, XMLHttpRequest, etc.)
+      'no-undef': 'off',
+
       // Clean code rules
       'no-console': ['warn', { allow: ['warn', 'error', 'log'] }],
       'prefer-const': 'error',
