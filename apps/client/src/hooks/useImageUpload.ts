@@ -152,8 +152,8 @@ const uploadOneFile = (
 
 // --- Hook ---
 
-export function useImageUpload(): UseImageUploadReturn {
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([])
+export function useImageUpload(initialImages?: UploadedImage[]): UseImageUploadReturn {
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(initialImages ?? [])
   const [uploadingImages, setUploadingImages] = useState<UploadingImage[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)

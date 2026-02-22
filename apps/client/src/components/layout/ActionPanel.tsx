@@ -12,10 +12,11 @@ import { ACTION_PANEL_WIDTH } from './constants'
 import { useProductForm } from '@/contexts/ProductFormContext'
 
 export default function ActionPanel() {
-  const { title, setTitle, canSave, isSaving, saveError, saveProduct, uploadedImages } =
+  const { title, setTitle, mode, canSave, isSaving, saveError, saveProduct, uploadedImages } =
     useProductForm()
 
   const needsMoreImages = uploadedImages.length < 2
+  const isEdit = mode === 'edit'
 
   return (
     <Box
@@ -33,6 +34,7 @@ export default function ActionPanel() {
       }}
     >
       <TextField
+        id="product-title"
         label="Product Title"
         variant="outlined"
         size="small"
@@ -64,7 +66,7 @@ export default function ActionPanel() {
         onClick={saveProduct}
         startIcon={isSaving ? <CircularProgress size={18} color="inherit" /> : undefined}
       >
-        {isSaving ? 'Saving...' : 'Save Product'}
+        {isSaving ? 'Saving...' : isEdit ? 'Update Product' : 'Save Product'}
       </Button>
     </Box>
   )

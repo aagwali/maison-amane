@@ -3,12 +3,25 @@
 import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { useImageUpload, type UseImageUploadReturn } from '@/hooks/useImageUpload'
-import { createProduct } from '@/app/products/actions'
+import {
+  useImageUpload,
+  type UploadedImage,
+  type UseImageUploadReturn,
+} from '@/hooks/useImageUpload'
+import { createProduct, updateProduct } from '@/app/products/actions'
+
+export interface ProductFormInitialData {
+  id: string
+  title: string
+  images: UploadedImage[]
+}
+
+type ProductFormMode = 'create' | 'edit'
 
 interface ProductFormContextValue extends UseImageUploadReturn {
   title: string
   setTitle: (title: string) => void
+  mode: ProductFormMode
   canSave: boolean
   isSaving: boolean
   saveError: string | null
@@ -26,15 +39,36 @@ function imagesToViews(images: { imageUrl: string }[]) {
   }))
 }
 
-export function ProductFormProvider({ children }: { children: ReactNode }) {
-  const router = useRouter()
-  const imageUpload = useImageUpload()
+function hasImageChanges(current: UploadedImage[], initial: UploadedImage[]): boolean {
+  if (current.length !== initial.length) return true
+  return current.some((img, i) => img.imageUrl !== initial[i].imageUrl)
+}
 
-  const [title, setTitle] = useState('')
+interface ProductFormProviderProps {
+  initialData?: ProductFormInitialData
+  children: ReactNode
+}
+
+export function ProductFormProvider({ initialData, children }: ProductFormProviderProps) {
+  const router = useRouter()
+  const mode: ProductFormMode = initialData ? 'edit' : 'create'
+  const imageUpload = useImageUpload(initialData?.images)
+
+  const [title, setTitle] = useState(initialData?.title ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  const canSave = title.trim() !== '' && imageUpload.uploadedImages.length >= 2 && !isSaving
+  const hasChanges =
+    mode === 'edit' &&
+    initialData != null &&
+    (title.trim() !== initialData.title ||
+      hasImageChanges(imageUpload.uploadedImages, initialData.images))
+
+  const canSave =
+    !isSaving &&
+    (mode === 'create'
+      ? title.trim() !== '' && imageUpload.uploadedImages.length >= 2
+      : hasChanges && title.trim() !== '' && imageUpload.uploadedImages.length >= 2)
 
   const saveProduct = useCallback(async () => {
     if (!canSave) return
@@ -42,37 +76,47 @@ export function ProductFormProvider({ children }: { children: ReactNode }) {
     setIsSaving(true)
     setSaveError(null)
 
-    const payload = {
-      label: title.trim(),
-      type: 'TAPIS',
-      category: 'STANDARD',
-      description: '',
-      priceRange: 'STANDARD',
-      variants: [{ size: 'REGULAR' }],
-      views: imagesToViews(imageUpload.uploadedImages),
-      status: 'PUBLISHED',
-    }
-
     try {
-      const result = await createProduct(payload)
-      if ('error' in result) setSaveError(result.error)
-      else router.push(`/products/${result.id}`)
+      if (mode === 'create') {
+        const payload = {
+          label: title.trim(),
+          type: 'TAPIS',
+          category: 'STANDARD',
+          description: '',
+          priceRange: 'STANDARD',
+          variants: [{ size: 'REGULAR' }],
+          views: imagesToViews(imageUpload.uploadedImages),
+          status: 'PUBLISHED',
+        }
+
+        const result = await createProduct(payload)
+        if ('error' in result) setSaveError(result.error)
+        else router.push(`/products/${result.id}`)
+      } else {
+        const result = await updateProduct(initialData!.id, {
+          label: title.trim(),
+          views: imagesToViews(imageUpload.uploadedImages),
+        })
+        if ('error' in result) setSaveError(result.error)
+        else router.refresh()
+      }
     } finally {
       setIsSaving(false)
     }
-  }, [canSave, title, imageUpload.uploadedImages, router])
+  }, [canSave, mode, title, imageUpload.uploadedImages, router, initialData])
 
   const value = useMemo<ProductFormContextValue>(
     () => ({
       ...imageUpload,
       title,
       setTitle,
+      mode,
       canSave,
       isSaving,
       saveError,
       saveProduct,
     }),
-    [imageUpload, title, canSave, isSaving, saveError, saveProduct]
+    [imageUpload, title, mode, canSave, isSaving, saveError, saveProduct]
   )
 
   return <ProductFormContext.Provider value={value}>{children}</ProductFormContext.Provider>

@@ -47,7 +47,7 @@ const program = bootstrapConsumer({
   consumerName: CONSUMER_NAME,
   queuePrefix: CONSUMER_NAME,
   exchange: EXCHANGES.PILOT_EVENTS,
-  routingKeys: [ROUTING_KEYS.PILOT.PRODUCT_CREATED],
+  routingKeys: [ROUTING_KEYS.PILOT.PRODUCT_CREATED, ROUTING_KEYS.PILOT.PRODUCT_UPDATED],
   startConsumer: startConsumer(CONSUMER_NAME, mediaConfirmationHandler),
 })
   .pipe(provide(layers))

@@ -1,6 +1,6 @@
 'use server'
 
-import type { CreatePilotProductRequest } from '@maison-amane/api'
+import type { CreatePilotProductRequest, UpdatePilotProductRequest } from '@maison-amane/api'
 import * as Cause from 'effect/Cause'
 import * as Exit from 'effect/Exit'
 
@@ -37,4 +37,20 @@ export async function createProduct(
 
   logger.error('createProduct failed', { cause: Cause.pretty(exit.cause), label: input.label })
   return { error: 'Erreur lors de la création du produit' }
+}
+
+export async function updateProduct(
+  id: string,
+  input: UpdatePilotProductRequest
+): Promise<{ success: true } | { error: string }> {
+  const exit = await runApi((client) =>
+    client['pilot-product'].update({ path: { id }, payload: input })
+  )
+
+  if (Exit.isSuccess(exit)) {
+    return { success: true }
+  }
+
+  logger.error('updateProduct failed', { cause: Cause.pretty(exit.cause), id })
+  return { error: 'Erreur lors de la mise à jour du produit' }
 }
