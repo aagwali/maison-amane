@@ -1,10 +1,8 @@
 // ============================================
-// CLIENT CONFIGURATION
-// Single source of truth for all env vars.
+// CLIENT CONFIGURATION — browser-safe only.
+// Only NEXT_PUBLIC_* vars here (statically replaced at build time by Next.js).
 //
-// NOTE: NEXT_PUBLIC_* vars must be accessed with literal syntax here —
-// Next.js replaces them statically at build time and cannot resolve
-// dynamic access like process.env[name].
+// For server-only config (API_URL, secrets), see config.server.ts.
 // ============================================
 
 function required(name: string, value: string | undefined): string {
@@ -13,8 +11,6 @@ function required(name: string, value: string | undefined): string {
 }
 
 export const config = {
-  apiUrl: required('API_URL', process.env.API_URL),
-
   cloudinary: {
     cloudName: required(
       'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME',

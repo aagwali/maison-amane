@@ -4,10 +4,10 @@ import { Cause, Exit } from 'effect'
 import { type Effect, gen, provide, runPromiseExit } from 'effect/Effect'
 import { notFound } from 'next/navigation'
 
-import { config } from './config'
+import { serverConfig } from './config.server'
 import { throwApiError } from './throw-api-error'
 
-const BASE_URL = config.apiUrl
+const BASE_URL = serverConfig.apiUrl
 
 /**
  * Effect lazy décrivant l'acquisition du client typé.

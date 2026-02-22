@@ -1,8 +1,11 @@
 'use server'
 
+import type { CreatePilotProductRequest } from '@maison-amane/api'
+import * as Cause from 'effect/Cause'
 import * as Exit from 'effect/Exit'
 
 import { runApi } from '@/lib/api-client'
+import { logger } from '@/lib/logger'
 
 export async function registerMedia(input: {
   externalUrl: string
@@ -16,5 +19,22 @@ export async function registerMedia(input: {
     return exit.value
   }
 
+  logger.error('registerMedia failed', {
+    cause: Cause.pretty(exit.cause),
+    filename: input.filename,
+  })
   return { error: "Erreur lors de l'enregistrement du média" }
+}
+
+export async function createProduct(
+  input: CreatePilotProductRequest
+): Promise<{ id: string } | { error: string }> {
+  const exit = await runApi((client) => client['pilot-product'].create({ payload: input }))
+
+  if (Exit.isSuccess(exit)) {
+    return { id: exit.value.id }
+  }
+
+  logger.error('createProduct failed', { cause: Cause.pretty(exit.cause), label: input.label })
+  return { error: 'Erreur lors de la création du produit' }
 }

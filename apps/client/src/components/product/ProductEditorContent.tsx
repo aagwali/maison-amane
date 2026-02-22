@@ -7,15 +7,10 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
-import type { PilotProductResponse } from '@maison-amane/api'
 
-import { useImageUpload } from '@/hooks/useImageUpload'
+import { useProductForm } from '@/contexts/ProductFormContext'
 
-interface ProductEditorContentProps {
-  product?: PilotProductResponse
-}
-
-export default function ProductEditorContent({ product: _ }: ProductEditorContentProps) {
+export default function ProductEditorContent() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const {
     uploadedImages,
@@ -26,7 +21,7 @@ export default function ProductEditorContent({ product: _ }: ProductEditorConten
     onDragLeave,
     onDrop,
     onFileSelect,
-  } = useImageUpload()
+  } = useProductForm()
 
   return (
     <Box>
