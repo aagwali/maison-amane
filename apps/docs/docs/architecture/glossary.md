@@ -254,6 +254,52 @@ Les messages restent dans la retry queue pendant un délai (TTL) avant d'être r
 
 ---
 
+## Application Client
+
+### Server Action
+
+**Définition** : Fonction Next.js exécutée côté serveur, appelée directement depuis un composant client.
+
+Les Server Actions servent de pont entre l'UI et l'API du serveur. Elles sont marquées `'use server'` et peuvent être appelées comme des fonctions asynchrones ordinaires depuis les composants React. Elles gèrent également la conversion des erreurs Effect en objets `{ error: string }` lisibles par le client.
+
+Trois Server Actions existent dans le back-office :
+
+| Action            | API appelée                  | Description                           |
+| ----------------- | ---------------------------- | ------------------------------------- |
+| `createProduct()` | `POST /api/pilot-product`    | Crée un nouveau produit               |
+| `updateProduct()` | `PUT /api/pilot-product/:id` | Met à jour un produit existant        |
+| `registerMedia()` | `POST /api/media`            | Enregistre une image après upload CDN |
+
+**Fichier source** : [`apps/client/src/app/products/actions.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/client/src/app/products/actions.ts)
+
+---
+
+### ProductFormContext
+
+**Définition** : Context React gérant l'état du formulaire produit (mode create/edit, images, titre, détection de changements, sauvegarde).
+
+Le `ProductFormContext` est le centre de coordination du formulaire produit. Il détecte automatiquement le mode (création ou édition) en fonction de la présence d'`initialData`, active la détection de changements en mode édition, et orchestre la sauvegarde via les Server Actions appropriées.
+
+| Propriété clé   | Description                                                             |
+| --------------- | ----------------------------------------------------------------------- |
+| `mode`          | `'create'` ou `'edit'` — déterminé par la présence d'`initialData`      |
+| `canSave`       | `true` si titre non vide + 2+ images + changements détectés (mode edit) |
+| `saveProduct()` | Appelle `createProduct` ou `updateProduct` selon le mode                |
+
+**Fichier source** : [`apps/client/src/contexts/ProductFormContext.tsx`](https://github.com/maison-amane/maison-amane/blob/main/apps/client/src/contexts/ProductFormContext.tsx)
+
+---
+
+### useImageUpload
+
+**Définition** : Hook React basé sur Effect-TS gérant l'upload d'images vers Cloudinary et l'enregistrement via l'API media.
+
+Le hook implémente un pipeline complet : validation des fichiers (type, taille), upload XHR vers Cloudinary avec suivi de progression, puis enregistrement via la Server Action `registerMedia`. Il expose l'état des uploads en cours (`uploadingImages`) et des uploads terminés (`uploadedImages`).
+
+**Fichier source** : [`apps/client/src/hooks/useImageUpload.ts`](https://github.com/maison-amane/maison-amane/blob/main/apps/client/src/hooks/useImageUpload.ts)
+
+---
+
 ## Identifiants
 
 ### ProductId

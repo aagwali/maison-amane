@@ -21,6 +21,12 @@ const sidebars: SidebarsConfig = {
             'architecture/data-flows/error-handling',
           ],
         },
+        {
+          type: 'category',
+          label: 'Application Client',
+          collapsed: false,
+          items: ['architecture/client/overview', 'architecture/client/data-flows'],
+        },
       ],
     },
   ],

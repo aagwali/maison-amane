@@ -12,11 +12,11 @@ Bienvenue dans la documentation technique et fonctionnelle du projet Maison Aman
 
 Cette documentation est destinée à plusieurs audiences :
 
-| Audience           | Contenu recommandé                                                                                       |
-| ------------------ | -------------------------------------------------------------------------------------------------------- |
-| **Développeurs**   | [Vue d'ensemble](./architecture/overview), [Flux de données](./architecture/data-flows/pilot-to-catalog) |
-| **Product Owners** | [Glossaire](./architecture/glossary), [Gestion des erreurs](./architecture/data-flows/error-handling)    |
-| **QA**             | [Glossaire](./architecture/glossary), [Gestion des erreurs](./architecture/data-flows/error-handling)    |
+| Audience           | Contenu recommandé                                                                                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Développeurs**   | [Vue d'ensemble](./architecture/overview), [Flux de données](./architecture/data-flows/pilot-to-catalog), [Architecture Client](./architecture/client/overview) |
+| **Product Owners** | [Glossaire](./architecture/glossary), [Gestion des erreurs](./architecture/data-flows/error-handling)                                                           |
+| **QA**             | [Glossaire](./architecture/glossary), [Gestion des erreurs](./architecture/data-flows/error-handling)                                                           |
 
 ## Architecture en bref
 
@@ -66,6 +66,8 @@ Pour une explication complète de ces concepts, consultez le [Glossaire](./archi
 - [Synchronisation Shopify](./architecture/data-flows/shopify-sync) - Intégration avec Shopify
 - [Enregistrement Media](./architecture/data-flows/media-upload) - Upload d'images et confirmation
 - [Gestion des erreurs](./architecture/data-flows/error-handling) - Mécanisme de retry et DLQ
+- [Application Client](./architecture/client/overview) - Architecture et composants du back-office
+- [Flux utilisateur](./architecture/client/data-flows) - Création, édition et upload d'images
 
 ## Stack technique
 
@@ -73,8 +75,10 @@ Pour une explication complète de ces concepts, consultez le [Glossaire](./archi
 | --------------- | --------------------- |
 | Backend         | Node.js + Effect-TS   |
 | API             | @effect/platform      |
+| Frontend        | Next.js 16 + MUI 7    |
 | Base de données | MongoDB               |
 | Messaging       | RabbitMQ              |
+| CDN Images      | Cloudinary            |
 | E-commerce      | Shopify (intégration) |
 | Monorepo        | pnpm + Turborepo      |
 

@@ -15,10 +15,10 @@ Maison Amane est une application e-commerce construite sur les principes du **Do
 
 ```mermaid
 flowchart TB
-    subgraph Client["Client Layer"]
-        HTTP_CMD["POST /api/pilot-product<br/>PUT /api/pilot-product/:id"]
-        HTTP_QUERY["GET /api/pilot-product/:id"]
-        HTTP_MEDIA["POST /api/media"]
+    subgraph Client["Application Client (Next.js)"]
+        Pages["Pages SSR<br/>/products, /products/new, /products/:id"]
+        ServerActions["Server Actions<br/>createProduct, updateProduct, registerMedia"]
+        ApiClient["API Client<br/>(@maison-amane/api)"]
     end
 
     subgraph Server["Server (Write Model)"]
@@ -51,12 +51,14 @@ flowchart TB
     end
 
     subgraph External["External Services"]
+        CloudinaryCDN["Cloudinary CDN"]
         Shopify["Shopify API"]
     end
 
-    HTTP_CMD --> Handler
-    HTTP_QUERY --> Handler
-    HTTP_MEDIA --> Handler
+    Pages --> ServerActions
+    ServerActions --> ApiClient
+    ApiClient --> Handler
+    Pages -->|"upload direct"| CloudinaryCDN
     Handler --> AppHandler
     AppHandler -->|"Events"| Publisher
     AppHandler --> PilotAggregate
@@ -69,7 +71,7 @@ flowchart TB
 
     Exchange -->|"product.published<br/>product.updated"| ShopifyQueue
     Exchange -->|"product.published<br/>product.updated"| CatalogQueue
-    Exchange -->|"product.created"| MediaQueue
+    Exchange -->|"product.created<br/>product.updated"| MediaQueue
 
     ShopifyQueue --> ShopifyConsumer
     ShopifyConsumer --> Shopify
@@ -86,12 +88,14 @@ flowchart TB
     classDef storage fill:#f5f5f5,stroke:#333,color:#333
     classDef messaging fill:#ff9800,stroke:#e65100,color:#fff
     classDef external fill:#2196f3,stroke:#0d47a1,color:#fff
+    classDef client fill:#7c4dff,stroke:#4a148c,color:#fff
 
     class Handler,AppHandler,PilotAggregate,MediaAggregate,PilotRepo,MediaRepo,Publisher primary
     class CatalogConsumer,ShopifyConsumer,MediaConsumer secondary
     class MongoDB_Pilot,MongoDB_Catalog,MongoDB_Media storage
     class Exchange,CatalogQueue,ShopifyQueue,MediaQueue messaging
-    class Shopify external
+    class Shopify,CloudinaryCDN external
+    class Pages,ServerActions,ApiClient client
 ```
 
 :::tip Gestion des erreurs
@@ -124,6 +128,21 @@ Les consumers sont des **driving adapters asynchrones** : ils reçoivent des év
 | `media-confirmation` | `product.created` | Confirme les médias référencés |
 
 **Flux** : `RabbitMQ Event → Consumer (driving) → Application Handler → Repository (driven)`
+
+  </TabItem>
+  <TabItem value="client" label="Application Client">
+
+L'application back-office **Next.js 16 + MUI 7** permet la gestion des produits depuis un navigateur.
+
+| Composant | Rôle | Route |
+|-----------|------|-------|
+| `ProductListGrid` | Grille de cards produits | `/products` |
+| `ProductDetailShell` | Layout détail produit + context provider | `/products/new`, `/products/:id` |
+| `ProductEditorContent` | Formulaire + drag & drop images | (enfant de `ProductDetailShell`) |
+| `ProductFormContext` | State management : mode, images, titre, sauvegarde | — |
+| `useImageUpload` | Upload Cloudinary + enregistrement media | — |
+
+Voir [Architecture Client](./client/overview) pour les détails complets.
 
   </TabItem>
   <TabItem value="messaging" label="Messaging">
