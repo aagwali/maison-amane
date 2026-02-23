@@ -18,6 +18,7 @@ export interface InMemoryRepository<T, Id extends string> {
   ) => Effect<T, PersistenceError | TError>
   readonly update: (entity: T) => Effect<T, PersistenceError>
   readonly upsert: (entity: T) => Effect<T, PersistenceError>
+  readonly findAll: () => Effect<ReadonlyArray<T>, PersistenceError>
 }
 
 export const createInMemoryRepository = <T, Id extends string>(
@@ -78,6 +79,12 @@ export const createInMemoryRepository = <T, Id extends string>(
           store.set(getId(entity), entity)
           return entity
         },
+        catch: (error) => new PersistenceError({ cause: error }),
+      }),
+
+    findAll: () =>
+      trySync({
+        try: () => Array.from(store.values()),
         catch: (error) => new PersistenceError({ cause: error }),
       }),
   }

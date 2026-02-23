@@ -18,6 +18,7 @@ import type {
   PilotProductCreationError,
   PilotProductUpdateError,
   PilotProductQueryError,
+  PilotProductListError,
   ProductNotFoundError,
 } from '../../../domain/pilot'
 import type { PersistenceError } from '../../../ports/driven'
@@ -145,7 +146,6 @@ export const toProblemDetail = (
     return toPersistenceProblemDetail(error, ctx)
   }
 
-  // Fallback for unexpected errors
   return toInternalProblemDetail(ctx)
 }
 
@@ -165,7 +165,6 @@ export const toUpdateProblemDetail = (
     return toPersistenceProblemDetail(error, ctx)
   }
 
-  // Fallback for unexpected errors
   return toInternalProblemDetail(ctx)
 }
 
@@ -181,6 +180,16 @@ export const toQueryProblemDetail = (
     return toPersistenceProblemDetail(error as PersistenceError, ctx)
   }
 
-  // Fallback for unexpected errors
+  return toInternalProblemDetail(ctx)
+}
+
+export const toListProblemDetail = (
+  error: PilotProductListError,
+  ctx: ErrorContext
+): ApiPersistenceError | ApiInternalError => {
+  if (isPersistenceError(error as PilotProductUpdateError)) {
+    return toPersistenceProblemDetail(error as PersistenceError, ctx)
+  }
+
   return toInternalProblemDetail(ctx)
 }

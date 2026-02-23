@@ -140,4 +140,5 @@ export {
   type PilotProductCreationError,
   type PilotProductUpdateError,
   type PilotProductQueryError,
+  type PilotProductListError,
 } from './errors'

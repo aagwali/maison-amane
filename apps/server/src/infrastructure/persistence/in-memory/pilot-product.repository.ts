@@ -19,6 +19,7 @@ export const createInMemoryPilotProductRepository = (): PilotProductRepositorySe
     findById: baseRepo.findById,
     getById: (id) => baseRepo.getById(id, (productId) => new ProductNotFoundError({ productId })),
     update: baseRepo.update,
+    findAll: baseRepo.findAll,
   }
 }
 

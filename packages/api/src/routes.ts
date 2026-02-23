@@ -31,6 +31,12 @@ export class SystemGroup extends HttpApiGroup.make(GroupNames.SYSTEM).add(
 
 export class PilotProductGroup extends HttpApiGroup.make(GroupNames.PILOT_PRODUCT)
   .add(
+    HttpApiEndpoint.get('listAll', Endpoints.PILOT_PRODUCT)
+      .addSuccess(S.Array(PilotProductResponse))
+      .addError(ApiPersistenceError, { status: ApiPersistenceError.status })
+      .addError(ApiInternalError, { status: ApiInternalError.status })
+  )
+  .add(
     HttpApiEndpoint.post('create', Endpoints.PILOT_PRODUCT)
       .setPayload(CreatePilotProductRequest)
       .addSuccess(PilotProductResponse)

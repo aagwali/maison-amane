@@ -96,6 +96,22 @@ export const findDocumentById = <TDocument extends Document, TEntity>(
   })
 
 /**
+ * Generic findAll operation for MongoDB
+ * Returns all documents in the collection as domain entities
+ *
+ * @param collection MongoDB collection
+ * @param fromDocument Mapper function from MongoDB document to domain entity
+ */
+export const findAllDocuments = <TDocument extends Document, TEntity>(
+  collection: Collection<TDocument>,
+  fromDocument: (doc: TDocument) => TEntity
+): Effect<ReadonlyArray<TEntity>, PersistenceError> =>
+  tryMongoOperation(async () => {
+    const docs = await collection.find().toArray()
+    return docs.map((doc) => fromDocument(doc as TDocument))
+  })
+
+/**
  * Generic getById operation for MongoDB
  * Returns TEntity or fails with domain-specific NotFoundError
  *

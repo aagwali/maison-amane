@@ -1,15 +1,7 @@
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
+import { runApiPage } from '@/lib/api-client'
+import ProductListGrid from '@/components/product/ProductListGrid'
 
-export default function ProductsPage() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Products
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        Liste produits à venir
-      </Typography>
-    </Box>
-  )
+export default async function ProductsPage() {
+  const products = await runApiPage((client) => client['pilot-product'].listAll())
+  return <ProductListGrid products={products} />
 }

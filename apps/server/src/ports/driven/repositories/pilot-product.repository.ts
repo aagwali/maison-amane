@@ -20,6 +20,8 @@ export interface PilotProductRepositoryService {
   readonly findById: (id: ProductId) => Effect<Option<PilotProduct>, PersistenceError>
 
   readonly getById: (id: ProductId) => Effect<PilotProduct, PersistenceError | ProductNotFoundError>
+
+  readonly findAll: () => Effect<ReadonlyArray<PilotProduct>, PersistenceError>
 }
 
 export class PilotProductRepository extends Context.Tag('PilotProductRepository')<

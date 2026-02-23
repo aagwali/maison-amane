@@ -10,6 +10,7 @@ import { ProductNotFoundError } from '../../../domain/pilot'
 
 import { fromDocument, type PilotProductDocument, toDocument } from './mappers'
 import {
+  findAllDocuments,
   findDocumentById,
   getDocumentById,
   insertDocument,
@@ -47,6 +48,8 @@ export const createMongodbPilotProductRepository = (db: Db): PilotProductReposit
       const doc = toDocument(product)
       return replaceDocument(collection, product.id, doc, product)
     },
+
+    findAll: () => findAllDocuments(collection, fromDocument),
   }
 }
 

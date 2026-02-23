@@ -8,9 +8,11 @@ import {
   pilotProductCreationHandler,
   pilotProductUpdateHandler,
   getPilotProductHandler,
+  listPilotProductsHandler,
   makePilotProductCreationCommand,
   makePilotProductUpdateCommand,
   makeGetPilotProductQuery,
+  makeListPilotProductsQuery,
 } from '../../../application/pilot'
 import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import { makeProductId } from '../../../domain/pilot'
@@ -21,6 +23,7 @@ import {
   toUnvalidatedUpdateData,
   toUpdateProblemDetail,
   toQueryProblemDetail,
+  toListProblemDetail,
 } from '../mappers'
 import { executeWithObservability, generateCommandContext } from '../helpers'
 
@@ -33,6 +36,25 @@ export const PilotProductHandlerLive = HttpApiBuilder.group(
   GroupNames.PILOT_PRODUCT,
   (handlers) =>
     handlers
+      .handle('listAll', () =>
+        gen(function* () {
+          const { ctx, errorCtx } = yield* generateCommandContext(FullPaths.PILOT_PRODUCT)
+
+          const query = makeListPilotProductsQuery()
+
+          const products = yield* executeWithObservability(
+            ctx,
+            'listPilotProducts',
+            `GET ${FullPaths.PILOT_PRODUCT}`,
+            listPilotProductsHandler(query),
+            (error) => toListProblemDetail(error, errorCtx)
+          )
+
+          yield* logInfo('Pilot products listed successfully')
+
+          return products.map(toResponse)
+        })
+      )
       .handle('create', ({ payload }) =>
         gen(function* () {
           const { correlationId, userId, ctx, errorCtx } = yield* generateCommandContext(

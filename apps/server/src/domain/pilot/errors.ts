@@ -51,3 +51,5 @@ export type PilotProductUpdateError =
   | ArchiveNotAllowed
 
 export type PilotProductQueryError = PersistenceError | ProductNotFoundError
+
+export type PilotProductListError = PersistenceError
