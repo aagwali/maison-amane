@@ -1,5 +1,3 @@
-// src/composition/layers/http.layer.ts
-
 import { createServer } from 'node:http'
 
 import { Layer } from 'effect'

@@ -7,8 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Maison Amane is a DDD-based e-commerce backend using **Effect-TS** with **Hexagonal Architecture** and **CQRS**. It's a **Turbo + pnpm monorepo** with:
 
 - `apps/server` - Main Effect HTTP API
+- `apps/client` - Next.js 16 back-office (MUI 7, Effect-TS)
 - `apps/consumers/catalog-projection` - Read model projector
 - `apps/consumers/shopify-sync` - Shopify sync consumer
+- `apps/consumers/media-confirmation` - Media confirmation consumer
 - `apps/docs` - Docusaurus documentation
 - `packages/api` - Shared API contracts (routes, DTOs)
 - `packages/shared-kernel` - Cross-cutting types and configs
@@ -49,11 +51,12 @@ Composition Layer (Effect Layers for DI)
 
 ### Bounded Contexts
 
-| Context     | Type        | Location                |
-| ----------- | ----------- | ----------------------- |
-| **Pilot**   | Write Model | Product creation/update |
-| **Catalog** | Read Model  | UI-optimized projection |
-| **Shopify** | Integration | External sync           |
+| Context     | Type        | Location                        |
+| ----------- | ----------- | ------------------------------- |
+| **Pilot**   | Write Model | Product creation/update         |
+| **Media**   | Write Model | Image registration/confirmation |
+| **Catalog** | Read Model  | UI-optimized projection         |
+| **Shopify** | Integration | External sync                   |
 
 ### Key Patterns (quick rules — see [CONTEXT.md](CONTEXT.md) for full examples)
 
@@ -77,6 +80,20 @@ Composition Layer (Effect Layers for DI)
 | Repository Port | `{entity}.repository.ts` in `ports/driven/`                       |
 | Repository Impl | `{entity}.repository.ts` in `infrastructure/persistence/mongodb/` |
 | Layer           | `{name}.layer.ts`                                                 |
+
+### Client File Naming Conventions (apps/client)
+
+| Pattern        | Example                          | Location             |
+| -------------- | -------------------------------- | -------------------- |
+| Page           | `page.tsx`                       | `app/[route]/`       |
+| Layout         | `layout.tsx`                     | `app/`               |
+| Loading        | `loading.tsx`                    | `app/[route]/`       |
+| Error boundary | `error.tsx`                      | `app/[route]/`       |
+| Server Action  | `actions.ts`                     | `app/[route]/`       |
+| Component      | `{PascalCase}.tsx`               | `components/{area}/` |
+| Hook           | `use{Name}.ts`                   | `hooks/`             |
+| Context        | `{Name}Context.tsx`              | `contexts/`          |
+| Config         | `config.ts` / `config.server.ts` | `lib/`               |
 
 ## ESLint Rules for Effect-TS
 
@@ -105,8 +122,10 @@ See [CONTEXT.md §6](CONTEXT.md#6-workflows-de-développement) for detailed step
 - **MongoDB**: `localhost:27017` (Mongo Express UI: `8081`)
 - **RabbitMQ**: `localhost:5672` (Management UI: `15672`)
 - **Server**: port `3001`
+- **Client**: port `3002` (Next.js dev server)
+- **Cloudinary**: unsigned upload (cloud: `dhk8ipori`, preset: `maison_amane_dev`)
 
-Collections: `pilot_products` (write), `catalog_products` (read)
+Collections: `pilot_products` (write), `catalog_products` (read), `media` (write)
 
 ## Utilisation des Skills
 
@@ -123,6 +142,7 @@ Avant de commencer une tâche de développement, **vérifiez si un skill peut vo
 - **`consumer`** -- Consumer RabbitMQ (apps/consumers/)
 - **`shared-kernel`** -- Types partagés cross-context (IDs, enums, messaging topology, configs infrastructure)
 - **`documentation`** -- Pages Docusaurus (data-flows, architecture, glossaire)
+- **`client`** -- UI client Next.js (pages, composants, hooks, server actions, contexts)
 
 ### Workflow recommandé
 
@@ -138,6 +158,7 @@ Claude : "Je recommande [liste des skills]. Je vais les lire et les appliquer."
 - "Créer le bounded context Production" -> `bounded-context` (orchestre tous les autres)
 - "Ajouter un endpoint GET /products/:id" -> `use-case`, `api-endpoint`, `test-suite`
 - "Documenter le flux de paiement" -> `documentation`
+- "Ajouter une page de liste des commandes côté client" -> `client`, `use-case`, `api-endpoint`
 
 ## Maintenance des artefacts de documentation
 

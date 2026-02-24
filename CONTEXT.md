@@ -20,7 +20,7 @@
 
 **Monorepo Turbo + pnpm** composé de :
 
-- 4 applications (`apps/`)
+- 5 applications (`apps/`)
 - 2 packages partagés (`packages/`)
 
 ### Stack technique
@@ -31,9 +31,12 @@
 | Package Manager | pnpm               | 9.0.0       |
 | Build           | Turbo              | 2.4.2       |
 | Core Framework  | Effect-TS          | 3.13.1      |
-| HTTP            | @effect/platform   | -           |
+| HTTP (server)   | @effect/platform   | -           |
+| HTTP (client)   | Next.js            | 16.1.0      |
+| UI              | React + MUI        | 19.0 / 7.3  |
 | Base de données | MongoDB            | 6.12.0      |
 | Message Broker  | RabbitMQ (amqplib) | 0.10.9      |
+| Image Upload    | Cloudinary         | unsigned    |
 | Tests           | Vitest             | -           |
 | Linting         | ESLint + Prettier  | 9.x / 3.5.0 |
 
@@ -82,6 +85,7 @@
 | Context     | Type        | Responsabilité                                                        |
 | ----------- | ----------- | --------------------------------------------------------------------- |
 | **Pilot**   | Write Model | Gestion des produits pilotes (création, mise à jour, synchronisation) |
+| **Media**   | Write Model | Enregistrement et confirmation des images uploadées                   |
 | **Catalog** | Read Model  | Projection simplifiée pour l'UI du catalogue                          |
 | **Shopify** | Integration | Synchronisation externe vers Shopify                                  |
 
@@ -95,9 +99,10 @@
 maison-amane/
 ├── apps/
 │   ├── server/              # API principale (Effect HTTP)
-│   ├── client/              # Frontend (placeholder)
+│   ├── client/              # Back-office Next.js 16 (MUI 7, Effect-TS)
 │   ├── consumers/           # Message consumers (Driving adapters)
 │   │   ├── catalog-projection/  # Consumer: projection read model
+│   │   ├── media-confirmation/  # Consumer: media status confirmation
 │   │   └── shopify-sync/        # Consumer: sync Shopify
 │   └── docs/                # Documentation Docusaurus
 ├── packages/
@@ -166,6 +171,56 @@ src/
 │   └── layers/                      # Effect Layers
 └── test-utils/                      # Helpers de test
 ```
+
+### Structure apps/client/src (application front-office)
+
+```
+src/
+├── app/                              # ══════ PAGES (App Router) ══════
+│   ├── layout.tsx                    # Root layout (Sidebar + ThemeRegistry)
+│   ├── page.tsx                      # Home page (/)
+│   ├── not-found.tsx                 # 404 page
+│   └── products/
+│       ├── page.tsx                  # Product list (/products)
+│       ├── actions.ts               # Server Actions (create, update, registerMedia)
+│       ├── loading.tsx              # Loading skeleton
+│       └── (detail)/                # Route group
+│           ├── new/page.tsx         # Create (/products/new)
+│           └── [id]/
+│               ├── page.tsx         # Edit (/products/[id])
+│               └── error.tsx        # Error boundary
+├── components/                       # ══════ COMPOSANTS UI ══════
+│   ├── layout/
+│   │   ├── Sidebar.tsx              # Navigation latérale
+│   │   └── ActionPanel.tsx          # Panneau droit (titre + save)
+│   └── product/
+│       ├── ProductListGrid.tsx      # Grille de cards produits
+│       ├── ProductDetailShell.tsx   # Layout + context provider
+│       └── ProductEditorContent.tsx # Zone upload + galerie images
+├── contexts/
+│   └── ProductFormContext.tsx        # State management formulaire (mode, titre, images)
+├── hooks/
+│   └── useImageUpload.ts            # Upload Cloudinary + enregistrement média (Effect-TS)
+├── lib/
+│   ├── api-client.ts                # HttpApiClient Effect (runApi, runApiPage)
+│   ├── config.ts                    # Config publique (Cloudinary)
+│   ├── config.server.ts             # Config serveur (API_URL)
+│   └── throw-api-error.ts          # Error handler API
+└── theme/
+    ├── ThemeRegistry.tsx            # MUI ThemeProvider + SnackbarProvider
+    └── theme.ts                     # Palette personnalisée (tons terre)
+```
+
+**Patterns client :**
+
+| Pattern           | Description                             | Exemple                                       |
+| ----------------- | --------------------------------------- | --------------------------------------------- |
+| Server Component  | Page async, data loading SSR            | `products/page.tsx`                           |
+| Server Action     | Fonction `'use server'` pour mutations  | `actions.ts` (createProduct, updateProduct)   |
+| Shell / Content   | Shell = layout + provider, Content = UI | `ProductDetailShell` / `ProductEditorContent` |
+| Context + Hook    | State partagé via React Context         | `ProductFormContext` + `useImageUpload`       |
+| Effect dans React | `gen()` + `runPromise()` dans callbacks | `useImageUpload.ts`                           |
+| API Client        | `HttpApiClient.make()` type-safe        | `api-client.ts` (runApi, runApiPage)          |
 
 ### Conventions de nommage
 
@@ -885,12 +940,56 @@ export const provideTestLayer = (): TestContext => {
 
 - Dépend de: `pilot` (PilotProductPublished, SyncStatus update)
 
-### 4.4 Packages partagés
+### 4.4 Bounded Context: Media
+
+| Élément              | Path                                                                     | Responsabilité                            |
+| -------------------- | ------------------------------------------------------------------------ | ----------------------------------------- |
+| **Aggregate**        | `apps/server/src/domain/media/aggregate.ts`                              | Media, confirmMedia method                |
+| **Value Objects**    | `apps/server/src/domain/media/value-objects/`                            | MediaId, MediaUrl, MimeType, FileSize     |
+| **Enums**            | `apps/server/src/domain/media/enums.ts`                                  | MediaStatus (PENDING, CONFIRMED)          |
+| **Errors**           | `apps/server/src/domain/media/errors.ts`                                 | MediaNotFoundError, MediaAlreadyConfirmed |
+| **Command**          | `apps/server/src/application/media/commands/register-media.command.ts`   | RegisterMediaCommand                      |
+| **Register Handler** | `apps/server/src/application/media/handlers/register-media.handler.ts`   | registerMediaHandler                      |
+| **Confirm Handler**  | `apps/server/src/application/media/handlers/confirm-media.handler.ts`    | confirmMediaHandler                       |
+| **Repository Port**  | `apps/server/src/ports/driven/repositories/media.repository.ts`          | Interface (findById, getById)             |
+| **Repository Impl**  | `apps/server/src/infrastructure/persistence/mongodb/media.repository.ts` | MongoDB adapter                           |
+| **HTTP Handler**     | `apps/server/src/infrastructure/http/handlers/media.handler.ts`          | POST /api/media (driving)                 |
+| **Consumer**         | `apps/consumers/media-confirmation/src/main.ts`                          | RabbitMQ consumer (driving)               |
+
+**Dépendances :**
+
+- Dépend de: `pilot` (routing keys product.created, product.updated pour confirmation)
+- Consommé par: `pilot` (les produits référencent les mediaIds dans leurs views)
+
+### 4.5 Packages partagés
 
 | Package                         | Path                          | Contenu                                         |
 | ------------------------------- | ----------------------------- | ----------------------------------------------- |
 | **@maison-amane/api**           | `packages/api/src/`           | Routes HTTP, DTOs request/response, error codes |
 | **@maison-amane/shared-kernel** | `packages/shared-kernel/src/` | CorrelationId, UserId, configs infra            |
+
+### 4.6 Application Client (apps/client)
+
+| Élément                  | Path                                                          | Responsabilité                                  |
+| ------------------------ | ------------------------------------------------------------- | ----------------------------------------------- |
+| **Product List**         | `apps/client/src/app/products/page.tsx`                       | Liste des produits (SSR, cards grid)            |
+| **Product Create**       | `apps/client/src/app/products/(detail)/new/page.tsx`          | Création produit (formulaire)                   |
+| **Product Edit**         | `apps/client/src/app/products/(detail)/[id]/page.tsx`         | Édition produit (chargement SSR + update)       |
+| **Server Actions**       | `apps/client/src/app/products/actions.ts`                     | createProduct, updateProduct, registerMedia     |
+| **API Client**           | `apps/client/src/lib/api-client.ts`                           | HttpApiClient Effect (runApi, runApiPage)       |
+| **ProductFormContext**   | `apps/client/src/contexts/ProductFormContext.tsx`             | State formulaire (mode, titre, images, canSave) |
+| **useImageUpload**       | `apps/client/src/hooks/useImageUpload.ts`                     | Upload Cloudinary + enregistrement Effect-TS    |
+| **ProductListGrid**      | `apps/client/src/components/product/ProductListGrid.tsx`      | Composant grille de cards                       |
+| **ProductDetailShell**   | `apps/client/src/components/product/ProductDetailShell.tsx`   | Layout shell + provider                         |
+| **ProductEditorContent** | `apps/client/src/components/product/ProductEditorContent.tsx` | Upload zone + galerie                           |
+| **Sidebar**              | `apps/client/src/components/layout/Sidebar.tsx`               | Navigation latérale collapsible                 |
+| **ActionPanel**          | `apps/client/src/components/layout/ActionPanel.tsx`           | Panneau titre + save                            |
+
+**Communication avec le serveur :**
+
+- Pages SSR : `runApiPage()` → `HttpApiClient` → `GET /api/pilot-product[/:id]`
+- Mutations : Server Actions → `runApi()` → `POST/PUT /api/pilot-product`, `POST /api/media`
+- Images : Client → Cloudinary (XHR direct) → Server Action `registerMedia` → `POST /api/media`
 
 ---
 
@@ -1351,6 +1450,11 @@ LOG_LEVEL=info
 # Shopify (future)
 SHOPIFY_STORE_URL=
 SHOPIFY_ACCESS_TOKEN=
+
+# Client (apps/client)
+API_URL=http://localhost:3001
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dhk8ipori
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=maison_amane_dev
 ```
 
 ---

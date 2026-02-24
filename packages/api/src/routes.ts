@@ -1,5 +1,3 @@
-// packages/api/src/routes.ts
-
 import { HttpApi, HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
 import { Schema as S } from 'effect'
 
