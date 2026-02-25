@@ -14,27 +14,52 @@ export interface ProductFormInitialData {
   id: string
   title: string
   images: UploadedImage[]
+  description?: string
+  type?: string
+  category?: string
+  priceRange?: string
+  size?: string
+  status?: string
+  viewTypes?: Record<string, string>
 }
 
 type ProductFormMode = 'create' | 'edit'
 
+export const VIEW_TYPE_OPTIONS = ['FRONT', 'BACK', 'DETAIL', 'AMBIANCE'] as const
+export const PRODUCT_TYPE_OPTIONS = ['TAPIS', 'COUSSIN', 'POUF'] as const
+export const CATEGORY_OPTIONS = ['STANDARD', 'PREMIUM', 'COLLECTION'] as const
+export const PRICE_RANGE_OPTIONS = ['ECONOMIQUE', 'STANDARD', 'PREMIUM', 'LUXE'] as const
+export const SIZE_OPTIONS = ['PETIT', 'REGULAR', 'GRAND', 'SUR_MESURE'] as const
+
 interface ProductFormContextValue extends UseImageUploadReturn {
   title: string
   setTitle: (title: string) => void
+  description: string
+  setDescription: (desc: string) => void
+  productType: string
+  setProductType: (t: string) => void
+  category: string
+  setCategory: (c: string) => void
+  priceRange: string
+  setPriceRange: (p: string) => void
+  size: string
+  setSize: (s: string) => void
+  viewTypes: Record<string, string>
+  setImageViewType: (imageId: string, viewType: string) => void
   mode: ProductFormMode
+  productStatus: string | undefined
   canSave: boolean
+  canPublish: boolean
   isSaving: boolean
   saveError: string | null
-  saveProduct: () => void
+  saveProduct: (publish?: boolean) => void
 }
 
 const ProductFormContext = createContext<ProductFormContextValue | null>(null)
 
-const VIEW_TYPES = ['FRONT', 'DETAIL', 'AMBIANCE'] as const
-
-function imagesToViews(images: { imageUrl: string }[]) {
+function imagesToViews(images: UploadedImage[], viewTypes: Record<string, string>) {
   return images.map((img, i) => ({
-    viewType: i < 2 ? VIEW_TYPES[i] : VIEW_TYPES[2],
+    viewType: viewTypes[img.mediaId] ?? (i === 0 ? 'FRONT' : i === 1 ? 'DETAIL' : 'AMBIANCE'),
     imageUrl: img.imageUrl,
   }))
 }
@@ -55,8 +80,18 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
   const imageUpload = useImageUpload(initialData?.images)
 
   const [title, setTitle] = useState(initialData?.title ?? '')
+  const [description, setDescription] = useState(initialData?.description ?? '')
+  const [productType, setProductType] = useState(initialData?.type ?? 'TAPIS')
+  const [category, setCategory] = useState(initialData?.category ?? 'STANDARD')
+  const [priceRange, setPriceRange] = useState(initialData?.priceRange ?? 'STANDARD')
+  const [size, setSize] = useState(initialData?.size ?? 'REGULAR')
+  const [viewTypes, setViewTypes] = useState<Record<string, string>>(initialData?.viewTypes ?? {})
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  const setImageViewType = useCallback((imageId: string, viewType: string) => {
+    setViewTypes((prev) => ({ ...prev, [imageId]: viewType }))
+  }, [])
 
   const hasChanges =
     mode === 'edit' &&
@@ -70,53 +105,108 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
       ? title.trim() !== '' && imageUpload.uploadedImages.length >= 2
       : hasChanges && title.trim() !== '' && imageUpload.uploadedImages.length >= 2)
 
-  const saveProduct = useCallback(async () => {
-    if (!canSave) return
+  const canPublish =
+    !isSaving &&
+    initialData?.status === 'DRAFT' &&
+    title.trim() !== '' &&
+    imageUpload.uploadedImages.length >= 2
 
-    setIsSaving(true)
-    setSaveError(null)
+  const saveProduct = useCallback(
+    async (publish = false) => {
+      if (publish ? !canPublish : !canSave) return
 
-    try {
-      if (mode === 'create') {
-        const payload = {
-          label: title.trim(),
-          type: 'TAPIS',
-          category: 'STANDARD',
-          description: '',
-          priceRange: 'STANDARD',
-          variants: [{ size: 'REGULAR' }],
-          views: imagesToViews(imageUpload.uploadedImages),
-          status: 'PUBLISHED',
+      setIsSaving(true)
+      setSaveError(null)
+
+      try {
+        if (mode === 'create') {
+          const payload = {
+            label: title.trim(),
+            type: productType,
+            category,
+            description: description.trim(),
+            priceRange,
+            variants: [{ size }],
+            views: imagesToViews(imageUpload.uploadedImages, viewTypes),
+            status: publish ? 'PUBLISHED' : 'PUBLISHED', // API currently requires PUBLISHED
+          }
+
+          const result = await createProduct(payload)
+          if ('error' in result) setSaveError(result.error)
+          else router.push(`/products/${result.id}`)
+        } else {
+          const result = await updateProduct(initialData!.id, {
+            label: title.trim(),
+            views: imagesToViews(imageUpload.uploadedImages, viewTypes),
+            ...(publish ? { status: 'PUBLISHED' } : {}),
+          })
+          if ('error' in result) setSaveError(result.error)
+          else router.refresh()
         }
-
-        const result = await createProduct(payload)
-        if ('error' in result) setSaveError(result.error)
-        else router.push(`/products/${result.id}`)
-      } else {
-        const result = await updateProduct(initialData!.id, {
-          label: title.trim(),
-          views: imagesToViews(imageUpload.uploadedImages),
-        })
-        if ('error' in result) setSaveError(result.error)
-        else router.refresh()
+      } finally {
+        setIsSaving(false)
       }
-    } finally {
-      setIsSaving(false)
-    }
-  }, [canSave, mode, title, imageUpload.uploadedImages, router, initialData])
+    },
+    [
+      canSave,
+      canPublish,
+      mode,
+      title,
+      description,
+      productType,
+      category,
+      priceRange,
+      size,
+      imageUpload.uploadedImages,
+      viewTypes,
+      router,
+      initialData,
+    ]
+  )
 
   const value = useMemo<ProductFormContextValue>(
     () => ({
       ...imageUpload,
       title,
       setTitle,
+      description,
+      setDescription,
+      productType,
+      setProductType,
+      category,
+      setCategory,
+      priceRange,
+      setPriceRange,
+      size,
+      setSize,
+      viewTypes,
+      setImageViewType,
       mode,
+      productStatus: initialData?.status,
       canSave,
+      canPublish,
       isSaving,
       saveError,
       saveProduct,
     }),
-    [imageUpload, title, mode, canSave, isSaving, saveError, saveProduct]
+    [
+      imageUpload,
+      title,
+      description,
+      productType,
+      category,
+      priceRange,
+      size,
+      viewTypes,
+      setImageViewType,
+      mode,
+      initialData?.status,
+      canSave,
+      canPublish,
+      isSaving,
+      saveError,
+      saveProduct,
+    ]
   )
 
   return <ProductFormContext.Provider value={value}>{children}</ProductFormContext.Provider>

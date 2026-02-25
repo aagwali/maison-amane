@@ -1,77 +1,130 @@
 'use client'
 
-import * as React from 'react'
+import { usePathname } from 'next/navigation'
 import Box from '@mui/material/Box'
-import Divider from '@mui/material/Divider'
-import Drawer from '@mui/material/Drawer'
-import IconButton from '@mui/material/IconButton'
-import List from '@mui/material/List'
-import ListItemButton from '@mui/material/ListItemButton'
-import ListItemIcon from '@mui/material/ListItemIcon'
-import ListItemText from '@mui/material/ListItemText'
 import Tooltip from '@mui/material/Tooltip'
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import HomeIcon from '@mui/icons-material/Home'
-import InventoryIcon from '@mui/icons-material/Inventory'
+import Typography from '@mui/material/Typography'
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
+import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded'
 import Link from 'next/link'
+import { alpha } from '@mui/material/styles'
 
-import { SIDEBAR_WIDTH_CLOSED, SIDEBAR_WIDTH_OPEN } from './constants'
+import { NAV_RAIL_WIDTH } from './constants'
+
+import { tokens } from '@/theme/theme'
 
 const navItems = [
-  { label: 'Home', href: '/', icon: <HomeIcon /> },
-  { label: 'Products', href: '/products', icon: <InventoryIcon /> },
+  { label: 'Accueil', href: '/', icon: HomeRoundedIcon },
+  { label: 'Produits', href: '/products', icon: Inventory2RoundedIcon },
 ]
 
-export default function Sidebar() {
-  const [open, setOpen] = React.useState(true)
+export default function NavigationRail() {
+  const pathname = usePathname()
+
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/'
+    return pathname.startsWith(href)
+  }
 
   return (
-    <Drawer
-      variant="permanent"
+    <Box
+      component="nav"
       sx={{
-        width: open ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED,
+        width: NAV_RAIL_WIDTH,
         flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: open ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED,
-          overflowX: 'hidden',
-          transition: 'width 0.25s ease',
-          boxSizing: 'border-box',
-          borderRight: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-        },
+        height: '100vh',
+        bgcolor: tokens.charcoal,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        py: 2,
+        gap: 1,
+        position: 'relative',
+        zIndex: 1200,
       }}
     >
+      {/* Brand mark */}
       <Box
+        component={Link}
+        href="/"
         sx={{
+          width: 36,
+          height: 36,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: open ? 'flex-end' : 'center',
-          px: 1,
-          py: 1.5,
-          minHeight: 56,
+          justifyContent: 'center',
+          mb: 3,
+          textDecoration: 'none',
+          opacity: 0.9,
+          '&:hover': {
+            opacity: 1,
+          },
         }}
       >
-        <Tooltip title={open ? 'Réduire' : 'Agrandir'} placement="right">
-          <IconButton onClick={() => setOpen(!open)} size="small">
-            {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-          </IconButton>
-        </Tooltip>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M12 3L4 21" stroke={tokens.ember} strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M12 3L20 21" stroke={tokens.ember} strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M7 14L17 14" stroke={tokens.ember} strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M12 2L8.5 8.5" stroke={tokens.ember} strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M12 2L15.5 8.5" stroke={tokens.ember} strokeWidth="1.2" strokeLinecap="round" />
+          <path
+            d="M6.5 5.5L17.5 5.5"
+            stroke={tokens.ember}
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+        </svg>
       </Box>
 
-      <Divider />
-
-      <List dense sx={{ pt: 1 }}>
-        {navItems.map(({ label, href, icon }) => (
-          <Tooltip key={href} title={open ? '' : label} placement="right">
-            <ListItemButton component={Link} href={href} sx={{ px: 2, py: 1.25 }}>
-              <ListItemIcon sx={{ minWidth: open ? 40 : 'unset' }}>{icon}</ListItemIcon>
-              {open && <ListItemText primary={label} />}
-            </ListItemButton>
-          </Tooltip>
-        ))}
-      </List>
-    </Drawer>
+      {/* Navigation items */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, width: '100%', px: 1 }}>
+        {navItems.map(({ label, href, icon: Icon }) => {
+          const active = isActive(href)
+          return (
+            <Tooltip key={href} title={label} placement="right" arrow>
+              <Box
+                component={Link}
+                href={href}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  py: 1,
+                  px: 0.5,
+                  borderRadius: 0,
+                  textDecoration: 'none',
+                  color: active ? '#FFFFFF' : alpha('#FFFFFF', 0.45),
+                  bgcolor: active ? alpha('#FFFFFF', 0.1) : 'transparent',
+                  transition: 'color 0.15s ease, background-color 0.15s ease',
+                  '&:hover': {
+                    color: '#FFFFFF',
+                    bgcolor: alpha('#FFFFFF', 0.08),
+                  },
+                }}
+              >
+                <Icon sx={{ fontSize: 22 }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.5625rem',
+                    fontWeight: active ? 600 : 400,
+                    letterSpacing: '0.02em',
+                    lineHeight: 1,
+                  }}
+                >
+                  {label}
+                </Typography>
+              </Box>
+            </Tooltip>
+          )
+        })}
+      </Box>
+    </Box>
   )
 }
