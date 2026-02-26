@@ -13,6 +13,12 @@ const tokens = {
   oliveLight: '#a29f3d',
   oliveDark: '#6d6929',
 
+  // White
+  white: '#FFFFFF',
+
+  // Steel (Commandes)
+  steel: '#3d6e9a',
+
   // Neutral — gamme gris charbon
   charcoal: '#333333', // sidebar, texte intense
   charcoalLight: '#454545', // hover sidebar

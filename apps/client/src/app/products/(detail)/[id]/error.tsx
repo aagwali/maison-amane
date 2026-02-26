@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
@@ -42,7 +43,7 @@ export default function ProductDetailError({ error, reset }: Props) {
     <Box sx={{ p: { xs: 3, md: 5 }, maxWidth: 520 }}>
       <Box
         sx={{
-          borderLeft: `3px solid`,
+          borderLeft: '3px solid',
           borderColor: 'error.main',
           pl: 2.5,
           py: 0.5,
@@ -67,14 +68,14 @@ export default function ProductDetailError({ error, reset }: Props) {
             fontFamily: 'monospace',
             color: 'text.disabled',
             mt: 2,
-            ml: '19px',
+            ml: 2,
           }}
         >
           réf\u00a0: {ref}
         </Typography>
       )}
 
-      <Box sx={{ display: 'flex', gap: 1, mt: 3, ml: '16px' }}>
+      <Stack direction="row" spacing={1} sx={{ mt: 3, ml: 2 }}>
         <Button
           variant="text"
           onClick={handleRetry}
@@ -85,7 +86,7 @@ export default function ProductDetailError({ error, reset }: Props) {
             color: tokens.graphite,
             '&:hover': {
               color: 'error.main',
-              bgcolor: alpha('#b83c35', 0.06),
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.06),
             },
           }}
         >
@@ -106,7 +107,7 @@ export default function ProductDetailError({ error, reset }: Props) {
         >
           Retour
         </Button>
-      </Box>
+      </Stack>
     </Box>
   )
 }

@@ -3,31 +3,22 @@
 import Link from 'next/link'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import Chip from '@mui/material/Chip'
+import Grid from '@mui/material/Grid'
+import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
+import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded'
-import IconButton from '@mui/material/IconButton'
-import Tooltip from '@mui/material/Tooltip'
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import type { PilotProductResponse } from '@maison-amane/api'
 
-import { tokens } from '@/theme/theme'
+import ProductCard from './ProductCard'
 
 interface Props {
   products: readonly PilotProductResponse[]
-}
-
-const statusConfig: Record<string, { label: string; color: string }> = {
-  PUBLISHED: { label: 'Publié', color: '#4a7a40' },
-  DRAFT: { label: 'Brouillon', color: '#8b8635' },
-  ARCHIVED: { label: 'Archivé', color: '#8a8a8a' },
-}
-
-function getStatusProps(status: string) {
-  return statusConfig[status] ?? { label: status, color: tokens.pewter }
 }
 
 export default function ProductListGrid({ products }: Props) {
@@ -38,13 +29,13 @@ export default function ProductListGrid({ products }: Props) {
         <Typography variant="overline" sx={{ mb: 0.5, display: 'block' }}>
           Catalogue
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="baseline" spacing={1.5}>
             <Typography variant="h1">Produits</Typography>
             <Typography variant="body2" color="text.secondary">
               {products.length} {products.length <= 1 ? 'élément' : 'éléments'}
             </Typography>
-          </Box>
+          </Stack>
           <Button
             component={Link}
             href="/products/new"
@@ -54,20 +45,15 @@ export default function ProductListGrid({ products }: Props) {
           >
             Nouveau
           </Button>
-        </Box>
+        </Stack>
       </Box>
 
       {/* Toolbar */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          mb: 3,
-          pb: 2,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1.5}
+        sx={{ mb: 3, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}
       >
         <TextField
           placeholder="Rechercher..."
@@ -91,7 +77,7 @@ export default function ProductListGrid({ products }: Props) {
             </IconButton>
           </span>
         </Tooltip>
-      </Box>
+      </Stack>
 
       {/* Grid */}
       {products.length === 0 ? (
@@ -109,98 +95,13 @@ export default function ProductListGrid({ products }: Props) {
           </Button>
         </Box>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(3, 1fr)',
-              lg: 'repeat(5, 1fr)',
-              xl: 'repeat(6, 1fr)',
-            },
-            gap: 2,
-          }}
-        >
-          {products.map((p) => {
-            const status = getStatusProps(p.status)
-            return (
-              <Box
-                key={p.id}
-                component={Link}
-                href={`/products/${p.id}`}
-                sx={{
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  display: 'block',
-                  pb: 2,
-                  borderBottom: `1px solid`,
-                  borderColor: tokens.ash,
-                  transition: 'border-color 0.15s ease',
-                  '&:hover': {
-                    borderColor: tokens.ember,
-                  },
-                  '&:hover .product-img': {
-                    opacity: 0.88,
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'relative',
-                    aspectRatio: '1',
-                    bgcolor: tokens.fog,
-                    overflow: 'hidden',
-                    mb: 1.5,
-                  }}
-                >
-                  <Box
-                    className="product-img"
-                    component="img"
-                    src={p.views.front.imageUrl}
-                    alt={p.label}
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  />
-                </Box>
-
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    justifyContent: 'space-between',
-                    gap: 1,
-                  }}
-                >
-                  <Typography variant="subtitle1" noWrap sx={{ lineHeight: 1.3, flex: 1 }}>
-                    {p.label}
-                  </Typography>
-                  <Chip
-                    label={status.label}
-                    size="small"
-                    sx={{
-                      bgcolor: 'transparent',
-                      color: status.color,
-                      fontWeight: 600,
-                      fontSize: '0.625rem',
-                      height: 18,
-                      letterSpacing: '0.04em',
-                      flexShrink: 0,
-                    }}
-                  />
-                </Box>
-                <Typography variant="caption" color="text.disabled">
-                  {p.id.slice(0, 8)}
-                </Typography>
-              </Box>
-            )
-          })}
-        </Box>
+        <Grid container spacing={2}>
+          {products.map((p) => (
+            <Grid key={p.id} size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+              <ProductCard product={p} />
+            </Grid>
+          ))}
+        </Grid>
       )}
     </Box>
   )

@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
@@ -27,16 +28,14 @@ export default function NavigationRail() {
   }
 
   return (
-    <Box
+    <Stack
       component="nav"
+      alignItems="center"
       sx={{
         width: NAV_RAIL_WIDTH,
         flexShrink: 0,
         height: '100vh',
         bgcolor: tokens.charcoal,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
         py: 2,
         gap: 1,
         position: 'relative',
@@ -56,9 +55,7 @@ export default function NavigationRail() {
           mb: 3,
           textDecoration: 'none',
           opacity: 0.9,
-          '&:hover': {
-            opacity: 1,
-          },
+          '&:hover': { opacity: 1 },
         }}
       >
         <svg
@@ -83,7 +80,7 @@ export default function NavigationRail() {
       </Box>
 
       {/* Navigation items */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, width: '100%', px: 1 }}>
+      <Stack spacing={0.5} sx={{ width: '100%', px: 1 }}>
         {navItems.map(({ label, href, icon: Icon }) => {
           const active = isActive(href)
           return (
@@ -100,12 +97,12 @@ export default function NavigationRail() {
                   px: 0.5,
                   borderRadius: 0,
                   textDecoration: 'none',
-                  color: active ? '#FFFFFF' : alpha('#FFFFFF', 0.45),
-                  bgcolor: active ? alpha('#FFFFFF', 0.1) : 'transparent',
+                  color: active ? tokens.white : alpha(tokens.white, 0.45),
+                  bgcolor: active ? alpha(tokens.white, 0.1) : 'transparent',
                   transition: 'color 0.15s ease, background-color 0.15s ease',
                   '&:hover': {
-                    color: '#FFFFFF',
-                    bgcolor: alpha('#FFFFFF', 0.08),
+                    color: tokens.white,
+                    bgcolor: alpha(tokens.white, 0.08),
                   },
                 }}
               >
@@ -124,7 +121,7 @@ export default function NavigationRail() {
             </Tooltip>
           )
         })}
-      </Box>
-    </Box>
+      </Stack>
+    </Stack>
   )
 }

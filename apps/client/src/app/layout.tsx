@@ -2,6 +2,7 @@ import * as React from 'react'
 import type { Metadata } from 'next'
 import { DM_Sans, DM_Serif_Display } from 'next/font/google'
 import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
 
 import ThemeRegistry from '@/theme/ThemeRegistry'
 import NavigationRail from '@/components/layout/Sidebar'
@@ -30,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body className={`${dmSans.variable} ${dmSerif.variable}`}>
         <ThemeRegistry>
-          <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+          <Stack direction="row" sx={{ height: '100vh', overflow: 'hidden' }}>
             <NavigationRail />
             <Box
               component="main"
@@ -42,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               {children}
             </Box>
-          </Box>
+          </Stack>
         </ThemeRegistry>
       </body>
     </html>
