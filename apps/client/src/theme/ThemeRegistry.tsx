@@ -13,7 +13,11 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
     <AppRouterCacheProvider>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+        <SnackbarProvider
+          maxSnack={3}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          autoHideDuration={4000}
+        >
           {children}
         </SnackbarProvider>
       </ThemeProvider>

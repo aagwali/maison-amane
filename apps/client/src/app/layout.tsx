@@ -1,16 +1,24 @@
 import * as React from 'react'
 import type { Metadata } from 'next'
-import { Roboto } from 'next/font/google'
+import { DM_Sans, DM_Serif_Display } from 'next/font/google'
 import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
 
 import ThemeRegistry from '@/theme/ThemeRegistry'
-import Sidebar from '@/components/layout/Sidebar'
+import NavigationRail from '@/components/layout/Sidebar'
 
-const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
+const dmSans = DM_Sans({
+  weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-roboto',
+  variable: '--font-dm-sans',
+})
+
+const dmSerif = DM_Serif_Display({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-dm-serif',
 })
 
 export const metadata: Metadata = {
@@ -21,10 +29,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className={roboto.variable}>
+      <body className={`${dmSans.variable} ${dmSerif.variable}`}>
         <ThemeRegistry>
-          <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-            <Sidebar />
+          <Stack direction="row" sx={{ height: '100vh', overflow: 'hidden' }}>
+            <NavigationRail />
             <Box
               component="main"
               sx={{
@@ -35,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               {children}
             </Box>
-          </Box>
+          </Stack>
         </ThemeRegistry>
       </body>
     </html>

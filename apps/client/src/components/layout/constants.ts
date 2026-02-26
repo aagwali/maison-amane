@@ -1,3 +1,2 @@
-export const SIDEBAR_WIDTH_OPEN = 240
-export const SIDEBAR_WIDTH_CLOSED = 64
-export const ACTION_PANEL_WIDTH = 360
+export const NAV_RAIL_WIDTH = 72
+export const ACTION_PANEL_WIDTH = 380

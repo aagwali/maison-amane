@@ -1,18 +1,35 @@
 'use client'
 
 import { useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
-import CircularProgress from '@mui/material/CircularProgress'
-import Grid from '@mui/material/Grid'
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+
+import ProductEditorHeader from './ProductEditorHeader'
+import ImageUploadZone from './ImageUploadZone'
+import ImageGallery from './ImageGallery'
+import ProductDetailsForm from './ProductDetailsForm'
 
 import { useProductForm } from '@/contexts/ProductFormContext'
 
 export default function ProductEditorContent() {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
   const {
+    title,
+    setTitle,
+    description,
+    setDescription,
+    productType,
+    setProductType,
+    category,
+    setCategory,
+    priceRange,
+    setPriceRange,
+    size,
+    setSize,
     uploadedImages,
     uploadingImages,
     error,
@@ -21,128 +38,108 @@ export default function ProductEditorContent() {
     onDragLeave,
     onDrop,
     onFileSelect,
+    viewTypes,
+    setImageViewType,
+    mode,
+    productStatus,
+    canSave,
+    canPublish,
+    isSaving,
+    saveError,
+    saveProduct,
   } = useProductForm()
 
-  return (
-    <Box>
-      {/* Upload zone */}
-      <Box
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onClick={() => fileInputRef.current?.click()}
-        sx={{
-          border: '2px dashed',
-          borderColor: isDragOver ? 'primary.main' : 'secondary.main',
-          borderRadius: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          py: 6,
-          mb: 4,
-          bgcolor: isDragOver ? 'action.hover' : 'background.paper',
-          color: 'text.secondary',
-          gap: 1,
-          cursor: 'pointer',
-          transition: 'border-color 0.2s ease, background-color 0.2s ease',
-        }}
-      >
-        <CloudUploadIcon
-          sx={{ fontSize: 48, color: isDragOver ? 'primary.main' : 'secondary.main' }}
-        />
-        <Typography variant="h6" color="text.primary">
-          {isDragOver ? 'Déposez vos images ici' : 'Drag & Drop Upload Zone'}
-        </Typography>
-        {!isDragOver && (
-          <Typography variant="body2">
-            Cliquez ou déposez des images (JPEG, PNG, WebP · max 10 MB)
-          </Typography>
-        )}
-      </Box>
+  const isEdit = mode === 'edit'
+  const needsMoreImages = uploadedImages.length < 2
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        multiple
-        hidden
-        onChange={onFileSelect}
+  return (
+    <>
+      <ProductEditorHeader
+        title={title}
+        isEdit={isEdit}
+        productStatus={productStatus}
+        canSave={canSave}
+        canPublish={canPublish}
+        isSaving={isSaving}
+        onSave={saveProduct}
+        onCancel={() => router.push('/products')}
       />
 
-      {/* Feedback erreur */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      <Box sx={{ flex: 1, overflow: 'auto', px: { xs: 2.5, md: 4 }, py: 2 }}>
+        {saveError && (
+          <Alert severity="error" sx={{ mb: 2, maxWidth: 1400, mx: 'auto' }}>
+            {saveError}
+          </Alert>
+        )}
 
-      {/* Gallery */}
-      <Typography variant="h6" gutterBottom>
-        Gallery
-      </Typography>
-      <Grid container spacing={1.5}>
-        {/* Images en cours d'upload */}
-        {uploadingImages.map((img) => (
-          <Grid key={img.id} size={{ xs: 6, sm: 4, md: 3 }}>
-            <Box
-              sx={{
-                aspectRatio: '4 / 3',
-                bgcolor: 'secondary.main',
-                opacity: 0.4,
-                borderRadius: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
-              }}
-            >
-              <CircularProgress variant="determinate" value={img.progress} size={32} />
-              <Typography
-                variant="caption"
-                sx={{ px: 1, textAlign: 'center', wordBreak: 'break-all' }}
-              >
-                {img.filename}
-              </Typography>
-            </Box>
-          </Grid>
-        ))}
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          spacing={2}
+          sx={{ maxWidth: 1400, mx: 'auto' }}
+        >
+          {/* Left column — Images */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Images
+            </Typography>
 
-        {/* Images uploadées */}
-        {uploadedImages.map((img) => (
-          <Grid key={img.mediaId} size={{ xs: 6, sm: 4, md: 3 }}>
-            <Box
-              component="img"
-              src={img.imageUrl}
-              alt={img.filename}
-              sx={{
-                width: '100%',
-                aspectRatio: '4 / 3',
-                objectFit: 'cover',
-                borderRadius: 1,
-                display: 'block',
-              }}
+            <ImageUploadZone
+              isDragOver={isDragOver}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              onClickUpload={() => fileInputRef.current?.click()}
             />
-          </Grid>
-        ))}
 
-        {/* Placeholders si galerie vide */}
-        {uploadedImages.length === 0 &&
-          uploadingImages.length === 0 &&
-          Array.from({ length: 8 }).map((_, i) => (
-            <Grid key={i} size={{ xs: 6, sm: 4, md: 3 }}>
-              <Box
-                sx={{
-                  aspectRatio: '4 / 3',
-                  bgcolor: 'secondary.main',
-                  opacity: 0.2,
-                  borderRadius: 1,
-                }}
-              />
-            </Grid>
-          ))}
-      </Grid>
-    </Box>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              hidden
+              onChange={onFileSelect}
+            />
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            {needsMoreImages && uploadedImages.length > 0 && (
+              <Typography variant="caption" color="warning.main" sx={{ mb: 2, display: 'block' }}>
+                {uploadedImages.length}/2 images minimum requises
+              </Typography>
+            )}
+
+            <ImageGallery
+              uploadingImages={uploadingImages}
+              uploadedImages={uploadedImages}
+              viewTypes={viewTypes}
+              onViewTypeChange={setImageViewType}
+              onClickUpload={() => fileInputRef.current?.click()}
+            />
+          </Box>
+
+          {/* Right column — Details */}
+          <Box sx={{ width: { xs: '100%', lg: 360 }, flexShrink: 0 }}>
+            <ProductDetailsForm
+              title={title}
+              setTitle={setTitle}
+              description={description}
+              setDescription={setDescription}
+              productType={productType}
+              setProductType={setProductType}
+              category={category}
+              setCategory={setCategory}
+              priceRange={priceRange}
+              setPriceRange={setPriceRange}
+              size={size}
+              setSize={setSize}
+            />
+          </Box>
+        </Stack>
+      </Box>
+    </>
   )
 }

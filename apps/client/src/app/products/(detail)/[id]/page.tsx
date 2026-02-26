@@ -16,13 +16,18 @@ function viewsToImages(views: {
   front: ViewDto
   detail: ViewDto
   additional: readonly ViewDto[]
-}): UploadedImage[] {
+}): { images: UploadedImage[]; viewTypes: Record<string, string> } {
   const all = [views.front, views.detail, ...views.additional]
-  return all.map((v) => ({
+  const images = all.map((v) => ({
     mediaId: v.imageUrl,
     imageUrl: v.imageUrl,
     filename: v.viewType.toLowerCase(),
   }))
+  const viewTypes: Record<string, string> = {}
+  all.forEach((v) => {
+    viewTypes[v.imageUrl] = v.viewType
+  })
+  return { images, viewTypes }
 }
 
 export default async function ProductDetailPage({ params }: Props) {
@@ -31,10 +36,14 @@ export default async function ProductDetailPage({ params }: Props) {
     notFoundOn: 'ApiNotFoundError',
   })
 
+  const { images, viewTypes } = viewsToImages(product.views)
+
   const initialData = {
     id: product.id,
     title: product.label,
-    images: viewsToImages(product.views),
+    images,
+    viewTypes,
+    status: product.status,
   }
 
   return (

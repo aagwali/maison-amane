@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation'
 import { useSnackbar } from 'notistack'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded'
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
+import { alpha } from '@mui/material/styles'
+
+import { tokens } from '@/theme/theme'
 
 interface Props {
   error: Error & { digest?: string; correlationId?: string }
@@ -21,9 +27,7 @@ export default function ProductDetailError({ error, reset }: Props) {
 
   useEffect(() => {
     enqueueSnackbar(
-      ref
-        ? `Impossible de charger le produit. Référence : ${ref}`
-        : "Impossible de charger le produit. Une erreur serveur s'est produite.",
+      ref ? `Erreur de chargement. Réf\u00a0: ${ref}` : 'Erreur de chargement du produit.',
       { variant: 'error', autoHideDuration: 8000 }
     )
   }, [enqueueSnackbar, ref])
@@ -36,27 +40,74 @@ export default function ProductDetailError({ error, reset }: Props) {
   }
 
   return (
-    <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Typography variant="h6" color="error.main">
-        Chargement échoué
-      </Typography>
-      <Typography color="text.secondary">
-        Une erreur s'est produite lors du chargement du produit. Vous pouvez réessayer ou revenir à
-        la liste.
-      </Typography>
+    <Box sx={{ p: { xs: 3, md: 5 }, maxWidth: 520 }}>
+      <Box
+        sx={{
+          borderLeft: '3px solid',
+          borderColor: 'error.main',
+          pl: 2.5,
+          py: 0.5,
+        }}
+      >
+        <Typography variant="h6" sx={{ color: 'error.main', mb: 0.5 }}>
+          Erreur
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'text.primary', mb: 0.5 }}>
+          Le chargement du produit a échoué.
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Vous pouvez réessayer ou revenir à la liste.
+        </Typography>
+      </Box>
+
       {ref && (
-        <Typography variant="caption" color="text.disabled" sx={{ fontFamily: 'monospace' }}>
-          Référence : {ref}
+        <Typography
+          variant="caption"
+          sx={{
+            display: 'block',
+            fontFamily: 'monospace',
+            color: 'text.disabled',
+            mt: 2,
+            ml: 2,
+          }}
+        >
+          réf\u00a0: {ref}
         </Typography>
       )}
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button variant="contained" onClick={handleRetry} disabled={isPending}>
-          {isPending ? 'Chargement...' : 'Réessayer'}
+
+      <Stack direction="row" spacing={1} sx={{ mt: 3, ml: 2 }}>
+        <Button
+          variant="text"
+          onClick={handleRetry}
+          disabled={isPending}
+          startIcon={<ReplayRoundedIcon sx={{ fontSize: '16px !important' }} />}
+          size="small"
+          sx={{
+            color: tokens.graphite,
+            '&:hover': {
+              color: 'error.main',
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.06),
+            },
+          }}
+        >
+          {isPending ? 'Chargement…' : 'Réessayer'}
         </Button>
-        <Button variant="outlined" onClick={() => router.push('/products')}>
-          Retour à la liste
+        <Button
+          variant="text"
+          onClick={() => router.push('/products')}
+          startIcon={<ArrowBackRoundedIcon sx={{ fontSize: '16px !important' }} />}
+          size="small"
+          sx={{
+            color: tokens.graphite,
+            '&:hover': {
+              color: tokens.charcoal,
+              bgcolor: alpha(tokens.ash, 0.5),
+            },
+          }}
+        >
+          Retour
         </Button>
-      </Box>
+      </Stack>
     </Box>
   )
 }
