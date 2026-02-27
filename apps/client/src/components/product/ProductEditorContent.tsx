@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
+import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 
@@ -65,9 +66,9 @@ export default function ProductEditorContent() {
         onCancel={() => router.push('/products')}
       />
 
-      <Box sx={{ flex: 1, overflow: 'auto', px: { xs: 2.5, md: 4 }, py: 2 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', px: { xs: 2.5, md: 4 }, pb: 2 }}>
         {saveError && (
-          <Alert severity="error" sx={{ mb: 2, maxWidth: 1400, mx: 'auto' }}>
+          <Alert severity="error" sx={{ mt: 2, mb: 2, maxWidth: 1400, mx: 'auto' }}>
             {saveError}
           </Alert>
         )}
@@ -79,39 +80,53 @@ export default function ProductEditorContent() {
         >
           {/* Left column — Images */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Images
-            </Typography>
-
-            <ImageUploadZone
-              isDragOver={isDragOver}
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              onDrop={onDrop}
-              onClickUpload={() => fileInputRef.current?.click()}
-            />
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              hidden
-              onChange={onFileSelect}
-            />
-
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-
-            {needsMoreImages && uploadedImages.length > 0 && (
-              <Typography variant="caption" color="warning.main" sx={{ mb: 2, display: 'block' }}>
-                {uploadedImages.length}/2 images minimum requises
+            {/* Sticky upload zone */}
+            <Box
+              sx={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 1,
+                bgcolor: 'background.default',
+                pt: 2,
+              }}
+            >
+              <Typography variant="h6" sx={{ mb: 1.5 }}>
+                Images
               </Typography>
-            )}
 
+              <ImageUploadZone
+                isDragOver={isDragOver}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+                onClickUpload={() => fileInputRef.current?.click()}
+              />
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                hidden
+                onChange={onFileSelect}
+              />
+
+              {error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {error}
+                </Alert>
+              )}
+
+              {needsMoreImages && uploadedImages.length > 0 && (
+                <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
+                  {uploadedImages.length}/2 images minimum requises
+                </Typography>
+              )}
+
+              <Divider sx={{ mt: 1.5, mb: 0 }} />
+            </Box>
+
+            <Box sx={{ pt: 1 }} />
             <ImageGallery
               uploadingImages={uploadingImages}
               uploadedImages={uploadedImages}
@@ -121,8 +136,17 @@ export default function ProductEditorContent() {
             />
           </Box>
 
-          {/* Right column — Details */}
-          <Box sx={{ width: { xs: '100%', lg: 360 }, flexShrink: 0 }}>
+          {/* Right column — Details (sticky) */}
+          <Box
+            sx={{
+              width: { xs: '100%', lg: 360 },
+              flexShrink: 0,
+              position: { lg: 'sticky' },
+              top: { lg: 0 },
+              pt: 2,
+              alignSelf: { lg: 'flex-start' },
+            }}
+          >
             <ProductDetailsForm
               title={title}
               setTitle={setTitle}

@@ -1,13 +1,16 @@
 'use client'
 
+import { alpha } from '@mui/material/styles'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import Stack from '@mui/material/Stack'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded'
 import PublishRoundedIcon from '@mui/icons-material/PublishRounded'
 import Link from 'next/link'
@@ -72,9 +75,48 @@ export default function ProductEditorHeader({
         </Stack>
 
         <Stack direction="row" spacing={1}>
-          <Button variant="text" size="small" onClick={onCancel}>
+          {/* Annuler — icon on xs, text on sm+ */}
+          <Tooltip title="Annuler">
+            <IconButton
+              size="small"
+              onClick={onCancel}
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                color: 'text.secondary',
+                '&:hover': { bgcolor: alpha(tokens.charcoal, 0.08) },
+              }}
+            >
+              <CloseRoundedIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+          <Button
+            variant="text"
+            size="small"
+            onClick={onCancel}
+            sx={{ display: { xs: 'none', md: 'flex' } }}
+          >
             Annuler
           </Button>
+
+          {/* Save — icon on xs, full button on sm+ */}
+          <Tooltip title={isSaving ? 'Enregistrement…' : isEdit ? 'Mettre à jour' : 'Enregistrer'}>
+            <IconButton
+              size="small"
+              color="primary"
+              disabled={!canSave}
+              onClick={() => onSave(false)}
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                '&:hover': { bgcolor: alpha(tokens.ember, 0.1) },
+              }}
+            >
+              {isSaving ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <SaveRoundedIcon sx={{ fontSize: 20 }} />
+              )}
+            </IconButton>
+          </Tooltip>
           <Button
             variant="contained"
             size="small"
@@ -87,24 +129,43 @@ export default function ProductEditorHeader({
                 <SaveRoundedIcon sx={{ fontSize: 18 }} />
               )
             }
-            sx={{ minWidth: 186, whiteSpace: 'nowrap' }}
+            sx={{ display: { xs: 'none', md: 'flex' }, minWidth: 186, whiteSpace: 'nowrap' }}
           >
             {isSaving ? 'Enregistrement…' : isEdit ? 'Mettre à jour' : 'Enregistrer'}
           </Button>
+
+          {/* Publish — icon on xs, full button on sm+ */}
           {(!isEdit || productStatus === 'DRAFT') && (
-            <Button
-              variant="contained"
-              size="small"
-              disabled={isEdit ? !canPublish : !canSave}
-              onClick={() => onSave(true)}
-              startIcon={<PublishRoundedIcon sx={{ fontSize: 18 }} />}
-              sx={{
-                bgcolor: tokens.olive,
-                '&:hover': { bgcolor: tokens.oliveDark },
-              }}
-            >
-              Publier
-            </Button>
+            <>
+              <Tooltip title="Publier">
+                <IconButton
+                  size="small"
+                  disabled={isEdit ? !canPublish : !canSave}
+                  onClick={() => onSave(true)}
+                  sx={{
+                    display: { xs: 'flex', md: 'none' },
+                    color: tokens.olive,
+                    '&:hover': { color: tokens.oliveDark, bgcolor: alpha(tokens.olive, 0.1) },
+                  }}
+                >
+                  <PublishRoundedIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
+              <Button
+                variant="contained"
+                size="small"
+                disabled={isEdit ? !canPublish : !canSave}
+                onClick={() => onSave(true)}
+                startIcon={<PublishRoundedIcon sx={{ fontSize: 18 }} />}
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  bgcolor: tokens.olive,
+                  '&:hover': { bgcolor: tokens.oliveDark },
+                }}
+              >
+                Publier
+              </Button>
+            </>
           )}
         </Stack>
       </Stack>
