@@ -9,7 +9,8 @@ import { withDefault } from 'effect/Config'
 
 export interface ShopifyConfigValue {
   readonly storeUrl: string
-  readonly accessToken: Redacted.Redacted<string>
+  readonly clientId: string
+  readonly clientSecret: Redacted.Redacted<string>
   readonly apiVersion: string
 }
 
@@ -20,8 +21,10 @@ export class ShopifyConfig extends Context.Tag('ShopifyConfig')<
 
 export const shopifyConfigFromEnv = Config.all({
   storeUrl: Config.string('SHOPIFY_STORE_URL'),
-  accessToken: Config.redacted('SHOPIFY_ACCESS_TOKEN'),
-  apiVersion: Config.string('SHOPIFY_API_VERSION').pipe(withDefault('2025-01')),
+  clientId: Config.string('SHOPIFY_CLIENT_ID'),
+  clientSecret: Config.redacted('SHOPIFY_CLIENT_SECRET'),
+  apiVersion: Config.string('SHOPIFY_API_VERSION')
+    .pipe(withDefault('2025-01')),
 })
 
 export const ShopifyConfigLive = Layer.effect(ShopifyConfig, shopifyConfigFromEnv)

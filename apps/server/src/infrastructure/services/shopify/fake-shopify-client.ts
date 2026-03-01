@@ -1,5 +1,3 @@
-// src/infrastructure/services/shopify/fake-shopify-client.ts
-//
 // Fake Shopify client for development/testing.
 // Implements the domain-oriented ShopifyClient port.
 

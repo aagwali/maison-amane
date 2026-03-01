@@ -60,7 +60,10 @@ const slugify = (text: string): string =>
 export const mapToShopifyProduct = (product: PilotProduct): ShopifyProductSetInput => {
   const handle = slugify(product.label)
   const productType = `${product.type} - ${product.category}`
-  const status: ShopifyProductStatus = 'ACTIVE'
+  const status: ShopifyProductStatus = 'DRAFT'
+
+  // If already synced, include Shopify GID so productSet does an update
+  const id = product.syncStatus._tag === 'Synced' ? product.syncStatus.shopifyProductId : undefined
 
   // Collect all unique size labels for product options
   const sizeLabels = product.variants.map((v) => getVariantSizeLabel(v, product.category))
@@ -94,6 +97,7 @@ export const mapToShopifyProduct = (product: PilotProduct): ShopifyProductSetInp
   ]
 
   return {
+    id,
     title: product.label,
     descriptionHtml: product.description,
     handle,

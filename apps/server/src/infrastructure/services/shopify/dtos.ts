@@ -47,6 +47,7 @@ export interface ShopifyProductOption {
 export type ShopifyProductStatus = 'ACTIVE' | 'DRAFT' | 'ARCHIVED'
 
 export interface ShopifyProductSetInput {
+  readonly id?: string
   readonly title: string
   readonly descriptionHtml: string
   readonly handle: string
@@ -71,4 +72,21 @@ export interface ShopifyProductSetResponse {
     readonly field: readonly string[]
     readonly message: string
   }[]
+}
+
+// ============================================
+// SHOPIFY GRAPHQL RESPONSE WRAPPER
+// ============================================
+
+export interface ShopifyGraphQLResponse<T> {
+  readonly data?: T
+  readonly errors?: readonly {
+    readonly message: string
+    readonly locations?: readonly { readonly line: number; readonly column: number }[]
+    readonly extensions?: Record<string, unknown>
+  }[]
+}
+
+export interface ProductSetMutationData {
+  readonly productSet: ShopifyProductSetResponse
 }

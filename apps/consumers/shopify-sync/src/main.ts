@@ -3,7 +3,8 @@
 import { Layer } from 'effect'
 import { NodeRuntime } from '@effect/platform-node'
 import {
-  FakeShopifyClientLive,
+  ShopifyClientLive,
+  ShopifyTokenProviderLive,
   JsonLogger,
   MongoDatabaseLive,
   MongodbPilotProductRepositoryLive,
@@ -19,6 +20,7 @@ import {
   createLoggerLive as createLoggerLive,
   EXCHANGES,
   ROUTING_KEYS,
+  ShopifyConfigLive,
 } from '@maison-amane/shared-kernel'
 import { provide } from 'effect/Effect'
 
@@ -39,7 +41,9 @@ const RabbitMQLayer = Layer.provideMerge(RabbitMQConnectionLive, RabbitMQConfigL
 const PilotProductRepositoryLayer = MongodbPilotProductRepositoryLive
   .pipe(Layer.provide(MongoDatabaseLive))
 
-const ShopifyClientLayer = FakeShopifyClientLive
+const ShopifyClientLayer = ShopifyClientLive
+  .pipe(Layer.provide(ShopifyTokenProviderLive))
+  .pipe(Layer.provide(ShopifyConfigLive))
 
 const layers = Layer.mergeAll(
   RabbitMQLayer,
