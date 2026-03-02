@@ -38,12 +38,21 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const { images, viewTypes } = viewsToImages(product.views)
 
+  const catalogSizes = product.variants
+    .filter((v) => v.sizeSpec._tag === 'CatalogSize')
+    .map((v) => (v.sizeSpec as { _tag: 'CatalogSize'; size: string }).size)
+
   const initialData = {
     id: product.id,
     title: product.label,
     images,
     viewTypes,
     status: product.status,
+    description: product.description,
+    type: product.type,
+    shape: product.shape,
+    material: product.material,
+    sizes: catalogSizes.length > 0 ? catalogSizes : ['MEDIUM'],
   }
 
   return (

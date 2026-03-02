@@ -23,14 +23,13 @@ import {
   makePilotProductUpdated,
   makeNotSynced,
   makeSynced,
-  makeStandardVariant,
-  PriceRange,
-  ProductCategory,
+  Material,
+  ProductShape,
   ProductStatus,
   ProductType,
-  Size,
   ViewType,
   type PilotProduct,
+  type ProductVariant,
   type ShopifyProductId,
 } from '../../../domain/pilot'
 import { makeCorrelationId, makeUserId } from '../../../domain/shared'
@@ -102,18 +101,20 @@ const createTestClock = () => ({
 // TEST FIXTURES
 // ============================================
 
+const catalogVariants: readonly [ProductVariant, ProductVariant] = [
+  { sizeSpec: { _tag: 'CatalogSize', size: 'MEDIUM' }, pricingSpec: { _tag: 'FormulaPrice' } },
+  { sizeSpec: { _tag: 'CatalogSize', size: 'LARGE' }, pricingSpec: { _tag: 'FormulaPrice' } },
+]
+
 const createPilotProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct =>
   makePilotProduct({
     id: 'test-product-1' as any,
     label: 'Tapis Berbère Atlas' as any,
     type: ProductType.TAPIS,
-    category: ProductCategory.RUNNER,
+    shape: ProductShape.RUNNER,
     description: 'Beautiful handmade rug' as any,
-    priceRange: PriceRange.PREMIUM,
-    variants: [
-      makeStandardVariant({ size: Size.REGULAR }),
-      makeStandardVariant({ size: Size.LARGE }),
-    ],
+    material: Material.AZILAL,
+    variants: catalogVariants,
     views: {
       front: { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' as any },
       detail: { viewType: ViewType.DETAIL, imageUrl: 'https://cdn.example.com/detail.jpg' as any },

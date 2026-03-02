@@ -4,50 +4,59 @@ import * as S from 'effect/Schema'
 
 import { Size } from '../enums'
 
-import { CustomDimensionSchema } from './dimensions'
-import { PriceSchema } from './scalar-types'
+import { PositiveCmSchema, PriceSchema } from './scalar-types'
 
 // ============================================
-// STANDARD VARIANT BASE (value object, without id)
+// AXE 1 : DIMENSIONS
 // ============================================
 
-export const StandardVariantBaseSchema = S.Struct({
-  _tag: S.Literal('StandardVariant'),
-  size: S.Literal(Size.REGULAR, Size.LARGE),
+export const CatalogSizeSchema = S.Struct({
+  _tag: S.Literal('CatalogSize'),
+  size: S.Literal(Size.EXTRA_SMALL, Size.SMALL, Size.MEDIUM, Size.LARGE, Size.EXTRA_LARGE),
 })
 
-export type StandardVariantBase = typeof StandardVariantBaseSchema.Type
+export type CatalogSize = typeof CatalogSizeSchema.Type
 
-// ============================================
-// CUSTOM VARIANT BASE (value object, without id)
-// ============================================
-
-export const CustomVariantBaseSchema = S.Struct({
-  _tag: S.Literal('CustomVariant'),
-  size: S.Literal(Size.CUSTOM),
-  customDimensions: CustomDimensionSchema,
-  price: PriceSchema,
+export const BespokeSizeSchema = S.Struct({
+  _tag: S.Literal('BespokeSize'),
+  width: PositiveCmSchema,
+  length: PositiveCmSchema,
 })
 
-export type CustomVariantBase = typeof CustomVariantBaseSchema.Type
+export type BespokeSize = typeof BespokeSizeSchema.Type
+
+export const VariantSizeSchema = S.Union(CatalogSizeSchema, BespokeSizeSchema)
+
+export type VariantSize = typeof VariantSizeSchema.Type
 
 // ============================================
-// VARIANT BASE (union)
+// AXE 2 : PRIX
 // ============================================
 
-export const VariantBaseSchema = S.Union(StandardVariantBaseSchema, CustomVariantBaseSchema)
+export const FormulaPricingSchema = S.Struct({
+  _tag: S.Literal('FormulaPrice'),
+})
 
-export type VariantBase = typeof VariantBaseSchema.Type
+export type FormulaPricing = typeof FormulaPricingSchema.Type
+
+export const NegotiatedPricingSchema = S.Struct({
+  _tag: S.Literal('NegotiatedPrice'),
+  amount: PriceSchema,
+})
+
+export type NegotiatedPricing = typeof NegotiatedPricingSchema.Type
+
+export const VariantPricingSchema = S.Union(FormulaPricingSchema, NegotiatedPricingSchema)
+
+export type VariantPricing = typeof VariantPricingSchema.Type
 
 // ============================================
-// ALIASES (for aggregate usage)
+// VARIANT = COMPOSITION
 // ============================================
 
-export const ProductVariantSchema = VariantBaseSchema
-export type ProductVariant = VariantBase
+export const ProductVariantSchema = S.Struct({
+  sizeSpec: VariantSizeSchema,
+  pricingSpec: VariantPricingSchema,
+})
 
-export const StandardVariantSchema = StandardVariantBaseSchema
-export type StandardVariant = StandardVariantBase
-
-export const CustomVariantSchema = CustomVariantBaseSchema
-export type CustomVariant = CustomVariantBase
+export type ProductVariant = typeof ProductVariantSchema.Type

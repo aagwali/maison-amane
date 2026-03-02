@@ -5,11 +5,10 @@
 // to an external system's language.
 
 import {
-  getDimensionsForSize,
-  getPriceForVariant,
+  calculateVariantPrice,
+  DIMENSION_SETS,
   type PilotProduct,
   type PredefinedSize,
-  type ProductCategory,
   type ProductVariant,
 } from '../../../domain/pilot'
 
@@ -26,19 +25,14 @@ import type {
 // SIZE/DIMENSION MAPPING
 // ============================================
 
-const getVariantSizeLabel = (variant: ProductVariant, category: ProductCategory): string => {
-  if (variant._tag === 'CustomVariant') {
-    const { width, length } = variant.customDimensions
-    return `${width}x${length}`
+const getVariantSizeLabel = (variant: ProductVariant, shape: PilotProduct['shape']): string => {
+  const sizeSpec = variant.sizeSpec
+  if (sizeSpec._tag === 'BespokeSize') {
+    return `${sizeSpec.width}x${sizeSpec.length}`
   }
-  // Use reference data: take first dimension from the set
-  const dimensions = getDimensionsForSize(category, variant.size as PredefinedSize)
-  const firstDimension = dimensions[0]
-  if (!firstDimension) {
-    // Fallback if no dimension found (should not happen with valid data)
-    return variant.size
-  }
-  return `${firstDimension.width}x${firstDimension.length}`
+  // CatalogSize — scalaire dans DIMENSION_SETS
+  const dim = DIMENSION_SETS[shape][sizeSpec.size as PredefinedSize]
+  return `${dim?.width}x${dim?.length}`
 }
 
 // ============================================
@@ -59,14 +53,14 @@ const slugify = (text: string): string =>
 
 export const mapToShopifyProduct = (product: PilotProduct): ShopifyProductSetInput => {
   const handle = slugify(product.label)
-  const productType = `${product.type} - ${product.category}`
+  const productType = `${product.type} - ${product.shape}`
   const status: ShopifyProductStatus = 'DRAFT'
 
   // If already synced, include Shopify GID so productSet does an update
   const id = product.syncStatus._tag === 'Synced' ? product.syncStatus.shopifyProductId : undefined
 
   // Collect all unique size labels for product options
-  const sizeLabels = product.variants.map((v) => getVariantSizeLabel(v, product.category))
+  const sizeLabels = product.variants.map((v) => getVariantSizeLabel(v, product.shape))
   const uniqueSizeLabels = [...new Set(sizeLabels)]
 
   const productOptions: ShopifyProductOption[] = [
@@ -76,10 +70,16 @@ export const mapToShopifyProduct = (product: PilotProduct): ShopifyProductSetInp
     },
   ]
 
-  // Map variants
+  // Map variants — prix calculé selon sizeSpec + material
   const variants: ShopifyVariantInput[] = product.variants.map((variant) => {
-    const sizeLabel = getVariantSizeLabel(variant, product.category)
-    const price = getPriceForVariant(variant, product.priceRange).toFixed(2)
+    const sizeLabel = getVariantSizeLabel(variant, product.shape)
+
+    const priceInCentimes =
+      variant.pricingSpec._tag === 'NegotiatedPrice'
+        ? variant.pricingSpec.amount
+        : calculateVariantPrice(variant.sizeSpec, product.shape, product.material)
+
+    const price = (priceInCentimes / 100).toFixed(2)
 
     const optionValues: ShopifyOptionValue[] = [{ optionName: 'Dimensions', name: sizeLabel }]
 
@@ -104,7 +104,7 @@ export const mapToShopifyProduct = (product: PilotProduct): ShopifyProductSetInp
     productType,
     vendor: 'Maison Amane',
     status,
-    tags: [product.priceRange, product.category],
+    tags: [product.material.toLowerCase(), product.shape.toLowerCase()],
     productOptions,
     variants,
     files,

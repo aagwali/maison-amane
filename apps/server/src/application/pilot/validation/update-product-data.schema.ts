@@ -6,8 +6,8 @@ import type { Option as OptionType } from 'effect/Option'
 import * as S from 'effect/Schema'
 
 import {
-  PriceRangeSchema,
-  ProductCategorySchema,
+  MaterialSchema,
+  ProductShapeSchema,
   ProductDescriptionSchema,
   ProductLabelSchema,
   ProductStatusSchema,
@@ -30,9 +30,9 @@ export type { ValidatedVariant }
 export interface ValidatedUpdateData {
   readonly label: OptionType<S.Schema.Type<typeof ProductLabelSchema>>
   readonly type: OptionType<S.Schema.Type<typeof ProductTypeSchema>>
-  readonly category: OptionType<S.Schema.Type<typeof ProductCategorySchema>>
+  readonly shape: OptionType<S.Schema.Type<typeof ProductShapeSchema>>
   readonly description: OptionType<S.Schema.Type<typeof ProductDescriptionSchema>>
-  readonly priceRange: OptionType<S.Schema.Type<typeof PriceRangeSchema>>
+  readonly material: OptionType<S.Schema.Type<typeof MaterialSchema>>
   readonly variants: OptionType<readonly [ValidatedVariant, ...ValidatedVariant[]]>
   readonly views: OptionType<S.Schema.Type<typeof ProductViewsSchema>>
   readonly status: OptionType<S.Schema.Type<typeof ProductStatusSchema>>
@@ -48,9 +48,9 @@ export const validateUpdateData = (
   gen(function* () {
     const label = yield* validateOptionalField(data.label, ProductLabelSchema)
     const type = yield* validateOptionalField(data.type, ProductTypeSchema)
-    const category = yield* validateOptionalField(data.category, ProductCategorySchema)
+    const shape = yield* validateOptionalField(data.shape, ProductShapeSchema)
     const description = yield* validateOptionalField(data.description, ProductDescriptionSchema)
-    const priceRange = yield* validateOptionalField(data.priceRange, PriceRangeSchema)
+    const material = yield* validateOptionalField(data.material, MaterialSchema)
     const status = yield* validateOptionalField(data.status, ProductStatusSchema)
     const variants = yield* validateOptionalVariants(data.variants)
     const views = yield* validateOptionalViews(data.views)
@@ -58,9 +58,9 @@ export const validateUpdateData = (
     return {
       label,
       type,
-      category,
+      shape,
       description,
-      priceRange,
+      material,
       variants,
       views,
       status,

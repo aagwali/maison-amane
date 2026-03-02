@@ -56,11 +56,8 @@ export const makeCatalogImageUrl = S.decodeUnknownSync(CatalogImageUrlSchema)
 // ============================================
 
 export {
-  ProductCategorySchema as CatalogCategorySchema,
-  makeProductCategory as makeCatalogCategory,
-  PriceRangeSchema as CatalogPriceRangeSchema,
-  makePriceRange as makeCatalogPriceRange,
-  Size,
-  SizeSchema as CatalogSizeSchema,
-  makeSize as makeCatalogSize,
+  ProductShapeSchema as CatalogShapeSchema,
+  makeProductShape as makeCatalogShape,
+  MaterialSchema as CatalogMaterialSchema,
+  makeMaterial as makeCatalogMaterial,
 } from '@maison-amane/shared-kernel'

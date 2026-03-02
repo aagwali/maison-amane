@@ -22,10 +22,10 @@ import { Data } from 'effect'
 import { type Effect, fail, succeed } from 'effect/Effect'
 import * as S from 'effect/Schema'
 
-import { type CustomVariant, ProductVariantSchema, type StandardVariant } from './value-objects'
+import { ProductVariantSchema } from './value-objects'
 import {
-  PriceRangeSchema,
-  ProductCategorySchema,
+  MaterialSchema,
+  ProductShapeSchema,
   ProductStatus,
   ProductStatusSchema,
   ProductTypeSchema,
@@ -43,16 +43,6 @@ import { ArchiveNotAllowed, PublicationNotAllowed } from './errors'
 import { SyncStatusMachine } from './services/sync-status.machine'
 
 // ============================================
-// VARIANT CONSTRUCTORS
-// ============================================
-
-export const makeStandardVariant = (params: Omit<StandardVariant, '_tag'>): StandardVariant =>
-  Data.case<StandardVariant>()({ _tag: 'StandardVariant', ...params })
-
-export const makeCustomVariant = (params: Omit<CustomVariant, '_tag'>): CustomVariant =>
-  Data.case<CustomVariant>()({ _tag: 'CustomVariant', ...params })
-
-// ============================================
 // PILOT PRODUCT (Aggregate Root)
 // ============================================
 
@@ -62,9 +52,9 @@ export const PilotProductSchema = S.TaggedStruct('PilotProduct', {
   id: ProductIdSchema,
   label: ProductLabelSchema,
   type: ProductTypeSchema,
-  category: ProductCategorySchema,
+  shape: ProductShapeSchema,
   description: ProductDescriptionSchema,
-  priceRange: PriceRangeSchema,
+  material: MaterialSchema,
   variants: VariantsNonEmptySchema,
   views: ProductViewsSchema,
   status: ProductStatusSchema,
@@ -90,7 +80,7 @@ export const withUpdatedFields = (
   updates: Partial<
     Pick<
       PilotProduct,
-      'label' | 'type' | 'category' | 'description' | 'priceRange' | 'variants' | 'views'
+      'label' | 'type' | 'shape' | 'description' | 'material' | 'variants' | 'views'
     >
   >,
   updatedAt: Date

@@ -58,9 +58,9 @@ const applyUpdates = (
       {
         label: Option.getOrElse(validated.label, () => product.label),
         type: Option.getOrElse(validated.type, () => product.type),
-        category: Option.getOrElse(validated.category, () => product.category),
+        shape: Option.getOrElse(validated.shape, () => product.shape),
         description: Option.getOrElse(validated.description, () => product.description),
-        priceRange: Option.getOrElse(validated.priceRange, () => product.priceRange),
+        material: Option.getOrElse(validated.material, () => product.material),
         variants: Option.match(validated.variants, {
           onNone: () => product.variants,
           onSome: (v) => createVariants(v),

@@ -7,8 +7,8 @@ import { runPromise, provide, either } from 'effect/Effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
-  PriceRange,
-  ProductCategory,
+  Material,
+  ProductShape,
   ProductStatus,
   ProductType,
   Size,
@@ -28,10 +28,10 @@ import { pilotProductCreationHandler } from './create-pilot-product.handler'
 const validProductData: UnvalidatedProductData = {
   label: 'Tapis Berbère Atlas',
   type: ProductType.TAPIS,
-  category: ProductCategory.RUNNER,
+  shape: ProductShape.RUNNER,
   description: 'Beautiful handmade Berber rug from the Atlas mountains',
-  priceRange: PriceRange.PREMIUM,
-  variants: [{ size: Size.REGULAR }, { size: Size.LARGE }],
+  material: Material.AZILAL,
+  variants: [{ size: Size.MEDIUM }, { size: Size.LARGE }],
   views: [
     { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' },
     { viewType: ViewType.DETAIL, imageUrl: 'https://cdn.example.com/detail.jpg' },
@@ -94,10 +94,14 @@ describe('handlePilotProductCreation', () => {
       )
 
       expect(result.variants).toHaveLength(2)
-      expect(result.variants[0]?._tag).toBe('StandardVariant')
-      expect(result.variants[0]?.size).toBe(Size.REGULAR)
-      expect(result.variants[1]?._tag).toBe('StandardVariant')
-      expect(result.variants[1]?.size).toBe(Size.LARGE)
+      expect(result.variants[0]?.sizeSpec._tag).toBe('CatalogSize')
+      if (result.variants[0]?.sizeSpec._tag === 'CatalogSize') {
+        expect(result.variants[0].sizeSpec.size).toBe('MEDIUM')
+      }
+      expect(result.variants[1]?.sizeSpec._tag).toBe('CatalogSize')
+      if (result.variants[1]?.sizeSpec._tag === 'CatalogSize') {
+        expect(result.variants[1].sizeSpec.size).toBe('LARGE')
+      }
     })
 
     it('initializes syncStatus as NotSynced', async () => {
@@ -124,29 +128,32 @@ describe('handlePilotProductCreation', () => {
       expect(result.views.additional).toHaveLength(2)
     })
 
-    it('handles custom variant with dimensions', async () => {
-      const dataWithCustom: UnvalidatedProductData = {
+    it('handles bespoke variant with dimensions and negotiated price', async () => {
+      const dataWithBespoke: UnvalidatedProductData = {
         ...validProductData,
         variants: [
           {
-            size: Size.CUSTOM,
-            customDimensions: { width: 150, length: 300 },
-            price: 25000,
+            width: 150,
+            length: 300,
+            negotiatedPrice: 25000,
           },
         ],
       }
-      const command = buildCommand(dataWithCustom)
+      const command = buildCommand(dataWithBespoke)
 
       const result = await runPromise(
         pilotProductCreationHandler(command)
           .pipe(provide(testCtx.layer))
       )
 
-      expect(result.variants[0]._tag).toBe('CustomVariant')
-      if (result.variants[0]._tag === 'CustomVariant') {
-        expect(result.variants[0].customDimensions.width).toBe(150)
-        expect(result.variants[0].customDimensions.length).toBe(300)
-        expect(result.variants[0].price).toBe(25000)
+      expect(result.variants[0]?.sizeSpec._tag).toBe('BespokeSize')
+      if (result.variants[0]?.sizeSpec._tag === 'BespokeSize') {
+        expect(result.variants[0].sizeSpec.width).toBe(150)
+        expect(result.variants[0].sizeSpec.length).toBe(300)
+      }
+      expect(result.variants[0]?.pricingSpec._tag).toBe('NegotiatedPrice')
+      if (result.variants[0]?.pricingSpec._tag === 'NegotiatedPrice') {
+        expect(result.variants[0].pricingSpec.amount).toBe(25000)
       }
     })
   })

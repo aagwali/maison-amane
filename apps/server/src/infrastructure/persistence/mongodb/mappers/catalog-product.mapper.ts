@@ -11,9 +11,8 @@ import {
   makeCatalogDescription,
   makeCatalogImageUrl,
   makeCatalogDimension,
-  makeCatalogPrice,
-  makeCatalogCategory,
-  makeCatalogPriceRange,
+  makeCatalogShape,
+  makeCatalogMaterial,
 } from '../../../../domain/catalog'
 
 // ============================================
@@ -24,13 +23,13 @@ export interface CatalogProductDocument {
   _id: string
   label: string
   description: string
-  category: string
-  priceRange: string
+  shape: string
+  material: string
   variants: Array<{
-    _tag: 'StandardVariant' | 'CustomVariant'
-    size: 'REGULAR' | 'LARGE' | 'CUSTOM'
-    dimensions?: { width: number; length: number }
-    price?: number
+    sizeSpec:
+      | { _tag: 'CatalogSize'; size: string }
+      | { _tag: 'BespokeSize'; width: number; length: number }
+    pricingSpec: { _tag: 'FormulaPrice' } | { _tag: 'NegotiatedPrice'; amount: number }
   }>
   images: {
     front: string
@@ -49,20 +48,11 @@ export const catalogToDocument = (product: CatalogProduct): CatalogProductDocume
   _id: product.id,
   label: product.label,
   description: product.description,
-  category: product.category,
-  priceRange: product.priceRange,
+  shape: product.shape,
+  material: product.material,
   variants: product.variants.map((v) => ({
-    _tag: v._tag,
-    size: v.size,
-    ...(v._tag === 'CustomVariant'
-      ? {
-          dimensions: {
-            width: v.dimensions.width,
-            length: v.dimensions.length,
-          },
-          price: v.price,
-        }
-      : {}),
+    sizeSpec: v.sizeSpec,
+    pricingSpec: v.pricingSpec,
   })),
   images: {
     front: product.images.front,
@@ -82,8 +72,8 @@ export const catalogFromDocument = (doc: CatalogProductDocument): CatalogProduct
   id: makeProductId(doc._id),
   label: makeCatalogLabel(doc.label),
   description: makeCatalogDescription(doc.description),
-  category: makeCatalogCategory(doc.category),
-  priceRange: makeCatalogPriceRange(doc.priceRange),
+  shape: makeCatalogShape(doc.shape),
+  material: makeCatalogMaterial(doc.material),
   variants: doc.variants.map(mapVariant),
   images: {
     front: makeCatalogImageUrl(doc.images.front),
@@ -99,19 +89,19 @@ export const catalogFromDocument = (doc: CatalogProductDocument): CatalogProduct
 // ============================================
 
 const mapVariant = (v: CatalogProductDocument['variants'][number]): CatalogVariant => {
-  if (v._tag === 'CustomVariant') {
-    return {
-      _tag: 'CustomVariant',
-      size: v.size as 'CUSTOM',
-      dimensions: {
-        width: makeCatalogDimension(v.dimensions!.width),
-        length: makeCatalogDimension(v.dimensions!.length),
-      },
-      price: makeCatalogPrice(v.price!),
-    }
-  }
-  return {
-    _tag: 'StandardVariant',
-    size: v.size as 'REGULAR' | 'LARGE',
-  }
+  const sizeSpec =
+    v.sizeSpec._tag === 'BespokeSize'
+      ? {
+          _tag: 'BespokeSize' as const,
+          width: makeCatalogDimension(v.sizeSpec.width),
+          length: makeCatalogDimension(v.sizeSpec.length),
+        }
+      : { _tag: 'CatalogSize' as const, size: v.sizeSpec.size as 'MEDIUM' | 'LARGE' }
+
+  const pricingSpec =
+    v.pricingSpec._tag === 'NegotiatedPrice'
+      ? { _tag: 'NegotiatedPrice' as const, amount: v.pricingSpec.amount }
+      : { _tag: 'FormulaPrice' as const }
+
+  return { sizeSpec, pricingSpec }
 }

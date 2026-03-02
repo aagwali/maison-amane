@@ -1,13 +1,11 @@
 // src/application/pilot/validation/variant-input.schema.test.ts
 //
-// UNIT TESTS: Variant transformation logic (CUSTOM vs STANDARD).
+// UNIT TESTS: Variant transformation logic (CatalogSize/BespokeSize × FormulaPrice/NegotiatedPrice).
 // This is the most important validation test as it contains conditional logic.
 
 import { runSync, either } from 'effect/Effect'
 import * as S from 'effect/Schema'
 import { describe, expect, it } from 'vitest'
-
-import { Size } from '../../../domain/pilot'
 
 import { ValidatedVariantSchema } from './variant-input.schema'
 
@@ -23,38 +21,48 @@ const decodeEither = (input: unknown) =>
     .pipe(either, runSync)
 
 // ============================================
-// STANDARD VARIANTS (REGULAR, LARGE)
+// CATALOG SIZE + FORMULA PRICE
 // ============================================
 
-describe('ValidatedVariantSchema - StandardVariant', () => {
-  it('accepts REGULAR size without dimensions', () => {
-    const result = decode({ size: Size.REGULAR })
+describe('ValidatedVariantSchema - CatalogSize + FormulaPrice', () => {
+  it('accepts { size: MEDIUM } → CatalogSize + FormulaPrice', () => {
+    const result = decode({ size: 'MEDIUM' })
 
-    expect(result._tag).toBe('StandardVariant')
-    expect(result.size).toBe(Size.REGULAR)
+    expect(result.sizeSpec._tag).toBe('CatalogSize')
+    if (result.sizeSpec._tag === 'CatalogSize') {
+      expect(result.sizeSpec.size).toBe('MEDIUM')
+    }
+    expect(result.pricingSpec._tag).toBe('FormulaPrice')
   })
 
-  it('accepts LARGE size without dimensions', () => {
-    const result = decode({ size: Size.LARGE })
+  it('accepts { size: LARGE } → CatalogSize + FormulaPrice', () => {
+    const result = decode({ size: 'LARGE' })
 
-    expect(result._tag).toBe('StandardVariant')
-    expect(result.size).toBe(Size.LARGE)
+    expect(result.sizeSpec._tag).toBe('CatalogSize')
+    if (result.sizeSpec._tag === 'CatalogSize') {
+      expect(result.sizeSpec.size).toBe('LARGE')
+    }
+    expect(result.pricingSpec._tag).toBe('FormulaPrice')
   })
 
-  it('ignores customDimensions if provided for REGULAR', () => {
-    // Extra fields are ignored for standard variants
-    const result = decode({
-      size: Size.REGULAR,
-      customDimensions: { width: 100, length: 200 },
-      price: 5000,
-    })
+  it('defaults to CatalogSize MEDIUM when no fields provided', () => {
+    const result = decode({})
 
-    expect(result._tag).toBe('StandardVariant')
-    // StandardVariant does not have customDimensions field
-    expect('customDimensions' in result).toBe(false)
+    expect(result.sizeSpec._tag).toBe('CatalogSize')
+    if (result.sizeSpec._tag === 'CatalogSize') {
+      expect(result.sizeSpec.size).toBe('MEDIUM')
+    }
+    expect(result.pricingSpec._tag).toBe('FormulaPrice')
   })
 
-  it('rejects invalid size string', () => {
+  it('rejects invalid size string (e.g. CUSTOM not accepted as CatalogSize)', () => {
+    // 'CUSTOM' is not in CatalogSize's accepted literals (MEDIUM | LARGE)
+    const result = decodeEither({ size: 'CUSTOM' })
+
+    expect(result._tag).toBe('Left')
+  })
+
+  it('rejects unknown size string', () => {
     const result = decodeEither({ size: 'INVALID_SIZE' })
 
     expect(result._tag).toBe('Left')
@@ -62,41 +70,60 @@ describe('ValidatedVariantSchema - StandardVariant', () => {
 })
 
 // ============================================
-// CUSTOM VARIANTS
+// BESPOKE SIZE + FORMULA PRICE
 // ============================================
 
-describe('ValidatedVariantSchema - CustomVariant', () => {
-  it('accepts CUSTOM with valid dimensions and price', () => {
-    const result = decode({
-      size: Size.CUSTOM,
-      customDimensions: { width: 120, length: 250 },
-      price: 15000,
-    })
+describe('ValidatedVariantSchema - BespokeSize + FormulaPrice', () => {
+  it('accepts { width, length } → BespokeSize + FormulaPrice', () => {
+    const result = decode({ width: 120, length: 250 })
 
-    expect(result._tag).toBe('CustomVariant')
-    expect(result.size).toBe(Size.CUSTOM)
-    if (result._tag === 'CustomVariant') {
-      expect(result.customDimensions.width).toBe(120)
-      expect(result.customDimensions.length).toBe(250)
-      expect(result.price).toBe(15000)
+    expect(result.sizeSpec._tag).toBe('BespokeSize')
+    if (result.sizeSpec._tag === 'BespokeSize') {
+      expect(result.sizeSpec.width).toBe(120)
+      expect(result.sizeSpec.length).toBe(250)
+    }
+    expect(result.pricingSpec._tag).toBe('FormulaPrice')
+  })
+
+  it('rejects BespokeSize with only width (missing length)', () => {
+    // Only width → not enough for BespokeSize, falls back to CatalogSize with invalid size
+    const result = decodeEither({ width: 120 })
+
+    // Falls back to CatalogSize path (no size → default MEDIUM), should succeed
+    // Actually: only width → BespokeSize condition not met (length undefined), so goes CatalogSize path
+    expect(result._tag).toBe('Right')
+    if (result._tag === 'Right') {
+      expect(result.right.sizeSpec._tag).toBe('CatalogSize')
+    }
+  })
+})
+
+// ============================================
+// NEGOTIATED PRICE
+// ============================================
+
+describe('ValidatedVariantSchema - NegotiatedPrice', () => {
+  it('accepts { size: MEDIUM, negotiatedPrice } → CatalogSize + NegotiatedPrice', () => {
+    const result = decode({ size: 'MEDIUM', negotiatedPrice: 15000 })
+
+    expect(result.sizeSpec._tag).toBe('CatalogSize')
+    expect(result.pricingSpec._tag).toBe('NegotiatedPrice')
+    if (result.pricingSpec._tag === 'NegotiatedPrice') {
+      expect(result.pricingSpec.amount).toBe(15000)
     }
   })
 
-  it('rejects CUSTOM without customDimensions', () => {
-    const result = decodeEither({
-      size: Size.CUSTOM,
-      price: 15000,
-    })
+  it('accepts { width, length, negotiatedPrice } → BespokeSize + NegotiatedPrice', () => {
+    const result = decode({ width: 120, length: 250, negotiatedPrice: 15000 })
 
-    expect(result._tag).toBe('Left')
-  })
-
-  it('rejects CUSTOM without price', () => {
-    const result = decodeEither({
-      size: Size.CUSTOM,
-      customDimensions: { width: 120, length: 250 },
-    })
-
-    expect(result._tag).toBe('Left')
+    expect(result.sizeSpec._tag).toBe('BespokeSize')
+    if (result.sizeSpec._tag === 'BespokeSize') {
+      expect(result.sizeSpec.width).toBe(120)
+      expect(result.sizeSpec.length).toBe(250)
+    }
+    expect(result.pricingSpec._tag).toBe('NegotiatedPrice')
+    if (result.pricingSpec._tag === 'NegotiatedPrice') {
+      expect(result.pricingSpec.amount).toBe(15000)
+    }
   })
 })

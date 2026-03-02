@@ -13,24 +13,25 @@ import type {
   UnvalidatedProductData,
   UnvalidatedUpdateData,
 } from '../../../application/pilot/commands'
-import type { PilotProduct, ProductVariant, SyncStatus } from '../../../domain/pilot'
+import {
+  calculateVariantPrice,
+  DIMENSION_SETS,
+  type PilotProduct,
+  type ProductVariant,
+  type SyncStatus,
+} from '../../../domain/pilot'
 
 // ============================================
 // REQUEST DTO → COMMAND INPUT
 // ============================================
 
-/**
- * Maps a variant from the request DTO to unvalidated command format
- */
 const mapVariantDto = (v: CreatePilotProductRequest['variants'][number]) => ({
   size: v.size,
-  customDimensions: v.customDimensions,
-  price: v.price,
+  width: v.width,
+  length: v.length,
+  negotiatedPrice: v.negotiatedPrice,
 })
 
-/**
- * Maps a view from the request DTO to unvalidated command format
- */
 const mapViewDto = (v: CreatePilotProductRequest['views'][number]) => ({
   viewType: v.viewType,
   imageUrl: v.imageUrl,
@@ -41,9 +42,9 @@ export const toUnvalidatedProductData = (
 ): UnvalidatedProductData => ({
   label: dto.label,
   type: dto.type,
-  category: dto.category,
+  shape: dto.shape,
   description: dto.description,
-  priceRange: dto.priceRange,
+  material: dto.material,
   variants: dto.variants.map(mapVariantDto),
   views: dto.views.map(mapViewDto),
   status: dto.status,
@@ -52,9 +53,9 @@ export const toUnvalidatedProductData = (
 export const toUnvalidatedUpdateData = (dto: UpdatePilotProductRequest): UnvalidatedUpdateData => ({
   label: dto.label,
   type: dto.type,
-  category: dto.category,
+  shape: dto.shape,
   description: dto.description,
-  priceRange: dto.priceRange,
+  material: dto.material,
   variants: dto.variants?.map(mapVariantDto),
   views: dto.views?.map(mapViewDto),
   status: dto.status,
@@ -64,22 +65,36 @@ export const toUnvalidatedUpdateData = (dto: UpdatePilotProductRequest): Unvalid
 // DOMAIN → RESPONSE DTO
 // ============================================
 
-const variantToDto = (variant: ProductVariant): VariantResponseDto => {
-  if (variant._tag === 'CustomVariant') {
-    return {
-      _tag: 'CustomVariant',
-      size: 'CUSTOM',
-      customDimensions: {
-        width: variant.customDimensions.width,
-        length: variant.customDimensions.length,
-      },
-      price: variant.price,
-    }
-  }
-  return {
-    _tag: 'StandardVariant',
-    size: variant.size,
-  }
+const variantToDto = (
+  variant: ProductVariant,
+  shape: PilotProduct['shape'],
+  material: PilotProduct['material']
+): VariantResponseDto => {
+  const sizeSpec = variant.sizeSpec
+  const pricingSpec = variant.pricingSpec
+
+  const computedPrice = calculateVariantPrice(sizeSpec, shape, material)
+
+  const sizeSpecDto =
+    sizeSpec._tag === 'CatalogSize'
+      ? {
+          _tag: 'CatalogSize' as const,
+          size: sizeSpec.size,
+          dimensions: DIMENSION_SETS[shape][sizeSpec.size]!,
+          computedPrice,
+        }
+      : {
+          _tag: 'BespokeSize' as const,
+          width: sizeSpec.width,
+          length: sizeSpec.length,
+        }
+
+  const pricingSpecDto =
+    pricingSpec._tag === 'NegotiatedPrice'
+      ? { _tag: 'NegotiatedPrice' as const, amount: pricingSpec.amount }
+      : { _tag: 'FormulaPrice' as const, computedPrice }
+
+  return { sizeSpec: sizeSpecDto, pricingSpec: pricingSpecDto }
 }
 
 const syncStatusToDto = (syncStatus: SyncStatus): SyncStatusResponseDto => {
@@ -125,10 +140,13 @@ export const toResponse = (product: PilotProduct): PilotProductResponse => ({
   id: product.id,
   label: product.label,
   type: product.type,
-  category: product.category,
+  shape: product.shape,
   description: product.description,
-  priceRange: product.priceRange,
-  variants: product.variants.map(variantToDto) as [VariantResponseDto, ...VariantResponseDto[]],
+  material: product.material,
+  variants: product.variants.map((v) => variantToDto(v, product.shape, product.material)) as [
+    VariantResponseDto,
+    ...VariantResponseDto[],
+  ],
   views: viewsToDto(product.views),
   status: product.status,
   syncStatus: syncStatusToDto(product.syncStatus),

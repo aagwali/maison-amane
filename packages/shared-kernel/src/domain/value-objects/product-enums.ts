@@ -6,45 +6,55 @@
 import * as S from 'effect/Schema'
 
 // ============================================
-// PRODUCT CATEGORY
+// PRODUCT SHAPE
 // ============================================
 
-export const ProductCategory = {
+export const ProductShape = {
   RUNNER: 'RUNNER',
   STANDARD: 'STANDARD',
 } as const
 
-export type ProductCategory = (typeof ProductCategory)[keyof typeof ProductCategory]
+export type ProductShape = (typeof ProductShape)[keyof typeof ProductShape]
 
-export const ProductCategorySchema = S.Literal('RUNNER', 'STANDARD')
-export const makeProductCategory = S.decodeUnknownSync(ProductCategorySchema)
+export const ProductShapeSchema = S.Literal('RUNNER', 'STANDARD')
+export const makeProductShape = S.decodeUnknownSync(ProductShapeSchema)
 
 // ============================================
-// PRICE RANGE
+// MATERIAL
 // ============================================
 
-export const PriceRange = {
-  DISCOUNT: 'DISCOUNT',
-  STANDARD: 'STANDARD',
-  PREMIUM: 'PREMIUM',
+export const Material = {
+  MTIRT: 'MTIRT',
+  BENI_OUARAIN: 'BENI_OUARAIN',
+  AZILAL: 'AZILAL',
 } as const
 
-export type PriceRange = (typeof PriceRange)[keyof typeof PriceRange]
+export type Material = (typeof Material)[keyof typeof Material]
 
-export const PriceRangeSchema = S.Literal('DISCOUNT', 'STANDARD', 'PREMIUM')
-export const makePriceRange = S.decodeUnknownSync(PriceRangeSchema)
+export const MaterialSchema = S.Literal('MTIRT', 'BENI_OUARAIN', 'AZILAL')
+export const makeMaterial = S.decodeUnknownSync(MaterialSchema)
 
 // ============================================
 // SIZE
 // ============================================
 
 export const Size = {
-  REGULAR: 'REGULAR',
+  EXTRA_SMALL: 'EXTRA_SMALL',
+  SMALL: 'SMALL',
+  MEDIUM: 'MEDIUM',
   LARGE: 'LARGE',
+  EXTRA_LARGE: 'EXTRA_LARGE',
   CUSTOM: 'CUSTOM',
 } as const
 
 export type Size = (typeof Size)[keyof typeof Size]
 
-export const SizeSchema = S.Literal('REGULAR', 'LARGE', 'CUSTOM')
+export const SizeSchema = S.Literal(
+  'EXTRA_SMALL',
+  'SMALL',
+  'MEDIUM',
+  'LARGE',
+  'EXTRA_LARGE',
+  'CUSTOM'
+)
 export const makeSize = S.decodeUnknownSync(SizeSchema)

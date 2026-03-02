@@ -16,9 +16,9 @@ export interface ProductFormInitialData {
   images: UploadedImage[]
   description?: string
   type?: string
-  category?: string
-  priceRange?: string
-  size?: string
+  shape?: string
+  material?: string
+  sizes?: string[]
   status?: string
   viewTypes?: Record<string, string>
 }
@@ -26,10 +26,15 @@ export interface ProductFormInitialData {
 type ProductFormMode = 'create' | 'edit'
 
 export const VIEW_TYPE_OPTIONS = ['FRONT', 'BACK', 'DETAIL', 'AMBIANCE'] as const
-export const PRODUCT_TYPE_OPTIONS = ['TAPIS', 'COUSSIN', 'POUF'] as const
-export const CATEGORY_OPTIONS = ['STANDARD', 'PREMIUM', 'COLLECTION'] as const
-export const PRICE_RANGE_OPTIONS = ['ECONOMIQUE', 'STANDARD', 'PREMIUM', 'LUXE'] as const
-export const SIZE_OPTIONS = ['PETIT', 'REGULAR', 'GRAND', 'SUR_MESURE'] as const
+export const PRODUCT_TYPE_OPTIONS = ['TAPIS'] as const
+export const SHAPE_OPTIONS = ['STANDARD', 'RUNNER'] as const
+export const MATERIAL_OPTIONS = ['MTIRT', 'BENI_OUARAIN', 'AZILAL'] as const
+export const SIZE_OPTIONS = ['EXTRA_SMALL', 'SMALL', 'MEDIUM', 'LARGE', 'EXTRA_LARGE'] as const
+export const RUNNER_SIZE_OPTIONS = ['MEDIUM', 'LARGE'] as const
+
+function defaultSizesForShape(shape: string): string[] {
+  return shape === 'RUNNER' ? [...RUNNER_SIZE_OPTIONS] : [...SIZE_OPTIONS]
+}
 
 interface ProductFormContextValue extends UseImageUploadReturn {
   title: string
@@ -38,12 +43,12 @@ interface ProductFormContextValue extends UseImageUploadReturn {
   setDescription: (desc: string) => void
   productType: string
   setProductType: (t: string) => void
-  category: string
-  setCategory: (c: string) => void
-  priceRange: string
-  setPriceRange: (p: string) => void
-  size: string
-  setSize: (s: string) => void
+  shape: string
+  setShape: (s: string) => void
+  material: string
+  setMaterial: (m: string) => void
+  sizes: string[]
+  setSizes: (s: string[]) => void
   viewTypes: Record<string, string>
   setImageViewType: (imageId: string, viewType: string) => void
   mode: ProductFormMode
@@ -82,9 +87,16 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
   const [title, setTitle] = useState(initialData?.title ?? '')
   const [description, setDescription] = useState(initialData?.description ?? '')
   const [productType, setProductType] = useState(initialData?.type ?? 'TAPIS')
-  const [category, setCategory] = useState(initialData?.category ?? 'STANDARD')
-  const [priceRange, setPriceRange] = useState(initialData?.priceRange ?? 'STANDARD')
-  const [size, setSize] = useState(initialData?.size ?? 'REGULAR')
+  const [shape, setShapeRaw] = useState(initialData?.shape ?? 'STANDARD')
+  const [material, setMaterial] = useState(initialData?.material ?? 'MTIRT')
+  const [sizes, setSizes] = useState<string[]>(
+    initialData?.sizes ?? defaultSizesForShape(initialData?.shape ?? 'STANDARD')
+  )
+
+  const setShape = useCallback((s: string) => {
+    setShapeRaw(s)
+    setSizes(defaultSizesForShape(s))
+  }, [])
   const [viewTypes, setViewTypes] = useState<Record<string, string>>(initialData?.viewTypes ?? {})
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -97,7 +109,16 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
     mode === 'edit' &&
     initialData != null &&
     (title.trim() !== initialData.title ||
-      hasImageChanges(imageUpload.uploadedImages, initialData.images))
+      description.trim() !== (initialData.description ?? '') ||
+      productType !== (initialData.type ?? 'TAPIS') ||
+      shape !== (initialData.shape ?? 'STANDARD') ||
+      material !== (initialData.material ?? 'MTIRT') ||
+      JSON.stringify([...sizes].sort()) !==
+        JSON.stringify(
+          [...(initialData.sizes ?? defaultSizesForShape(initialData.shape ?? 'STANDARD'))].sort()
+        ) ||
+      hasImageChanges(imageUpload.uploadedImages, initialData.images) ||
+      JSON.stringify(viewTypes) !== JSON.stringify(initialData.viewTypes ?? {}))
 
   const canSave =
     !isSaving &&
@@ -123,10 +144,10 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
           const payload = {
             label: title.trim(),
             type: productType,
-            category,
+            shape,
             description: description.trim(),
-            priceRange,
-            variants: [{ size }],
+            material,
+            variants: sizes.map((s) => ({ size: s })),
             views: imagesToViews(imageUpload.uploadedImages, viewTypes),
             status: publish ? 'PUBLISHED' : 'PUBLISHED', // API currently requires PUBLISHED
           }
@@ -137,6 +158,11 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
         } else {
           const result = await updateProduct(initialData!.id, {
             label: title.trim(),
+            type: productType,
+            shape,
+            description: description.trim(),
+            material,
+            variants: sizes.map((s) => ({ size: s })),
             views: imagesToViews(imageUpload.uploadedImages, viewTypes),
             ...(publish ? { status: 'PUBLISHED' } : {}),
           })
@@ -154,9 +180,9 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
       title,
       description,
       productType,
-      category,
-      priceRange,
-      size,
+      shape,
+      material,
+      sizes,
       imageUpload.uploadedImages,
       viewTypes,
       router,
@@ -173,12 +199,12 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
       setDescription,
       productType,
       setProductType,
-      category,
-      setCategory,
-      priceRange,
-      setPriceRange,
-      size,
-      setSize,
+      shape,
+      setShape,
+      material,
+      setMaterial,
+      sizes,
+      setSizes,
       viewTypes,
       setImageViewType,
       mode,
@@ -194,9 +220,9 @@ export function ProductFormProvider({ initialData, children }: ProductFormProvid
       title,
       description,
       productType,
-      category,
-      priceRange,
-      size,
+      shape,
+      material,
+      sizes,
       viewTypes,
       setImageViewType,
       mode,

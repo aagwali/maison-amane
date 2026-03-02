@@ -7,8 +7,8 @@ import { runPromise, provide } from 'effect/Effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
-  PriceRange,
-  ProductCategory,
+  Material,
+  ProductShape,
   ProductStatus,
   ProductType,
   Size,
@@ -29,10 +29,10 @@ import { listPilotProductsHandler } from './list-pilot-products.handler'
 const validProductData: UnvalidatedProductData = {
   label: 'Tapis Berbère Atlas',
   type: ProductType.TAPIS,
-  category: ProductCategory.RUNNER,
+  shape: ProductShape.RUNNER,
   description: 'Beautiful handmade Berber rug from the Atlas mountains',
-  priceRange: PriceRange.PREMIUM,
-  variants: [{ size: Size.REGULAR }],
+  material: Material.AZILAL,
+  variants: [{ size: Size.MEDIUM }],
   views: [
     { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' },
     { viewType: ViewType.DETAIL, imageUrl: 'https://cdn.example.com/detail.jpg' },

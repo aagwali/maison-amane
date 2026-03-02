@@ -12,33 +12,44 @@ import {
   CatalogDimensionSchema,
   CatalogImageUrlSchema,
   CatalogLabelSchema,
-  CatalogPriceRangeSchema,
-  CatalogPriceSchema,
-  CatalogCategorySchema,
-  Size,
+  CatalogMaterialSchema,
+  CatalogShapeSchema,
 } from '../value-objects'
 
 // ============================================
-// CATALOG VARIANT (simplified for UI)
+// CATALOG VARIANT (compositional model)
 // ============================================
 
-const CatalogStandardVariantSchema = S.TaggedStruct('StandardVariant', {
-  size: S.Literal(Size.REGULAR, Size.LARGE),
+const CatalogSizeCatalogSchema = S.Struct({
+  _tag: S.Literal('CatalogSize'),
+  size: S.Literal('EXTRA_SMALL', 'SMALL', 'MEDIUM', 'LARGE', 'EXTRA_LARGE'),
 })
 
-const CatalogCustomVariantSchema = S.TaggedStruct('CustomVariant', {
-  size: S.Literal(Size.CUSTOM),
-  dimensions: S.Struct({
-    width: CatalogDimensionSchema,
-    length: CatalogDimensionSchema,
-  }),
-  price: CatalogPriceSchema,
+const CatalogBespokeSizeSchema = S.Struct({
+  _tag: S.Literal('BespokeSize'),
+  width: CatalogDimensionSchema,
+  length: CatalogDimensionSchema,
 })
 
-const CatalogVariantSchema = S.Union(CatalogStandardVariantSchema, CatalogCustomVariantSchema)
+const CatalogVariantSizeSchema = S.Union(CatalogSizeCatalogSchema, CatalogBespokeSizeSchema)
 
-export type CatalogStandardVariant = typeof CatalogStandardVariantSchema.Type
-export type CatalogCustomVariant = typeof CatalogCustomVariantSchema.Type
+const CatalogFormulaPricingSchema = S.Struct({ _tag: S.Literal('FormulaPrice') })
+
+const CatalogNegotiatedPricingSchema = S.Struct({
+  _tag: S.Literal('NegotiatedPrice'),
+  amount: S.Number,
+})
+
+const CatalogVariantPricingSchema = S.Union(
+  CatalogFormulaPricingSchema,
+  CatalogNegotiatedPricingSchema
+)
+
+const CatalogVariantSchema = S.Struct({
+  sizeSpec: CatalogVariantSizeSchema,
+  pricingSpec: CatalogVariantPricingSchema,
+})
+
 export type CatalogVariant = typeof CatalogVariantSchema.Type
 
 // ============================================
@@ -49,8 +60,8 @@ const CatalogProductSchema = S.TaggedStruct('CatalogProduct', {
   id: ProductIdSchema,
   label: CatalogLabelSchema,
   description: CatalogDescriptionSchema,
-  category: CatalogCategorySchema,
-  priceRange: CatalogPriceRangeSchema,
+  shape: CatalogShapeSchema,
+  material: CatalogMaterialSchema,
   variants: S.Array(CatalogVariantSchema),
   images: S.Struct({
     front: CatalogImageUrlSchema,

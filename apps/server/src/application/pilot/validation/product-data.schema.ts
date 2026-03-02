@@ -4,8 +4,8 @@ import { type Effect, mapError } from 'effect/Effect'
 import * as S from 'effect/Schema'
 
 import {
-  PriceRangeSchema,
-  ProductCategorySchema,
+  MaterialSchema,
+  ProductShapeSchema,
   ProductDescriptionSchema,
   ProductLabelSchema,
   ProductStatusSchema,
@@ -27,9 +27,9 @@ export type { ValidatedVariant }
 const ValidatedProductDataSchema = S.Struct({
   label: ProductLabelSchema,
   type: ProductTypeSchema,
-  category: ProductCategorySchema,
+  shape: ProductShapeSchema,
   description: ProductDescriptionSchema,
-  priceRange: PriceRangeSchema,
+  material: MaterialSchema,
   variants: S.NonEmptyArray(ValidatedVariantSchema),
   views: ProductViewsTransformSchema,
   status: ProductStatusSchema,

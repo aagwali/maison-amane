@@ -16,11 +16,11 @@ import {
   makeNotSynced,
   makeImageUrl,
   ProductType,
-  ProductCategory,
-  PriceRange,
+  ProductShape,
+  Material,
   ProductStatus,
-  Size,
   ViewType,
+  type ProductVariant,
 } from '../../../domain/pilot'
 import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import { makePilotProductCreated, makePilotProductUpdated } from '../../../domain/pilot/events'
@@ -49,15 +49,20 @@ const buildMedia = (mediaId: string, externalUrl: string, status: MediaStatus) =
     tags: [],
   })
 
+const catalogVariant: ProductVariant = {
+  sizeSpec: { _tag: 'CatalogSize', size: 'MEDIUM' },
+  pricingSpec: { _tag: 'FormulaPrice' },
+}
+
 const buildPilotProduct = () =>
   makePilotProduct({
     id: makeProductId('test-product-1'),
     label: makeProductLabel('Test Product'),
     type: ProductType.TAPIS,
-    category: ProductCategory.RUNNER,
+    shape: ProductShape.RUNNER,
     description: makeProductDescription('Test description'),
-    priceRange: PriceRange.STANDARD,
-    variants: [{ _tag: 'StandardVariant', size: Size.REGULAR }],
+    material: Material.MTIRT,
+    variants: [catalogVariant],
     views: {
       front: { viewType: ViewType.FRONT, imageUrl: makeImageUrl(FRONT_URL) },
       detail: { viewType: ViewType.DETAIL, imageUrl: makeImageUrl(DETAIL_URL) },

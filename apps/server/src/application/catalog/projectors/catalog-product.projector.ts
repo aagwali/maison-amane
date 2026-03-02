@@ -1,5 +1,3 @@
-// src/application/catalog/projectors/catalog-product.projector.ts
-//
 // DDD: Anti-corruption layer - maps Pilot types to Catalog types.
 // The projector translates between bounded contexts.
 
@@ -12,11 +10,10 @@ import {
   makeCatalogProduct,
   makeCatalogLabel,
   makeCatalogDescription,
-  makeCatalogCategory,
-  makeCatalogPriceRange,
+  makeCatalogShape,
+  makeCatalogMaterial,
   makeCatalogImageUrl,
   makeCatalogDimension,
-  makeCatalogPrice,
 } from '../../../domain/catalog'
 import { CatalogProductRepository } from '../../../ports/driven'
 import type {
@@ -31,6 +28,7 @@ import type {
 // ============================================
 
 export type ProjectionEvent = PilotProductPublished | PilotProductUpdated
+
 // ============================================
 // PROJECTION ERROR
 // ============================================
@@ -49,8 +47,8 @@ const mapToCatalogProduct = (product: PilotProduct, publishedAt: Date): CatalogP
     id: product.id,
     label: makeCatalogLabel(product.label),
     description: makeCatalogDescription(product.description),
-    category: makeCatalogCategory(product.category),
-    priceRange: makeCatalogPriceRange(product.priceRange),
+    shape: makeCatalogShape(product.shape),
+    material: makeCatalogMaterial(product.material),
     variants: product.variants.map(mapVariant),
     images: {
       front: makeCatalogImageUrl(product.views.front.imageUrl),
@@ -61,21 +59,24 @@ const mapToCatalogProduct = (product: PilotProduct, publishedAt: Date): CatalogP
   })
 
 const mapVariant = (variant: PilotProduct['variants'][number]): CatalogVariant => {
-  if (variant._tag === 'CustomVariant') {
-    return {
-      _tag: 'CustomVariant',
-      size: variant.size,
-      dimensions: {
-        width: makeCatalogDimension(variant.customDimensions.width),
-        length: makeCatalogDimension(variant.customDimensions.length),
-      },
-      price: makeCatalogPrice(variant.price),
-    }
-  }
-  return {
-    _tag: 'StandardVariant',
-    size: variant.size,
-  }
+  const sizeSpec = variant.sizeSpec
+  const pricingSpec = variant.pricingSpec
+
+  const catalogSizeSpec =
+    sizeSpec._tag === 'BespokeSize'
+      ? {
+          _tag: 'BespokeSize' as const,
+          width: makeCatalogDimension(sizeSpec.width),
+          length: makeCatalogDimension(sizeSpec.length),
+        }
+      : { _tag: 'CatalogSize' as const, size: sizeSpec.size }
+
+  const catalogPricingSpec =
+    pricingSpec._tag === 'NegotiatedPrice'
+      ? { _tag: 'NegotiatedPrice' as const, amount: pricingSpec.amount }
+      : { _tag: 'FormulaPrice' as const }
+
+  return { sizeSpec: catalogSizeSpec, pricingSpec: catalogPricingSpec }
 }
 
 // ============================================

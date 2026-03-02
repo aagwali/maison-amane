@@ -17,8 +17,8 @@ import { MediaStatus } from '../../../domain/media'
 import { provideTestLayer, TEST_DATE } from '../../../test-utils'
 import { makeCorrelationId, makeUserId } from '../../../domain/shared'
 import {
-  PriceRange,
-  ProductCategory,
+  Material,
+  ProductShape,
   ProductStatus,
   ProductType,
   Size,
@@ -107,10 +107,10 @@ describe('Media Upload and Confirmation Flow (Integration)', () => {
       data: {
         label: 'Tapis Berbère Atlas',
         type: ProductType.TAPIS,
-        category: ProductCategory.RUNNER,
+        shape: ProductShape.RUNNER,
         description: 'Beautiful handmade Berber rug',
-        priceRange: PriceRange.PREMIUM,
-        variants: [{ size: Size.REGULAR }],
+        material: Material.AZILAL,
+        variants: [{ size: Size.MEDIUM }],
         views: [
           { viewType: ViewType.FRONT, imageUrl: frontMedia.externalUrl },
           { viewType: ViewType.DETAIL, imageUrl: detailMedia.externalUrl },
@@ -216,10 +216,10 @@ describe('Media Upload and Confirmation Flow (Integration)', () => {
       data: {
         label: 'Product 1',
         type: ProductType.TAPIS,
-        category: ProductCategory.STANDARD,
+        shape: ProductShape.STANDARD,
         description: 'First product',
-        priceRange: PriceRange.STANDARD,
-        variants: [{ size: Size.REGULAR }],
+        material: Material.MTIRT,
+        variants: [{ size: Size.MEDIUM }],
         views: [
           { viewType: ViewType.FRONT, imageUrl: media.externalUrl },
           { viewType: ViewType.DETAIL, imageUrl: media.externalUrl },
@@ -262,9 +262,9 @@ describe('Media Upload and Confirmation Flow (Integration)', () => {
       data: {
         label: 'Product 2',
         type: ProductType.TAPIS,
-        category: ProductCategory.RUNNER,
+        shape: ProductShape.RUNNER,
         description: 'Second product',
-        priceRange: PriceRange.PREMIUM,
+        material: Material.AZILAL,
         variants: [{ size: Size.LARGE }],
         views: [
           { viewType: ViewType.FRONT, imageUrl: media.externalUrl },

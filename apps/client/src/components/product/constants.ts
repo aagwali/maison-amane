@@ -13,24 +13,23 @@ export const typeLabels: Record<string, string> = {
   POUF: 'Pouf',
 }
 
-export const categoryLabels: Record<string, string> = {
+export const shapeLabels: Record<string, string> = {
   STANDARD: 'Standard',
-  PREMIUM: 'Premium',
-  COLLECTION: 'Collection',
+  RUNNER: 'Runner',
 }
 
-export const priceLabels: Record<string, string> = {
-  ECONOMIQUE: 'Économique',
-  STANDARD: 'Standard',
-  PREMIUM: 'Premium',
-  LUXE: 'Luxe',
+export const materialLabels: Record<string, string> = {
+  MTIRT: 'Mtirt',
+  BENI_OUARAIN: 'Béni Ouarain',
+  AZILAL: 'Azilal',
 }
 
 export const sizeLabels: Record<string, string> = {
-  PETIT: 'Petit',
-  REGULAR: 'Régulier',
-  GRAND: 'Grand',
-  SUR_MESURE: 'Sur mesure',
+  EXTRA_SMALL: 'XS',
+  SMALL: 'S',
+  MEDIUM: 'M',
+  LARGE: 'L',
+  EXTRA_LARGE: 'XL',
 }
 
 export const statusConfig: Record<string, { label: string; color: string }> = {

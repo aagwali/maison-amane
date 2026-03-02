@@ -35,9 +35,6 @@ export {
   type ProductView,
   ProductViewsSchema,
   type ProductViews,
-  // Variants (value objects)
-  VariantBaseSchema,
-  type VariantBase,
   // Sync Status
   SyncErrorSchema,
   type SyncError,
@@ -54,16 +51,24 @@ export {
 // ============================================
 // SERVICES
 // ============================================
-export { structureViews, flattenViews, MIN_VIEWS } from './services'
+export { structureViews, flattenViews, MIN_VIEWS, calculateVariantPrice } from './services'
 
 // ============================================
 // VARIANTS (value objects)
 // ============================================
 export {
-  StandardVariantSchema,
-  type StandardVariant,
-  CustomVariantSchema,
-  type CustomVariant,
+  CatalogSizeSchema,
+  type CatalogSize,
+  BespokeSizeSchema,
+  type BespokeSize,
+  VariantSizeSchema,
+  type VariantSize,
+  FormulaPricingSchema,
+  type FormulaPricing,
+  NegotiatedPricingSchema,
+  type NegotiatedPricing,
+  VariantPricingSchema,
+  type VariantPricing,
   ProductVariantSchema,
   type ProductVariant,
 } from './value-objects'
@@ -73,39 +78,33 @@ export {
 // ============================================
 export {
   ProductType,
-  ProductCategory,
+  ProductShape,
+  Material,
   Size,
-  PriceRange,
   ProductStatus,
   ViewType,
   REQUIRED_VIEW_TYPES,
   ProductTypeSchema,
-  ProductCategorySchema,
+  ProductShapeSchema,
+  MaterialSchema,
   SizeSchema,
-  PriceRangeSchema,
   ProductStatusSchema,
   ViewTypeSchema,
   type PredefinedSize,
+  type ProductShapeType,
+  type MaterialType,
 } from './enums'
 
 // ============================================
 // REFERENCE DATA
 // ============================================
-export {
-  DIMENSION_SETS,
-  getDimensionsForSize,
-  PRICE_BY_RANGE,
-  getPriceForVariant,
-  type Dimension,
-} from './reference-data'
+export { DIMENSION_SETS, PRICE_PER_SQM, type Dimension } from './reference-data'
 
 // ============================================
 // AGGREGATE
 // ============================================
 export {
-  makeStandardVariant,
   makePilotProduct,
-  makeCustomVariant,
   withUpdatedFields,
   publish,
   archive,

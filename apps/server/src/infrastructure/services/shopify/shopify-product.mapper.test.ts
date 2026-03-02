@@ -6,17 +6,15 @@ import { describe, expect, it } from 'vitest'
 
 import {
   makePilotProduct,
-  makeStandardVariant,
-  makeCustomVariant,
   makeNotSynced,
   makeSynced,
   makeShopifyProductId,
+  Material,
   ProductType,
-  PriceRange,
   ViewType,
-  Size,
   type PilotProduct,
   type PositiveCm,
+  type Price,
 } from '../../../domain/pilot'
 
 import { mapToShopifyProduct } from './shopify-product.mapper'
@@ -27,15 +25,20 @@ import { mapToShopifyProduct } from './shopify-product.mapper'
 
 const now = new Date('2024-01-15T10:00:00Z')
 
+const catalogRegularVariant = {
+  sizeSpec: { _tag: 'CatalogSize' as const, size: 'MEDIUM' as const },
+  pricingSpec: { _tag: 'FormulaPrice' as const },
+}
+
 const buildProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct =>
   makePilotProduct({
     id: 'test-product-1' as any,
     label: 'Tapis Berbère Atlas' as any,
     type: ProductType.TAPIS,
-    category: 'RUNNER' as any,
+    shape: 'RUNNER' as any,
     description: 'Beautiful handmade rug' as any,
-    priceRange: PriceRange.PREMIUM,
-    variants: [makeStandardVariant({ size: Size.REGULAR })],
+    material: Material.AZILAL,
+    variants: [catalogRegularVariant],
     views: {
       front: { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' as any },
       detail: { viewType: ViewType.DETAIL, imageUrl: 'https://cdn.example.com/detail.jpg' as any },
@@ -100,15 +103,15 @@ describe('mapToShopifyProduct — core fields', () => {
     expect(input.vendor).toBe('Maison Amane')
   })
 
-  it('maps productType as "type - category"', () => {
+  it('maps productType as "type - shape"', () => {
     const input = mapToShopifyProduct(buildProduct())
     expect(input.productType).toBe('TAPIS - RUNNER')
   })
 
-  it('includes category and priceRange in tags', () => {
+  it('includes shape and material as lowercase tags', () => {
     const input = mapToShopifyProduct(buildProduct())
-    expect(input.tags).toContain('RUNNER')
-    expect(input.tags).toContain('PREMIUM')
+    expect(input.tags).toContain('runner')
+    expect(input.tags).toContain('azilal')
   })
 })
 
@@ -117,7 +120,7 @@ describe('mapToShopifyProduct — core fields', () => {
 // ============================================
 
 describe('mapToShopifyProduct — variants', () => {
-  it('maps standard variant with price', () => {
+  it('maps catalog variant with formula price', () => {
     const input = mapToShopifyProduct(buildProduct())
     expect(input.variants).toHaveLength(1)
     const variant = input.variants[0]!
@@ -125,14 +128,13 @@ describe('mapToShopifyProduct — variants', () => {
     expect(variant.optionValues[0]!.optionName).toBe('Dimensions')
   })
 
-  it('maps custom variant with custom dimensions', () => {
+  it('maps bespoke variant with custom dimensions', () => {
     const product = buildProduct({
       variants: [
-        makeCustomVariant({
-          size: Size.CUSTOM as any,
-          customDimensions: { width: 120 as PositiveCm, length: 200 as PositiveCm },
-          price: 850 as any,
-        }),
+        {
+          sizeSpec: { _tag: 'BespokeSize', width: 120 as PositiveCm, length: 200 as PositiveCm },
+          pricingSpec: { _tag: 'FormulaPrice' },
+        },
       ],
     })
     const input = mapToShopifyProduct(product)
@@ -140,12 +142,22 @@ describe('mapToShopifyProduct — variants', () => {
     expect(input.variants[0]!.optionValues[0]!.name).toBe('120x200')
   })
 
-  it('deduplicates identical size labels in product options', () => {
+  it('uses negotiated price when pricingSpec is NegotiatedPrice', () => {
     const product = buildProduct({
       variants: [
-        makeStandardVariant({ size: Size.REGULAR }),
-        makeStandardVariant({ size: Size.REGULAR }),
+        {
+          sizeSpec: { _tag: 'CatalogSize', size: 'MEDIUM' as const },
+          pricingSpec: { _tag: 'NegotiatedPrice', amount: 85000 as Price },
+        },
       ],
+    })
+    const input = mapToShopifyProduct(product)
+    expect(input.variants[0]!.price).toBe('850.00')
+  })
+
+  it('deduplicates identical size labels in product options', () => {
+    const product = buildProduct({
+      variants: [catalogRegularVariant, catalogRegularVariant],
     })
     const input = mapToShopifyProduct(product)
     const option = input.productOptions.find((o) => o.name === 'Dimensions')!

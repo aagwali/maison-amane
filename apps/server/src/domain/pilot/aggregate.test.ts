@@ -9,7 +9,6 @@ import { describe, expect, it } from 'vitest'
 import {
   archive,
   makePilotProduct,
-  makeStandardVariant,
   makeNotSynced,
   makeSynced,
   makeSyncFailed,
@@ -18,13 +17,12 @@ import {
   markSyncFailed,
   ProductStatus,
   ProductType,
-  PriceRange,
   publish,
   requiresChangeNotification,
   resetSyncStatus,
   ViewType,
-  Size,
   type PilotProduct,
+  type ProductVariant,
   type SyncError,
 } from './index'
 
@@ -34,18 +32,20 @@ import {
 
 const now = new Date('2024-01-15T10:00:00Z')
 
+const catalogVariants: readonly [ProductVariant, ProductVariant] = [
+  { sizeSpec: { _tag: 'CatalogSize', size: 'MEDIUM' }, pricingSpec: { _tag: 'FormulaPrice' } },
+  { sizeSpec: { _tag: 'CatalogSize', size: 'LARGE' }, pricingSpec: { _tag: 'FormulaPrice' } },
+]
+
 const createProduct = (overrides: Partial<PilotProduct> = {}): PilotProduct =>
   makePilotProduct({
     id: 'test-product-1' as any,
     label: 'Tapis Berbère Atlas' as any,
     type: ProductType.TAPIS,
-    category: 'RUNNER' as any,
+    shape: 'RUNNER' as any,
     description: 'Beautiful handmade rug' as any,
-    priceRange: PriceRange.PREMIUM,
-    variants: [
-      makeStandardVariant({ size: Size.REGULAR }),
-      makeStandardVariant({ size: Size.LARGE }),
-    ],
+    material: 'AZILAL' as any,
+    variants: catalogVariants,
     views: {
       front: { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' as any },
       detail: { viewType: ViewType.DETAIL, imageUrl: 'https://cdn.example.com/detail.jpg' as any },

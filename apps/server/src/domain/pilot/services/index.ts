@@ -36,3 +36,4 @@
 // ============================================
 
 export { structureViews, flattenViews, MIN_VIEWS } from './views.service'
+export { calculateVariantPrice } from '../reference-data'

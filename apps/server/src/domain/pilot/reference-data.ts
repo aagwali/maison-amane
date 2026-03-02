@@ -1,7 +1,7 @@
 // src/domain/pilot/reference-data.ts
 
-import { PriceRange, Size, type PredefinedSize, type ProductCategory } from './enums'
-import type { ProductVariant } from './value-objects/variants'
+import { type Material, type PredefinedSize, type ProductShapeType } from './enums'
+import type { VariantSize } from './value-objects/variants'
 
 // ============================================
 // DIMENSION
@@ -14,73 +14,55 @@ export interface Dimension {
 
 // ============================================
 // DIMENSION SETS (Reference Data)
+// Un seul scalaire par (shape, size) — pas de tableau
 // ============================================
 
 export const DIMENSION_SETS: Record<
-  ProductCategory,
-  Record<PredefinedSize, readonly Dimension[]>
+  ProductShapeType,
+  Partial<Record<PredefinedSize, Dimension>>
 > = {
   RUNNER: {
-    REGULAR: [
-      { width: 60, length: 180 },
-      { width: 80, length: 200 },
-    ],
-    LARGE: [
-      { width: 80, length: 250 },
-      { width: 100, length: 300 },
-    ],
+    MEDIUM: { width: 80, length: 300 },
+    LARGE: { width: 100, length: 300 },
   },
   STANDARD: {
-    REGULAR: [
-      { width: 120, length: 180 },
-      { width: 140, length: 200 },
-    ],
-    LARGE: [
-      { width: 160, length: 230 },
-      { width: 200, length: 300 },
-    ],
+    EXTRA_SMALL: { width: 80, length: 120 },
+    SMALL: { width: 140, length: 200 },
+    MEDIUM: { width: 170, length: 240 },
+    LARGE: { width: 200, length: 300 },
+    EXTRA_LARGE: { width: 300, length: 300 },
   },
 }
-
-export const getDimensionsForSize = (
-  category: ProductCategory,
-  size: PredefinedSize
-): readonly Dimension[] => DIMENSION_SETS[category][size]
 
 // ============================================
 // PRICING (Reference Data)
+// Prix en centimes par m² selon le matériau
 // ============================================
 
-/**
- * Base prices in centimes by price range and size.
- * Custom variants use their own price field instead.
- */
-export const PRICE_BY_RANGE: Record<PriceRange, Record<Size, number>> = {
-  [PriceRange.DISCOUNT]: {
-    [Size.REGULAR]: 400_00,
-    [Size.LARGE]: 600_00,
-    [Size.CUSTOM]: 500_00, // Fallback, overridden by variant.price
-  },
-  [PriceRange.STANDARD]: {
-    [Size.REGULAR]: 600_00,
-    [Size.LARGE]: 900_00,
-    [Size.CUSTOM]: 800_00,
-  },
-  [PriceRange.PREMIUM]: {
-    [Size.REGULAR]: 900_00,
-    [Size.LARGE]: 1400_00,
-    [Size.CUSTOM]: 1200_00,
-  },
+export const PRICE_PER_SQM: Record<Material, number> = {
+  MTIRT: 80_00,
+  BENI_OUARAIN: 150_00,
+  AZILAL: 200_00,
 }
 
 /**
- * Gets the price for a variant based on its type and the product's price range.
- * - Custom variants: use the variant's own price
- * - Standard variants: lookup in PRICE_BY_RANGE
+ * Calcule le prix formulaire d'un variant à partir de ses dimensions et du matériau.
+ * Prix = Math.round((width * length / 10_000) * PRICE_PER_SQM[material])
+ * Arrondi au centime.
  */
-export const getPriceForVariant = (variant: ProductVariant, priceRange: PriceRange): number => {
-  if (variant._tag === 'CustomVariant') {
-    return variant.price
+export const calculateVariantPrice = (
+  sizeSpec: VariantSize,
+  shape: ProductShapeType,
+  material: Material
+): number => {
+  const pricePerSqm = PRICE_PER_SQM[material]
+
+  if (sizeSpec._tag === 'CatalogSize') {
+    const dim = DIMENSION_SETS[shape][sizeSpec.size]
+    if (!dim) throw new Error(`No dimension for shape=${shape} size=${sizeSpec.size}`)
+    return Math.round(((dim.width * dim.length) / 10_000) * pricePerSqm)
   }
-  return PRICE_BY_RANGE[priceRange][variant.size]
+
+  // BespokeSize — dimensions custom
+  return Math.round(((sizeSpec.width * sizeSpec.length) / 10_000) * pricePerSqm)
 }

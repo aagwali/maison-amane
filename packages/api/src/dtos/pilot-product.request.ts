@@ -7,14 +7,10 @@ import { Schema as S } from 'effect'
 // ============================================
 
 export const VariantRequestDto = S.Struct({
-  size: S.String,
-  customDimensions: S.optional(
-    S.Struct({
-      width: S.Number,
-      length: S.Number,
-    })
-  ),
-  price: S.optional(S.Number),
+  size: S.optional(S.String), // 'MEDIUM' | 'LARGE' → CatalogSize
+  width: S.optional(S.Number), // BespokeSize
+  length: S.optional(S.Number), // BespokeSize
+  negotiatedPrice: S.optional(S.Number), // NegotiatedPrice (centimes); absent = FormulaPrice
 })
 
 export type VariantRequestDto = S.Schema.Type<typeof VariantRequestDto>
@@ -37,9 +33,9 @@ export type ViewRequestDto = S.Schema.Type<typeof ViewRequestDto>
 export const CreatePilotProductRequest = S.Struct({
   label: S.String,
   type: S.String,
-  category: S.String,
+  shape: S.String,
   description: S.String,
-  priceRange: S.String,
+  material: S.String,
   variants: S.Array(VariantRequestDto),
   views: S.Array(ViewRequestDto),
   status: S.String,
@@ -54,9 +50,9 @@ export type CreatePilotProductRequest = S.Schema.Type<typeof CreatePilotProductR
 export const UpdatePilotProductRequest = S.Struct({
   label: S.optional(S.String),
   type: S.optional(S.String),
-  category: S.optional(S.String),
+  shape: S.optional(S.String),
   description: S.optional(S.String),
-  priceRange: S.optional(S.String),
+  material: S.optional(S.String),
   variants: S.optional(S.Array(VariantRequestDto)),
   views: S.optional(S.Array(ViewRequestDto)),
   status: S.optional(S.String),

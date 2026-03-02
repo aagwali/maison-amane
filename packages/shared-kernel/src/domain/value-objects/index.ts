@@ -9,12 +9,12 @@ export { ProductIdSchema, makeProductId, type ProductId } from './product-id'
 export { MediaIdSchema, makeMediaId, type MediaId } from './media-id'
 
 export {
-  ProductCategory,
-  ProductCategorySchema,
-  makeProductCategory,
-  PriceRange,
-  PriceRangeSchema,
-  makePriceRange,
+  ProductShape,
+  ProductShapeSchema,
+  makeProductShape,
+  Material,
+  MaterialSchema,
+  makeMaterial,
   Size,
   SizeSchema,
   makeSize,

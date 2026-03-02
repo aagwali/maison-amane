@@ -8,14 +8,13 @@ import {
   makeProductId,
   makeProductLabel,
   makeShopifyProductId,
+  type Material,
   type PilotProduct,
   type PredefinedSize,
-  PriceRange,
-  ProductCategory,
+  ProductShape,
   ProductStatus,
   ProductType,
   type ProductVariant,
-  Size,
   type SyncStatus,
   ViewType,
 } from '../../../../domain/pilot'
@@ -29,14 +28,14 @@ interface PilotProductDocumentSchema {
   _id: string
   label: string
   type: string
-  category: string
+  shape: string
   description: string
-  priceRange: string
+  material: string
   variants: Array<{
-    _tag: 'StandardVariant' | 'CustomVariant'
-    size: string
-    customDimensions?: { width: number; length: number }
-    price?: number
+    sizeSpec:
+      | { _tag: 'CatalogSize'; size: string }
+      | { _tag: 'BespokeSize'; width: number; length: number }
+    pricingSpec: { _tag: 'FormulaPrice' } | { _tag: 'NegotiatedPrice'; amount: number }
   }>
   views: {
     front: { viewType: string; imageUrl: string }
@@ -56,8 +55,6 @@ interface PilotProductDocumentSchema {
   updatedAt: Date
 }
 
-// Type alias for MongoDB collection
-// Explicitly declares this document uses string _id (not ObjectId)
 export type PilotProductDocument = PilotProductDocumentSchema
 
 // ============================================
@@ -68,21 +65,12 @@ export const pilotToDocument = (product: PilotProduct): PilotProductDocument => 
   _id: product.id,
   label: product.label,
   type: product.type,
-  category: product.category,
+  shape: product.shape,
   description: product.description,
-  priceRange: product.priceRange,
+  material: product.material,
   variants: product.variants.map((v) => ({
-    _tag: v._tag,
-    size: v.size,
-    ...(v._tag === 'CustomVariant'
-      ? {
-          customDimensions: {
-            width: v.customDimensions.width,
-            length: v.customDimensions.length,
-          },
-          price: v.price,
-        }
-      : {}),
+    sizeSpec: v.sizeSpec,
+    pricingSpec: v.pricingSpec,
   })),
   views: {
     front: {
@@ -128,25 +116,10 @@ export const pilotFromDocument = (doc: PilotProductDocument): PilotProduct => ({
   id: makeProductId(doc._id),
   label: makeProductLabel(doc.label),
   type: doc.type as ProductType,
-  category: doc.category as ProductCategory,
+  shape: (doc.shape ?? ProductShape.STANDARD) as PilotProduct['shape'],
   description: makeProductDescription(doc.description),
-  priceRange: doc.priceRange as PriceRange,
-  variants: doc.variants.map((v) =>
-    v._tag === 'CustomVariant'
-      ? {
-          _tag: 'CustomVariant' as const,
-          size: Size.CUSTOM,
-          customDimensions: {
-            width: makePositiveCm(v.customDimensions!.width),
-            length: makePositiveCm(v.customDimensions!.length),
-          },
-          price: makePrice(v.price!),
-        }
-      : {
-          _tag: 'StandardVariant' as const,
-          size: v.size as PredefinedSize,
-        }
-  ) as [ProductVariant, ...ProductVariant[]],
+  material: (doc.material ?? 'MTIRT') as Material,
+  variants: doc.variants.map(mapVariant) as [ProductVariant, ...ProductVariant[]],
   views: {
     front: {
       viewType: doc.views.front.viewType as ViewType,
@@ -168,8 +141,29 @@ export const pilotFromDocument = (doc: PilotProductDocument): PilotProduct => ({
 })
 
 // ============================================
-// HELPER
+// HELPERS
 // ============================================
+
+const mapVariant = (v: PilotProductDocument['variants'][number]): ProductVariant => {
+  const sizeSpec =
+    v.sizeSpec._tag === 'BespokeSize'
+      ? {
+          _tag: 'BespokeSize' as const,
+          width: makePositiveCm(v.sizeSpec.width),
+          length: makePositiveCm(v.sizeSpec.length),
+        }
+      : {
+          _tag: 'CatalogSize' as const,
+          size: v.sizeSpec.size as PredefinedSize,
+        }
+
+  const pricingSpec =
+    v.pricingSpec._tag === 'NegotiatedPrice'
+      ? { _tag: 'NegotiatedPrice' as const, amount: makePrice(v.pricingSpec.amount) }
+      : { _tag: 'FormulaPrice' as const }
+
+  return { sizeSpec, pricingSpec }
+}
 
 const mapSyncStatus = (status: PilotProductDocument['syncStatus']): SyncStatus => {
   switch (status._tag) {

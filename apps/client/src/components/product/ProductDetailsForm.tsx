@@ -7,15 +7,18 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import TextField from '@mui/material/TextField'
+import ToggleButton from '@mui/material/ToggleButton'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Typography from '@mui/material/Typography'
 
-import { typeLabels, categoryLabels, priceLabels, sizeLabels } from './constants'
+import { typeLabels, shapeLabels, materialLabels, sizeLabels } from './constants'
 
 import {
   PRODUCT_TYPE_OPTIONS,
-  CATEGORY_OPTIONS,
-  PRICE_RANGE_OPTIONS,
+  SHAPE_OPTIONS,
+  MATERIAL_OPTIONS,
   SIZE_OPTIONS,
+  RUNNER_SIZE_OPTIONS,
 } from '@/contexts/ProductFormContext'
 import { tokens } from '@/theme/theme'
 
@@ -26,12 +29,12 @@ interface Props {
   setDescription: (v: string) => void
   productType: string
   setProductType: (v: string) => void
-  category: string
-  setCategory: (v: string) => void
-  priceRange: string
-  setPriceRange: (v: string) => void
-  size: string
-  setSize: (v: string) => void
+  shape: string
+  setShape: (v: string) => void
+  material: string
+  setMaterial: (v: string) => void
+  sizes: string[]
+  setSizes: (v: string[]) => void
 }
 
 export default function ProductDetailsForm({
@@ -41,13 +44,14 @@ export default function ProductDetailsForm({
   setDescription,
   productType,
   setProductType,
-  category,
-  setCategory,
-  priceRange,
-  setPriceRange,
-  size,
-  setSize,
+  shape,
+  setShape,
+  material,
+  setMaterial,
+  sizes,
+  setSizes,
 }: Props) {
+  const availableSizes = shape === 'RUNNER' ? RUNNER_SIZE_OPTIONS : SIZE_OPTIONS
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 2 }}>
@@ -92,22 +96,22 @@ export default function ProductDetailsForm({
       </FormControl>
 
       <FormControl fullWidth size="small" variant="standard" sx={{ mb: 2.5 }}>
-        <InputLabel>Catégorie</InputLabel>
-        <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-          {CATEGORY_OPTIONS.map((c) => (
-            <MenuItem key={c} value={c}>
-              {categoryLabels[c] ?? c}
+        <InputLabel>Forme</InputLabel>
+        <Select value={shape} onChange={(e) => setShape(e.target.value)}>
+          {SHAPE_OPTIONS.map((s) => (
+            <MenuItem key={s} value={s}>
+              {shapeLabels[s] ?? s}
             </MenuItem>
           ))}
         </Select>
       </FormControl>
 
       <FormControl fullWidth size="small" variant="standard" sx={{ mb: 3 }}>
-        <InputLabel>Gamme de prix</InputLabel>
-        <Select value={priceRange} onChange={(e) => setPriceRange(e.target.value)}>
-          {PRICE_RANGE_OPTIONS.map((p) => (
-            <MenuItem key={p} value={p}>
-              {priceLabels[p] ?? p}
+        <InputLabel>Matériau</InputLabel>
+        <Select value={material} onChange={(e) => setMaterial(e.target.value)}>
+          {MATERIAL_OPTIONS.map((m) => (
+            <MenuItem key={m} value={m}>
+              {materialLabels[m] ?? m}
             </MenuItem>
           ))}
         </Select>
@@ -119,16 +123,37 @@ export default function ProductDetailsForm({
         Variantes
       </Typography>
 
-      <FormControl fullWidth size="small" variant="standard">
-        <InputLabel>Taille</InputLabel>
-        <Select value={size} onChange={(e) => setSize(e.target.value)}>
-          {SIZE_OPTIONS.map((s) => (
-            <MenuItem key={s} value={s}>
+      <Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+          Tailles
+        </Typography>
+        <ToggleButtonGroup
+          value={sizes}
+          onChange={(_, next: string[]) => next.length > 0 && setSizes(next)}
+          size="small"
+          sx={{ flexWrap: 'wrap', gap: 0.5 }}
+        >
+          {availableSizes.map((s) => (
+            <ToggleButton
+              key={s}
+              value={s}
+              sx={{
+                px: 2,
+                py: 0.5,
+                fontSize: '0.75rem',
+                '&.Mui-selected': {
+                  bgcolor: tokens.ember,
+                  color: tokens.white,
+                  borderColor: tokens.ember,
+                  '&:hover': { bgcolor: tokens.emberDark },
+                },
+              }}
+            >
               {sizeLabels[s] ?? s}
-            </MenuItem>
+            </ToggleButton>
           ))}
-        </Select>
-      </FormControl>
+        </ToggleButtonGroup>
+      </Box>
     </Box>
   )
 }

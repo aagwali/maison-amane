@@ -1,40 +1,16 @@
 // src/application/pilot/mappers/variant.mapper.ts
 
-import {
-  makeCustomVariant,
-  makeStandardVariant,
-  type ProductVariant,
-  Size,
-} from '../../../domain/pilot'
+import type { ProductVariant } from '../../../domain/pilot'
 import type { ValidatedVariant } from '../validation'
 
 // ============================================
 // VARIANT MAPPING: Validated → Domain
+// ValidatedVariant = ProductVariant (même type après refacto compositionnel)
 // ============================================
 
-/**
- * Maps a single validated variant to a domain ProductVariant
- */
-export const createVariant = (v: ValidatedVariant): ProductVariant => {
-  if (v._tag === 'CustomVariant') {
-    return makeCustomVariant({
-      size: Size.CUSTOM,
-      customDimensions: v.customDimensions,
-      price: v.price,
-    })
-  }
-  return makeStandardVariant({
-    size: v.size,
-  })
-}
+export const createVariant = (v: ValidatedVariant): ProductVariant => v
 
-/**
- * Maps a non-empty array of validated variants to domain ProductVariants
- * Preserves the non-empty array type constraint
- */
 export const createVariants = (
   validatedVariants: readonly [ValidatedVariant, ...ValidatedVariant[]]
-): readonly [ProductVariant, ...ProductVariant[]] => {
-  const [first, ...rest] = validatedVariants
-  return [createVariant(first), ...rest.map(createVariant)] as const
-}
+): readonly [ProductVariant, ...ProductVariant[]] =>
+  validatedVariants as readonly [ProductVariant, ...ProductVariant[]]

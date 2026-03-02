@@ -25,12 +25,12 @@ export default function ProductEditorContent() {
     setDescription,
     productType,
     setProductType,
-    category,
-    setCategory,
-    priceRange,
-    setPriceRange,
-    size,
-    setSize,
+    shape,
+    setShape,
+    material,
+    setMaterial,
+    sizes,
+    setSizes,
     uploadedImages,
     uploadingImages,
     error,
@@ -154,12 +154,12 @@ export default function ProductEditorContent() {
               setDescription={setDescription}
               productType={productType}
               setProductType={setProductType}
-              category={category}
-              setCategory={setCategory}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              size={size}
-              setSize={setSize}
+              shape={shape}
+              setShape={setShape}
+              material={material}
+              setMaterial={setMaterial}
+              sizes={sizes}
+              setSizes={setSizes}
             />
           </Box>
         </Stack>

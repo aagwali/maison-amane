@@ -9,9 +9,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   ArchiveNotAllowed,
   makeProductId,
-  PriceRange,
-  ProductCategory,
+  Material,
   ProductNotFoundError,
+  ProductShape,
   ProductStatus,
   ProductType,
   PublicationNotAllowed,
@@ -38,10 +38,10 @@ import { pilotProductUpdateHandler } from './update-pilot-product.handler'
 const validProductData: UnvalidatedProductData = {
   label: 'Tapis Berbère Atlas',
   type: ProductType.TAPIS,
-  category: ProductCategory.RUNNER,
+  shape: ProductShape.RUNNER,
   description: 'Beautiful handmade Berber rug from the Atlas mountains',
-  priceRange: PriceRange.PREMIUM,
-  variants: [{ size: Size.REGULAR }, { size: Size.LARGE }],
+  material: Material.AZILAL,
+  variants: [{ size: Size.MEDIUM }, { size: Size.LARGE }],
   views: [
     { viewType: ViewType.FRONT, imageUrl: 'https://cdn.example.com/front.jpg' },
     { viewType: ViewType.DETAIL, imageUrl: 'https://cdn.example.com/detail.jpg' },
@@ -116,9 +116,9 @@ describe('handlePilotProductUpdateHandler', () => {
 
       // Unchanged fields should be preserved
       expect(result.type).toBe(ProductType.TAPIS)
-      expect(result.category).toBe(ProductCategory.RUNNER)
+      expect(result.shape).toBe(ProductShape.RUNNER)
       expect(result.description).toBe('Beautiful handmade Berber rug from the Atlas mountains')
-      expect(result.priceRange).toBe(PriceRange.PREMIUM)
+      expect(result.material).toBe(Material.AZILAL)
     })
 
     it('preserves immutable fields (id, createdAt)', async () => {
@@ -186,7 +186,7 @@ describe('handlePilotProductUpdateHandler', () => {
       const updateCommand = buildUpdateCommand('test-product-1', {
         label: 'Nouveau Label',
         description: 'Nouvelle description',
-        priceRange: PriceRange.DISCOUNT,
+        material: Material.MTIRT,
       })
 
       const result = await runPromise(
@@ -196,7 +196,7 @@ describe('handlePilotProductUpdateHandler', () => {
 
       expect(result.label).toBe('Nouveau Label')
       expect(result.description).toBe('Nouvelle description')
-      expect(result.priceRange).toBe(PriceRange.DISCOUNT)
+      expect(result.material).toBe(Material.MTIRT)
     })
 
     it('preserves syncStatus', async () => {

@@ -14,25 +14,25 @@ export const ProductType = {
 export type ProductType = (typeof ProductType)[keyof typeof ProductType]
 
 // ============================================
-// PRODUCT CATEGORY (shared - cross-context)
+// PRODUCT SHAPE (shared - cross-context)
 // ============================================
 
-export { ProductCategory, ProductCategorySchema } from '@maison-amane/shared-kernel'
-export type { ProductCategory as ProductCategoryType } from '@maison-amane/shared-kernel'
+export { ProductShape, ProductShapeSchema } from '@maison-amane/shared-kernel'
+export type { ProductShape as ProductShapeType } from '@maison-amane/shared-kernel'
+
+// ============================================
+// MATERIAL (shared - cross-context)
+// ============================================
+
+export { Material, MaterialSchema } from '@maison-amane/shared-kernel'
+export type { Material as MaterialType } from '@maison-amane/shared-kernel'
 
 // ============================================
 // SIZE (shared - cross-context)
 // ============================================
 
 export { Size, SizeSchema } from '@maison-amane/shared-kernel'
-export type PredefinedSize = 'REGULAR' | 'LARGE'
-
-// ============================================
-// PRICE RANGE (shared - cross-context)
-// ============================================
-
-export { PriceRange, PriceRangeSchema } from '@maison-amane/shared-kernel'
-export type { PriceRange as PriceRangeType } from '@maison-amane/shared-kernel'
+export type PredefinedSize = 'EXTRA_SMALL' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'EXTRA_LARGE'
 
 // ============================================
 // PRODUCT STATUS

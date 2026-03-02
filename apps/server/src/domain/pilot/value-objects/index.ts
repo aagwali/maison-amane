@@ -44,22 +44,23 @@ export { CustomDimensionSchema, type CustomDimension } from './dimensions'
 export { ProductViewSchema, type ProductView, ProductViewsSchema, type ProductViews } from './views'
 
 // ============================================
-// VARIANTS (base schemas without id, for validation)
+// VARIANTS (compositional model)
 // ============================================
 export {
-  StandardVariantBaseSchema,
-  CustomVariantBaseSchema,
-  VariantBaseSchema,
-  type StandardVariantBase,
-  type CustomVariantBase,
-  type VariantBase,
-  // Aliases for aggregate usage
+  CatalogSizeSchema,
+  type CatalogSize,
+  BespokeSizeSchema,
+  type BespokeSize,
+  VariantSizeSchema,
+  type VariantSize,
+  FormulaPricingSchema,
+  type FormulaPricing,
+  NegotiatedPricingSchema,
+  type NegotiatedPricing,
+  VariantPricingSchema,
+  type VariantPricing,
   ProductVariantSchema,
-  StandardVariantSchema,
-  CustomVariantSchema,
   type ProductVariant,
-  type StandardVariant,
-  type CustomVariant,
 } from './variants'
 
 // ============================================
