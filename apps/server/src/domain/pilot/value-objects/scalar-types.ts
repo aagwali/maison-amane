@@ -49,10 +49,10 @@ export type PositiveCm = typeof PositiveCmSchema.Type
 export const makePositiveCm = S.decodeUnknownSync(PositiveCmSchema)
 
 // ============================================
-// IMAGE URL (env-aware)
+// IMAGE URL
 // ============================================
 
-const IMAGE_URL_PATTERN = process.env.NODE_ENV === 'production' ? /^https:\/\/.+/ : /^https?:\/\/.+/
+const IMAGE_URL_PATTERN = /^https?:\/\/.+/
 
 export const ImageUrlSchema = S.String
   .pipe(S.pattern(IMAGE_URL_PATTERN), S.brand('ImageUrl'))

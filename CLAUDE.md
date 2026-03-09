@@ -127,11 +127,11 @@ See [CONTEXT.md §6](CONTEXT.md#6-workflows-de-développement) for detailed step
 
 Collections: `pilot_products` (write), `catalog_products` (read), `media` (write)
 
-## Utilisation des Skills
+## Skills & Agents
 
-Avant de commencer une tâche de développement, **vérifiez si un skill peut vous assister**. Les skills contiennent les workflows, règles et références pour les tâches récurrentes.
+Avant de commencer une tâche de développement, **vérifiez si un skill ou agent peut assister**.
 
-### Skills disponibles
+### Skills (invoqués par `/nom` — workflows de génération)
 
 - **`domain-model`** -- Modélisation domaine DDD (aggregates, VOs, events, errors, services)
 - **`use-case`** -- Use cases applicatifs CQRS (commands, queries, handlers, validation)
@@ -143,6 +143,17 @@ Avant de commencer une tâche de développement, **vérifiez si un skill peut vo
 - **`shared-kernel`** -- Types partagés cross-context (IDs, enums, messaging topology, configs infrastructure)
 - **`documentation`** -- Pages Docusaurus (data-flows, architecture, glossaire)
 - **`client`** -- UI client Next.js (pages, composants, hooks, server actions, contexts)
+
+### Agents (autonomes — déclenchés par Claude ou sur demande)
+
+- **`architecture-guard`** -- Vérification conformité DDD/hexagonal, naming, imports, détection de drift documentation
+- **`onboarding`** -- Visite guidée interactive du projet, adaptée au profil du visiteur
+
+### Skills cross-projet (dans `~/.claude/skills/`)
+
+- **`skill-creator`** -- Guide de création de skills
+- **`agent-identifier`** -- Guide de création d'agents
+- **`imported-frontend-design`** -- Design frontend distinctif et production-grade
 
 ### Workflow recommandé
 
@@ -159,6 +170,7 @@ Claude : "Je recommande [liste des skills]. Je vais les lire et les appliquer."
 - "Ajouter un endpoint GET /products/:id" -> `use-case`, `api-endpoint`, `test-suite`
 - "Documenter le flux de paiement" -> `documentation`
 - "Ajouter une page de liste des commandes côté client" -> `client`, `use-case`, `api-endpoint`
+- "Vérifie que mes changements respectent l'architecture" -> agent `architecture-guard`
 
 ## Maintenance des artefacts de documentation
 

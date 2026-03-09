@@ -169,3 +169,13 @@ See [references/structure.md](references/structure.md) for the complete director
 - [ ] Handler implemented
 - [ ] Layers composed
 - [ ] `main.ts` with `bootstrapConsumer`
+
+### Documentation & Assets Update
+
+After scaffolding is complete, update project assets to reflect the new bounded context:
+
+- [ ] **CLAUDE.md** — Add the new BC to the "Bounded Contexts" table (name, type, location)
+- [ ] **CLAUDE.md** — Add new app/package scopes to "Commit Convention" if applicable
+- [ ] **CONTEXT.md** — Update if new architectural patterns were introduced (new ADR, new communication pattern, etc.). Skip if only existing patterns were reused
+- [ ] **Shared-kernel** — Verify new IDs, enums, or routing keys are properly exported
+- [ ] **Run `architecture-guard` agent** — Verify conformance of the entire new BC

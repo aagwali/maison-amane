@@ -3,10 +3,10 @@
 import * as S from 'effect/Schema'
 
 // ============================================
-// MEDIA URL (env-aware)
+// MEDIA URL
 // ============================================
 
-const MEDIA_URL_PATTERN = process.env.NODE_ENV === 'production' ? /^https:\/\/.+/ : /^https?:\/\/.+/
+const MEDIA_URL_PATTERN = /^https?:\/\/.+/
 
 export const MediaUrlSchema = S.String
   .pipe(S.pattern(MEDIA_URL_PATTERN), S.brand('MediaUrl'))
